@@ -104,6 +104,20 @@ function databaseRuntimeModulePath(manifest: ForgeLoopManifest) {
 		: `src/lib/database.${ext(manifest.language)}`;
 }
 
+function prismaAdapterDependency(manifest: ForgeLoopManifest) {
+	const provider = manifest.features.database?.provider;
+
+	if (provider === 'postgresql') {
+		return '@prisma/adapter-pg';
+	}
+
+	if (provider === 'sqlite' && manifest.packageManager === 'bun') {
+		return '@prisma/adapter-libsql';
+	}
+
+	return '@prisma/adapter-better-sqlite3';
+}
+
 function generatedReadme(manifest: ForgeLoopManifest) {
 	const handlerProject = hasHandlers(manifest);
 	const setupLines = [
@@ -201,12 +215,26 @@ function packageJson(
 
 	if (manifest.features.database?.orm === 'prisma') {
 		scripts['db:generate'] = 'prisma generate';
-		scripts['db:push'] = 'prisma db push';
-		scripts['db:migrate'] = 'prisma migrate dev';
+		scripts['db:push'] = 'prisma db push && prisma generate';
+		scripts['db:migrate'] = 'prisma migrate dev && prisma generate';
 		scripts['db:studio'] = 'prisma studio';
 		Object.assign(dependencies, {
 			'@prisma/client': '^7.7.0',
+			[prismaAdapterDependency(manifest)]: '^7.7.0',
 		});
+		if (manifest.features.database.provider === 'postgresql') {
+			Object.assign(dependencies, {
+				pg: '^8.16.0',
+			});
+		}
+		if (
+			manifest.features.database.provider === 'sqlite' &&
+			manifest.packageManager !== 'bun'
+		) {
+			Object.assign(dependencies, {
+				'better-sqlite3': '^12.2.0',
+			});
+		}
 		Object.assign(devDependencies, {
 			prisma: '^7.7.0',
 		});
@@ -805,8 +833,20 @@ function prismaFiles(manifest: ForgeLoopManifest): FileSpec[] {
 		return [];
 	}
 
-	const provider = manifest.features.database.provider;
 	return [
+		{
+			path: 'prisma.config.ts',
+			content: `import 'dotenv/config';
+import { defineConfig, env } from 'prisma/config';
+
+export default defineConfig({
+  schema: 'prisma/schema.prisma',
+  datasource: {
+    url: env('DATABASE_URL'),
+  },
+});
+`,
+		},
 		{
 			path: 'prisma/schema.prisma',
 			content: `generator client {
@@ -815,8 +855,7 @@ function prismaFiles(manifest: ForgeLoopManifest): FileSpec[] {
 }
 
 datasource db {
-  provider = "${provider}"
-  url      = env("DATABASE_URL")
+  provider = "${manifest.features.database.provider}"
 }
 
 model Healthcheck {
@@ -835,10 +874,29 @@ function databaseFiles(manifest: ForgeLoopManifest): FileSpec[] {
 	}
 
 	const ts = manifest.language === 'ts';
+	const isSqlite = manifest.features.database.provider === 'sqlite';
+	const isBunSqlite =
+		isSqlite && manifest.packageManager === 'bun';
 	const clientImportPath =
 		manifest.preset === 'advanced'
 			? '../../generated/prisma/client'
 			: '../generated/prisma/client';
+	const adapterImport = isSqlite
+		? isBunSqlite
+			? "import { PrismaLibSql } from '@prisma/adapter-libsql';\n"
+			: "import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';\n"
+		: "import { PrismaPg } from '@prisma/adapter-pg';\n";
+	const adapterFactory = isSqlite
+		? isBunSqlite
+			? `  const adapter = new PrismaLibSql({
+    url: resolveDatabaseUrl(),
+  });`
+			: `  const adapter = new PrismaBetterSqlite3({
+    url: resolveDatabaseUrl(),
+  });`
+		: `  const adapter = new PrismaPg({
+    connectionString: resolveDatabaseUrl(),
+  });`;
 	const loggerImport =
 		manifest.preset === 'advanced'
 			? `import { logScope } from '${relativeImportPath(manifest.language, '../logging/logger')}';\n`
@@ -859,13 +917,28 @@ function databaseFiles(manifest: ForgeLoopManifest): FileSpec[] {
 	return [
 		{
 			path: databaseRuntimeModulePath(manifest),
-			content: `import { PrismaClient } from '${relativeImportPath(manifest.language, clientImportPath)}';
-${loggerImport}${globalType}
+			content: `import 'dotenv/config';
+import { PrismaClient } from '${relativeImportPath(manifest.language, clientImportPath)}';
+${adapterImport}${loggerImport}${globalType}
 const globalForPrisma = globalThis${globalCast};
+
+function resolveDatabaseUrl() {
+  const value = process.env.DATABASE_URL;
+${isSqlite ? "  if (!value) {\n    return 'file:./dev.db';\n  }\n" : ''}  if (!value) {
+    throw new Error('Missing required environment variable: DATABASE_URL');
+  }
+
+  return value;
+}
+
+function createPrismaClient() {
+${adapterFactory}
+  return new PrismaClient({ adapter });
+}
 
 export const prisma =
   globalForPrisma.__forgeloopPrisma__ ??
-  new PrismaClient();
+  createPrismaClient();
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.__forgeloopPrisma__ = prisma;

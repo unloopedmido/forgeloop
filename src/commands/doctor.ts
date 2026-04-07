@@ -46,6 +46,7 @@ export async function runDoctor(args: ParsedArgs, output = new Output()) {
 
 	if (manifest.features.database) {
 		requiredPaths.push(
+			'prisma.config.ts',
 			'prisma/schema.prisma',
 			manifest.preset === 'advanced'
 				? `src/core/database/client.${manifest.language}`

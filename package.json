@@ -1,6 +1,6 @@
 {
 	"name": "create-forgeloop",
-	"version": "0.1.8",
+	"version": "0.1.9",
 	"description": "Scaffold and grow Discord bots with opinionated starters and maintenance commands.",
 	"homepage": "https://github.com/unloopedmido/forgeloop#readme",
 	"repository": {
