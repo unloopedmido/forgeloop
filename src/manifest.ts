@@ -10,7 +10,7 @@ import { CliError } from './utils/errors.js';
 import { pathExists, readJsonFile } from './utils/fs.js';
 
 const SCHEMA_URL =
-	'https://raw.githubusercontent.com/unloopedmido/forgeloop/main/schemas/project-manifest.v1.json';
+	'https://raw.githubusercontent.com/unloopedmido/forgeloop/refs/heads/main/schemas/project-manifest.v1.json';
 
 function toDatabaseConfig(
 	database: InitOptions['database'],
