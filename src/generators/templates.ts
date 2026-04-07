@@ -1,3 +1,4 @@
+import { CONFIG_FILE } from '../constants.js';
 import type { ForgeLoopManifest, Language } from '../types.js';
 import type { FileSpec } from '../utils/fs.js';
 
@@ -161,7 +162,20 @@ ${handlerProject ? `\n## Command Sync\n\nCommands sync automatically on startup.
 
 ## Managed by ForgeLoop
 
-This project includes ${manifest.$schema} and is expected to be maintained with ForgeLoop commands.
+This project includes \`${CONFIG_FILE}\` and is expected to be maintained with ForgeLoop commands.
+`;
+}
+
+function projectConfig(manifest: ForgeLoopManifest) {
+	const config = { ...manifest };
+	delete config.$schema;
+
+	return `/** @typedef {import('create-forgeloop/config').ForgeLoopConfig} ForgeLoopConfig */
+
+/** @type {ForgeLoopConfig} */
+const config = ${JSON.stringify(config, null, 2)};
+
+export default config;
 `;
 }
 
@@ -1079,8 +1093,8 @@ export function renderProjectFiles(
 			content: generatedReadme(manifest),
 		},
 		{
-			path: 'forgeloop.json',
-			content: `${JSON.stringify(manifest, null, 2)}\n`,
+			path: CONFIG_FILE,
+			content: projectConfig(manifest),
 		},
 		{
 			path: `src/index.${fileExtension}`,

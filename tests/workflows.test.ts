@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
-import { readFile } from 'node:fs/promises';
+import { readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { CONFIG_FILE } from '../src/constants.js';
 import { parseArgs } from '../src/utils/args.js';
 import { runAdd } from '../src/commands/add.js';
 import { runDoctor } from '../src/commands/doctor.js';
@@ -201,6 +202,47 @@ describe('Add and doctor workflows', () => {
 		expect(output.errors.length).toBe(0);
 		expect(
 			output.logs.some((line) => line.includes('Project looks healthy.')),
+		).toBe(true);
+	});
+
+	test('legacy forgeloop.json projects still load', async () => {
+		const root = await makeProjectRoot();
+		const manifest = createManifest({
+			projectName: 'legacy-project',
+			targetDir: root,
+			language: 'ts',
+			preset: 'modular',
+			packageManager: 'npm',
+			database: 'none',
+			orm: 'none',
+			tooling: 'eslint-prettier',
+			git: false,
+			docker: false,
+			ci: false,
+			install: false,
+		});
+
+		await ensureDirectory(root);
+		await writeFiles(root, renderProjectFiles(manifest));
+		await rm(path.join(root, CONFIG_FILE));
+		await writeFile(
+			path.join(root, 'forgeloop.json'),
+			`${JSON.stringify(
+				{
+					...manifest,
+					$schema:
+						'https://raw.githubusercontent.com/unloopedmido/forgeloop/refs/heads/main/schemas/project-manifest.v1.json',
+				},
+				null,
+				2,
+			)}\n`,
+		);
+
+		const output = new BufferedOutput();
+		await runDoctor(parseArgs(['doctor', '--dir', root]), output as never);
+		expect(output.errors.length).toBe(0);
+		expect(
+			output.logs.some((line) => line.includes('Found forgeloop.json')),
 		).toBe(true);
 	});
 });

@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { CONFIG_FILE } from '../src/constants.js';
 import { createManifest } from '../src/manifest.js';
 import { renderProjectFiles } from '../src/generators/templates.js';
 import { ensureDirectory, writeFiles } from '../src/utils/fs.js';
@@ -27,13 +28,14 @@ describe('Project scaffolds', () => {
 		await ensureDirectory(root);
 		await writeFiles(root, renderProjectFiles(manifest));
 
-		const manifestContent = JSON.parse(
-			await readFile(path.join(root, 'forgeloop.json'), 'utf8'),
+		const configContent = await readFile(
+			path.join(root, CONFIG_FILE),
+			'utf8',
 		);
-		expect(manifestContent.features.database.provider).toBe('sqlite');
-		expect(manifestContent.features.tooling).toBe('eslint-prettier');
-		expect(manifestContent.features.git).toBe(true);
-		expect(manifestContent.paths.coreDir).toBe('src/core');
+		expect(configContent).toMatch(/ForgeLoopConfig/);
+		expect(configContent).toMatch(/export default config/);
+		expect(configContent).toMatch(/"projectName": "alpha"/);
+		expect(configContent).toMatch(/"provider": "sqlite"/);
 		expect(await readFile(path.join(root, '.gitignore'), 'utf8')).toMatch(
 			/node_modules/,
 		);

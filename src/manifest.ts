@@ -1,16 +1,20 @@
+import { stat } from 'node:fs/promises';
 import path from 'node:path';
-import { MANIFEST_FILE, MANIFEST_VERSION } from './constants.js';
+import { pathToFileURL } from 'node:url';
+import {
+	LEGACY_MANIFEST_FILE,
+	MANIFEST_VERSION,
+	SUPPORTED_CONFIG_FILES,
+} from './constants.js';
 import type {
 	DatabaseProvider,
 	ForgeLoopManifest,
+	ForgeLoopConfig,
 	InitOptions,
 	Orm,
 } from './types.js';
 import { CliError } from './utils/errors.js';
 import { pathExists, readJsonFile } from './utils/fs.js';
-
-const SCHEMA_URL =
-	'https://raw.githubusercontent.com/unloopedmido/forgeloop/refs/heads/main/schemas/project-manifest.v1.json';
 
 function toDatabaseConfig(
 	database: InitOptions['database'],
@@ -36,7 +40,6 @@ export function createManifest(options: InitOptions): ForgeLoopManifest {
 	const usesHandlers = options.preset !== 'basic';
 	const usesCore = options.preset === 'advanced';
 	return {
-		$schema: SCHEMA_URL,
 		manifestVersion: MANIFEST_VERSION,
 		projectName: options.projectName,
 		createdAt: new Date().toISOString(),
@@ -62,13 +65,68 @@ export function createManifest(options: InitOptions): ForgeLoopManifest {
 	};
 }
 
-export async function loadManifest(projectDir: string) {
-	const manifestPath = path.join(projectDir, MANIFEST_FILE);
-	if (!(await pathExists(manifestPath))) {
-		throw new CliError(`No ${MANIFEST_FILE} found in ${projectDir}.`);
+export async function resolveManifestLocation(projectDir: string) {
+	for (const fileName of SUPPORTED_CONFIG_FILES) {
+		const manifestPath = path.join(projectDir, fileName);
+		if (await pathExists(manifestPath)) {
+			return {
+				path: manifestPath,
+				relativePath: fileName,
+				format: 'module' as const,
+			};
+		}
 	}
 
-	const manifest = await readJsonFile<ForgeLoopManifest>(manifestPath);
+	const legacyManifestPath = path.join(projectDir, LEGACY_MANIFEST_FILE);
+	if (await pathExists(legacyManifestPath)) {
+		return {
+			path: legacyManifestPath,
+			relativePath: LEGACY_MANIFEST_FILE,
+			format: 'json' as const,
+		};
+	}
+
+	throw new CliError(
+		`No ForgeLoop project config found in ${projectDir}. Expected one of ${SUPPORTED_CONFIG_FILES.join(', ')} or ${LEGACY_MANIFEST_FILE}.`,
+	);
+}
+
+async function loadModuleManifest(manifestPath: string) {
+	const manifestUrl = pathToFileURL(manifestPath);
+	const metadata = await stat(manifestPath);
+	manifestUrl.searchParams.set('t', String(metadata.mtimeMs));
+	let module: {
+		default?: unknown;
+		config?: unknown;
+		manifest?: unknown;
+	};
+
+	try {
+		module = (await import(manifestUrl.href)) as typeof module;
+	} catch (error) {
+		const message =
+			error instanceof Error ? error.message : 'Unknown module loading error.';
+		throw new CliError(
+			`Failed to load ForgeLoop config at ${manifestPath}: ${message}`,
+		);
+	}
+	const manifest = module.default ?? module.config ?? module.manifest;
+
+	if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) {
+		throw new CliError(
+			`Invalid ForgeLoop config in ${manifestPath}. Export a default object from the config file.`,
+		);
+	}
+
+	return manifest as ForgeLoopConfig;
+}
+
+export async function loadManifest(projectDir: string) {
+	const manifestLocation = await resolveManifestLocation(projectDir);
+	const manifest =
+		manifestLocation.format === 'json'
+			? await readJsonFile<ForgeLoopManifest>(manifestLocation.path)
+			: await loadModuleManifest(manifestLocation.path);
 	validateManifest(manifest);
 	return manifest;
 }

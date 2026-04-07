@@ -65,6 +65,8 @@ If you install the package globally, the same commands are also available throug
 
 Generated projects now include `create-forgeloop` as a local dev dependency, so `pnpm forgeloop ...` works inside new pnpm-based ForgeLoop apps after install.
 
+New projects are described by `forgeloop.config.mjs` instead of a JSON manifest. The file is a normal module, so it is easier to read and can opt into package-provided typing with `create-forgeloop/config`.
+
 Common flags:
 
 ```bash
@@ -136,7 +138,7 @@ npx create-forgeloop@latest doctor --dir ./my-bot
 
 - Scaffolds `discord.js` bots without dumping a generic Node template on the user
 - Supports both fast starts and more structured project layouts
-- Keeps generated projects machine-readable through `forgeloop.json`
+- Keeps generated projects readable and toolable through `forgeloop.config.mjs`
 - Adds follow-up generators instead of treating scaffolding as a one-time step
 - Includes a lightweight `doctor` command for template drift and missing files
 

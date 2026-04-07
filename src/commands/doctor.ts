@@ -1,6 +1,5 @@
 import path from 'node:path';
-import { MANIFEST_FILE } from '../constants.js';
-import { loadManifest } from '../manifest.js';
+import { loadManifest, resolveManifestLocation } from '../manifest.js';
 import type { ParsedArgs } from '../types.js';
 import { getFlag } from '../utils/args.js';
 import { pathExists } from '../utils/fs.js';
@@ -10,12 +9,13 @@ export async function runDoctor(args: ParsedArgs, output = new Output()) {
 	const projectDir = path.resolve(
 		(getFlag(args.flags, 'dir') as string | undefined) ?? process.cwd(),
 	);
+	const manifestLocation = await resolveManifestLocation(projectDir);
 	const manifest = await loadManifest(projectDir);
 
 	output.banner('ForgeLoop doctor', `Inspecting ${projectDir}`);
 
 	const requiredPaths = [
-		MANIFEST_FILE,
+		manifestLocation.relativePath,
 		manifest.paths.srcDir,
 		manifest.paths.configDir,
 	];

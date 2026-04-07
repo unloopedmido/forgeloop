@@ -1,5 +1,11 @@
 export const CLI_NAME = 'forgeloop';
-export const MANIFEST_FILE = 'forgeloop.json';
+export const CONFIG_FILE = 'forgeloop.config.mjs';
+export const SUPPORTED_CONFIG_FILES = [
+	CONFIG_FILE,
+	'forgeloop.config.js',
+	'forgeloop.config.cjs',
+] as const;
+export const LEGACY_MANIFEST_FILE = 'forgeloop.json';
 export const MANIFEST_VERSION = 1;
 
 export const SUPPORTED_LANGUAGES = ['ts', 'js'] as const;

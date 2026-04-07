@@ -1,6 +1,6 @@
 {
 	"name": "create-forgeloop",
-	"version": "0.1.9",
+	"version": "0.2.0",
 	"description": "Scaffold and grow Discord bots with opinionated starters and maintenance commands.",
 	"homepage": "https://github.com/unloopedmido/forgeloop#readme",
 	"repository": {
@@ -14,6 +14,13 @@
 	"bin": {
 		"create-forgeloop": "bin/create-forgeloop.js",
 		"forgeloop": "bin/forgeloop.js"
+	},
+	"exports": {
+		"./config": {
+			"types": "./dist/config.d.ts",
+			"import": "./dist/config.js",
+			"default": "./dist/config.js"
+		}
 	},
 	"files": [
 		"bin",
