@@ -11,7 +11,7 @@ import {
 } from '../constants.js';
 import { createManifest } from '../manifest.js';
 import { renderProjectFiles } from '../generators/templates.js';
-import type { InitOptions, ParsedArgs } from '../types.js';
+import type { InitOptions, PackageManager, ParsedArgs } from '../types.js';
 import { getBooleanFlag, getFlag } from '../utils/args.js';
 import { CliError } from '../utils/errors.js';
 import { ensureDirectory, writeFiles } from '../utils/fs.js';
@@ -270,14 +270,25 @@ async function resolveInitOptions(
 	};
 }
 
+export function resolvePackageManagerCommand(
+	packageManager: PackageManager,
+	platform = process.platform,
+) {
+	if (platform === 'win32' && ['npm', 'pnpm', 'yarn'].includes(packageManager)) {
+		return `${packageManager}.cmd`;
+	}
+
+	return packageManager;
+}
+
 async function runInstall(
 	targetDir: string,
 	packageManager: InitOptions['packageManager'],
 ) {
-	const command =
-		packageManager === 'yarn'
-			? { cmd: 'yarn', args: ['install'] }
-			: { cmd: packageManager, args: ['install'] };
+	const command = {
+		cmd: resolvePackageManagerCommand(packageManager),
+		args: ['install'],
+	};
 
 	await new Promise<void>((resolve, reject) => {
 		const child = spawn(command.cmd, command.args, {
