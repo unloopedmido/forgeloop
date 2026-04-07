@@ -1,0 +1,35 @@
+{
+	"include": ["src/**/*.ts", "tests/**/*.ts", ".prettierrc.json"],
+	"compilerOptions": {
+		"target": "ES2020",
+		"lib": ["DOM", "DOM.Iterable", "ES2021"],
+		"module": "NodeNext",
+		"moduleResolution": "nodenext",
+		"resolveJsonModule": true,
+		"allowJs": true,
+		"checkJs": false,
+
+		"outDir": "./dist",
+		"noEmit": true,
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		"removeComments": true,
+
+		"strict": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitOverride": true,
+		"noImplicitReturns": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"useUnknownInCatchVariables": true,
+		"noUncheckedIndexedAccess": true,
+
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"skipLibCheck": true,
+		"useDefineForClassFields": true,
+		"types": ["node", "bun-types"]
+	}
+}

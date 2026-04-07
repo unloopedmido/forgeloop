@@ -1,0 +1,209 @@
+import path from 'node:path';
+import {
+	assertDiscordEventName,
+	getDiscordEventNames,
+} from '../discord/events.js';
+import { loadManifest } from '../manifest.js';
+import { renderCommandFile, renderEventFile } from '../generators/templates.js';
+import type { ParsedArgs } from '../types.js';
+import { getBooleanFlag, getFlag } from '../utils/args.js';
+import { CliError } from '../utils/errors.js';
+import { writeFiles } from '../utils/fs.js';
+import { Output } from '../utils/format.js';
+import {
+	canPrompt,
+	promptConfirm,
+	promptSelect,
+	promptText,
+} from '../utils/prompts.js';
+
+function getProjectDir(args: ParsedArgs) {
+	return path.resolve(
+		(getFlag(args.flags, 'dir') as string | undefined) ?? process.cwd(),
+	);
+}
+
+function assertHandlerProject(
+	manifest: Awaited<ReturnType<typeof loadManifest>>,
+) {
+	if (!manifest.paths.commandsDir || !manifest.paths.eventsDir) {
+		throw new CliError(
+			'This ForgeLoop project uses the "basic" shape, so commands and events stay inline in index.ts/js. Switch to "modular" or "advanced" to use handler generators.',
+		);
+	}
+}
+
+function normalizeCommandName(name: string) {
+	if (!/^[a-z0-9-_]+$/i.test(name)) {
+		throw new CliError(
+			`Invalid command name "${name}". Use letters, numbers, hyphens, or underscores.`,
+		);
+	}
+
+	return name.toLowerCase();
+}
+
+function normalizeEventName(name: string) {
+	if (!/^[a-zA-Z0-9]+$/.test(name)) {
+		throw new CliError(
+			`Invalid event name "${name}". Use the exact Discord.js event name, for example "messageCreate".`,
+		);
+	}
+
+	return name;
+}
+
+async function resolveCommandInput(args: ParsedArgs, output: Output) {
+	const providedName = args.subcommands[1];
+	const providedDescription = getFlag(args.flags, 'description');
+	const interactive =
+		canPrompt() && !providedName && providedDescription === undefined;
+
+	if (interactive) {
+		output.hero(
+			'Command generator',
+			'Shape a slash command with a clean prompt flow instead of raw file creation.',
+		);
+	}
+
+	const name = interactive
+		? normalizeCommandName(
+				await promptText(output, 'Command name', providedName, (value) =>
+					/^[a-z0-9-_]+$/i.test(value)
+						? null
+						: 'Use letters, numbers, hyphens, or underscores.',
+				),
+			)
+		: providedName
+			? normalizeCommandName(providedName)
+			: (() => {
+					throw new CliError(
+						'Usage: forgeloop add command <name> [--description "..."]',
+					);
+				})();
+
+	const description = interactive
+		? await promptText(
+				output,
+				'Description',
+				typeof providedDescription === 'string'
+					? providedDescription
+					: undefined,
+				() => null,
+				{ allowEmpty: true },
+			)
+		: typeof providedDescription === 'string'
+			? providedDescription
+			: '';
+
+	return { name, description };
+}
+
+async function resolveEventInput(args: ParsedArgs, output: Output) {
+	const providedName = args.subcommands[1];
+	const providedOnce = getBooleanFlag(args.flags, 'once');
+	const providedOn = getBooleanFlag(args.flags, 'on');
+	const interactive =
+		canPrompt() && !providedName && !providedOnce && !providedOn;
+
+	if (interactive) {
+		output.hero(
+			'Event generator',
+			'Pick an official Discord.js event and decide whether it should run once or stay subscribed.',
+		);
+	}
+
+	const eventName = interactive
+		? await promptSelect(
+				output,
+				'Choose an event type',
+				(await getDiscordEventNames()).map((eventName) => ({
+					label: eventName,
+					value: eventName,
+				})),
+				typeof providedName === 'string'
+					? await assertDiscordEventName(normalizeEventName(providedName))
+					: 'interactionCreate',
+			)
+		: providedName
+			? await assertDiscordEventName(normalizeEventName(providedName))
+			: (() => {
+					throw new CliError('Usage: forgeloop add event <eventName> [--once]');
+				})();
+
+	const once = interactive
+		? await promptConfirm(
+				output,
+				'Should this event run only once?',
+				eventName === 'ready' ? true : providedOnce,
+			)
+		: providedOnce
+			? true
+			: providedOn
+				? false
+				: eventName === 'ready';
+
+	return { eventName, once };
+}
+
+export async function runAdd(args: ParsedArgs, output = new Output()) {
+	const artifactType = args.subcommands[0];
+	if (!artifactType) {
+		throw new CliError(
+			'Usage: forgeloop add command <name> OR forgeloop add event <eventName>',
+		);
+	}
+
+	const projectDir = getProjectDir(args);
+	const manifest = await loadManifest(projectDir);
+	assertHandlerProject(manifest);
+
+	if (artifactType !== 'command' && artifactType !== 'event') {
+		throw new CliError(
+			`Unsupported add target "${artifactType}". Try "command" or "event".`,
+		);
+	}
+
+	if (artifactType === 'command') {
+		const command = await resolveCommandInput(args, output);
+		const commandFile = renderCommandFile(
+			manifest,
+			command.name,
+			command.description,
+		);
+		await writeFiles(projectDir, [commandFile]);
+		if (
+			canPrompt() &&
+			!args.subcommands[1] &&
+			getFlag(args.flags, 'description') === undefined
+		) {
+			output.callout('Command summary', [
+				`Name: ${command.name}`,
+				`Description: ${command.description || 'No description provided yet.'}`,
+			]);
+		}
+		output.success(
+			`Added command "${command.name}" to ${path.join(projectDir, commandFile.path)}`,
+		);
+		return;
+	}
+
+	const event = await resolveEventInput(args, output);
+	const eventFile = renderEventFile(manifest, event.eventName, event.once);
+	await writeFiles(projectDir, [eventFile]);
+	if (
+		canPrompt() &&
+		!args.subcommands[1] &&
+		!getBooleanFlag(args.flags, 'once') &&
+		!getBooleanFlag(args.flags, 'on')
+	) {
+		output.callout('Event summary', [
+			`Event: ${event.eventName}`,
+			`Binding: ${event.once ? 'client.once' : 'client.on'}`,
+		]);
+	}
+	output.success(
+		`Added event "${event.eventName}" to ${path.join(projectDir, eventFile.path)}`,
+	);
+	return;
+}

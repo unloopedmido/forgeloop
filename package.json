@@ -1,0 +1,57 @@
+{
+	"name": "create-forgeloop",
+	"version": "0.1.1",
+	"description": "Scaffold and grow Discord bots with opinionated starters and maintenance commands.",
+	"homepage": "https://github.com/unloopedmido/forgeloop#readme",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/unloopedmido/forgeloop.git"
+	},
+	"bugs": {
+		"url": "https://github.com/unloopedmido/forgeloop/issues"
+	},
+	"type": "module",
+	"bin": {
+		"create-forgeloop": "bin/create-forgeloop.js",
+		"forgeloop": "bin/forgeloop.js"
+	},
+	"files": [
+		"bin",
+		"dist",
+		"README.md"
+	],
+	"keywords": [
+		"discord",
+		"discordjs",
+		"scaffold",
+		"starter",
+		"cli",
+		"create"
+	],
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "tsc -p tsconfig.build.json",
+		"dev": "bun run src/index.ts",
+		"lint": "eslint src tests eslint.config.js",
+		"test": "bun test",
+		"typecheck": "tsc --noEmit",
+		"prepublishOnly": "npm run build"
+	},
+	"dependencies": {
+		"discord.js": "^14.25.0"
+	},
+	"devDependencies": {
+		"@eslint/js": "^10.0.1",
+		"@types/bun": "latest",
+		"@types/node": "^25.5.2",
+		"eslint": "^10.2.0",
+		"globals": "^17.4.0",
+		"prettier": "3.8.1",
+		"tsx": "^4.21.0",
+		"typescript": "^5.9.3",
+		"typescript-eslint": "^8.58.0"
+	}
+}

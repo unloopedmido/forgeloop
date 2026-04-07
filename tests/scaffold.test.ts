@@ -1,0 +1,116 @@
+import { describe, expect, test } from 'bun:test';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { createManifest } from '../src/manifest.js';
+import { renderProjectFiles } from '../src/generators/templates.js';
+import { ensureDirectory, writeFiles } from '../src/utils/fs.js';
+import { makeProjectRoot } from './test-helpers.js';
+
+describe('Project scaffolds', () => {
+	test('advanced scaffold creates core runtime structure and requested tooling', async () => {
+		const root = await makeProjectRoot();
+		const manifest = createManifest({
+			projectName: 'alpha',
+			targetDir: root,
+			language: 'ts',
+			preset: 'advanced',
+			packageManager: 'npm',
+			database: 'sqlite',
+			orm: 'prisma',
+			tooling: 'eslint-prettier',
+			git: true,
+			docker: true,
+			ci: true,
+			install: false,
+		});
+
+		await ensureDirectory(root);
+		await writeFiles(root, renderProjectFiles(manifest));
+
+		const manifestContent = JSON.parse(
+			await readFile(path.join(root, 'forgeloop.json'), 'utf8'),
+		);
+		expect(manifestContent.features.database.provider).toBe('sqlite');
+		expect(manifestContent.features.tooling).toBe('eslint-prettier');
+		expect(manifestContent.features.git).toBe(true);
+		expect(manifestContent.paths.coreDir).toBe('src/core');
+		expect(await readFile(path.join(root, '.gitignore'), 'utf8')).toMatch(
+			/node_modules/,
+		);
+		expect(await readFile(path.join(root, '.prettierrc.json'), 'utf8')).toMatch(
+			/singleQuote/,
+		);
+		expect(await readFile(path.join(root, 'src/index.ts'), 'utf8')).toMatch(
+			/startBot/,
+		);
+		expect(
+			await readFile(path.join(root, 'src/core/runtime/start-bot.ts'), 'utf8'),
+		).toMatch(/loadCommands/);
+	});
+
+	test('basic scaffold keeps logic inline and skips handlers and git files when disabled', async () => {
+		const root = await makeProjectRoot();
+		const manifest = createManifest({
+			projectName: 'basic-inline',
+			targetDir: root,
+			language: 'ts',
+			preset: 'basic',
+			packageManager: 'npm',
+			database: 'none',
+			orm: 'none',
+			tooling: 'none',
+			git: false,
+			docker: false,
+			ci: false,
+			install: false,
+		});
+
+		await ensureDirectory(root);
+		await writeFiles(root, renderProjectFiles(manifest));
+
+		expect(await readFile(path.join(root, 'src/index.ts'), 'utf8')).toMatch(
+			/pingCommand/,
+		);
+		await expect(
+			readFile(path.join(root, '.gitignore'), 'utf8'),
+		).rejects.toThrow();
+		await expect(
+			readFile(path.join(root, 'eslint.config.js'), 'utf8'),
+		).rejects.toThrow();
+		await expect(
+			readFile(path.join(root, 'src/commands/ping.ts'), 'utf8'),
+		).rejects.toThrow();
+	});
+
+	test('biome scaffold generates biome config instead of eslint files', async () => {
+		const root = await makeProjectRoot();
+		const manifest = createManifest({
+			projectName: 'biome-only',
+			targetDir: root,
+			language: 'ts',
+			preset: 'modular',
+			packageManager: 'npm',
+			database: 'none',
+			orm: 'none',
+			tooling: 'biome',
+			git: true,
+			docker: false,
+			ci: false,
+			install: false,
+		});
+
+		await ensureDirectory(root);
+		await writeFiles(root, renderProjectFiles(manifest));
+
+		const packageJson = JSON.parse(
+			await readFile(path.join(root, 'package.json'), 'utf8'),
+		);
+		expect(packageJson.scripts.lint).toBe('biome check .');
+		expect(await readFile(path.join(root, 'biome.json'), 'utf8')).toMatch(
+			/biomejs\.dev\/schemas/,
+		);
+		await expect(
+			readFile(path.join(root, 'eslint.config.js'), 'utf8'),
+		).rejects.toThrow();
+	});
+});
