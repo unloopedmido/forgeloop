@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/unloopedmido/forgeloop/main/schemas/project-manifest.v1.json",
+  "$id": "https://raw.githubusercontent.com/unloopedmido/forgeloop/refs/heads/main/schemas/project-manifest.v1.json",
   "title": "ForgeLoop Project Manifest v1",
   "type": "object",
   "additionalProperties": false,
@@ -20,7 +20,7 @@
   "properties": {
     "$schema": {
       "type": "string",
-      "const": "https://raw.githubusercontent.com/unloopedmido/forgeloop/main/schemas/project-manifest.v1.json"
+      "const": "https://raw.githubusercontent.com/unloopedmido/forgeloop/refs/heads/main/schemas/project-manifest.v1.json"
     },
     "manifestVersion": {
       "type": "integer",
