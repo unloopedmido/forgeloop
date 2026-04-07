@@ -63,6 +63,8 @@ npx create-forgeloop@latest my-bot --language ts --preset modular
 
 If you install the package globally, the same commands are also available through `forgeloop`.
 
+Generated projects now include `create-forgeloop` as a local dev dependency, so `pnpm forgeloop ...` works inside new pnpm-based ForgeLoop apps after install.
+
 Common flags:
 
 ```bash
@@ -85,15 +87,33 @@ Common flags:
 Generate a slash command:
 
 ```bash
+cd my-bot
+pnpm forgeloop add command status --description "Show current bot status"
+
+# or run the package directly
 npx create-forgeloop@latest add command status --description "Show current bot status" --dir ./my-bot
 ```
 
 Generate an event handler:
 
 ```bash
+pnpm forgeloop add event messageCreate --on
+pnpm forgeloop add event ready --once
+
+# or run the package directly
 npx create-forgeloop@latest add event messageCreate --on --dir ./my-bot
 npx create-forgeloop@latest add event ready --once --dir ./my-bot
 ```
+
+Deploy slash commands explicitly:
+
+```bash
+pnpm forgeloop deploy commands
+pnpm forgeloop deploy commands --guild-only
+```
+
+> [!NOTE]
+> `modular` and `advanced` starters now auto-sync commands on startup. Development defaults to guild sync, and production defaults to global sync when `NODE_ENV=production`.
 
 ### Inspect an existing project
 

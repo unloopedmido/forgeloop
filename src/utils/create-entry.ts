@@ -1,4 +1,12 @@
-const DIRECT_COMMANDS = new Set(['help', '--help', 'init', 'add', 'doctor', 'info']);
+const DIRECT_COMMANDS = new Set([
+	'help',
+	'--help',
+	'init',
+	'add',
+	'deploy',
+	'doctor',
+	'info',
+]);
 
 export function normalizeCreateArgv(argv: string[]) {
 	if (argv.length === 0) {

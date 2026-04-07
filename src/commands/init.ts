@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
 	DEFAULTS,
@@ -270,6 +271,29 @@ async function resolveInitOptions(
 	};
 }
 
+async function resolveCurrentCliPackage() {
+	const packageJsonUrl = new URL('../../package.json', import.meta.url);
+	const packageJsonRaw = await readFile(packageJsonUrl, 'utf8').catch(
+		() => null,
+	);
+
+	if (packageJsonRaw) {
+		const packageJson = JSON.parse(packageJsonRaw) as {
+			name?: string;
+			version?: string;
+		};
+		return {
+			name: packageJson.name ?? 'create-forgeloop',
+			version: packageJson.version ?? 'latest',
+		};
+	}
+
+	return {
+		name: 'create-forgeloop',
+		version: 'latest',
+	};
+}
+
 export function resolvePackageManagerCommand(
 	packageManager: PackageManager,
 	platform = process.platform,
@@ -345,7 +369,14 @@ async function initializeGitRepository(targetDir: string) {
 export async function runInit(args: ParsedArgs, output = new Output()) {
 	const options = await resolveInitOptions(args, output);
 	const manifest = createManifest(options);
-	const files = renderProjectFiles(manifest);
+	const cliPackage = await resolveCurrentCliPackage();
+	const files = renderProjectFiles(manifest, {
+		cliPackageName: cliPackage.name,
+		cliPackageVersion:
+			cliPackage.version === 'latest'
+				? 'latest'
+				: `^${cliPackage.version}`,
+	});
 
 	output.banner(
 		'ForgeLoop init',
