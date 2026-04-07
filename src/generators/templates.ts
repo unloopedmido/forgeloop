@@ -1,6 +1,11 @@
 import type { ForgeLoopManifest, Language } from '../types.js';
 import type { FileSpec } from '../utils/fs.js';
 
+interface RenderProjectFilesOptions {
+	cliPackageName?: string;
+	cliPackageVersion?: string;
+}
+
 function ext(language: Language) {
 	return language === 'ts' ? 'ts' : 'js';
 }
@@ -31,12 +36,31 @@ function packageManagerField(
 ) {
 	const versions: Record<ForgeLoopManifest['packageManager'], string> = {
 		npm: 'npm@10',
-		pnpm: 'pnpm@9',
+		pnpm: 'pnpm@9.15.9',
 		yarn: 'yarn@1.22.22',
 		bun: 'bun@1.3.11',
 	};
 
 	return versions[packageManager];
+}
+
+function packageManagerCliCommand(
+	packageManager: ForgeLoopManifest['packageManager'],
+	command: string,
+) {
+	if (packageManager === 'pnpm') {
+		return `pnpm forgeloop ${command}`;
+	}
+
+	if (packageManager === 'yarn') {
+		return `yarn forgeloop ${command}`;
+	}
+
+	if (packageManager === 'bun') {
+		return `bunx forgeloop ${command}`;
+	}
+
+	return `npx forgeloop ${command}`;
 }
 
 function relativeImportPath(language: Language, importPath: string) {
@@ -55,7 +79,10 @@ function hasHandlers(manifest: ForgeLoopManifest) {
 	return Boolean(manifest.paths.commandsDir && manifest.paths.eventsDir);
 }
 
-function packageJson(manifest: ForgeLoopManifest) {
+function packageJson(
+	manifest: ForgeLoopManifest,
+	options: Required<RenderProjectFilesOptions>,
+) {
 	const isTs = manifest.language === 'ts';
 	const mainFile = `src/index.${sourceFileExtension(manifest.language)}`;
 	const scripts: Record<string, string> = {
@@ -68,11 +95,14 @@ function packageJson(manifest: ForgeLoopManifest) {
 	};
 	const devDependencies: Record<string, string> = isTs
 		? {
+				[options.cliPackageName]: options.cliPackageVersion,
 				'@types/node': '^24.7.2',
 				tsx: '^4.20.6',
 				typescript: '^5.9.3',
 			}
-		: {};
+		: {
+				[options.cliPackageName]: options.cliPackageVersion,
+			};
 
 	if (manifest.features.tooling === 'eslint-prettier') {
 		scripts.lint = 'eslint .';
@@ -295,6 +325,35 @@ export type BotClient = import('discord.js').Client & {
 `;
 }
 
+function modularSyncCommands(manifest: ForgeLoopManifest) {
+	const ts = manifest.language === 'ts';
+	return `import { REST, Routes } from 'discord.js';
+${ts ? "import type { BotClient } from '../types/commands.js';\n" : ''}
+import { assertRequiredEnv } from '${relativeImportPath(manifest.language, './config/env')}';
+
+export async function syncCommands(client${ts ? ': BotClient' : ''}) {
+  const commandPayload = [...client.commands.values()].map((command) => command.data.toJSON());
+  const token = assertRequiredEnv('DISCORD_TOKEN');
+  const clientId = assertRequiredEnv('CLIENT_ID');
+  const rest = new REST({ version: '10' }).setToken(token);
+
+  if (process.env.NODE_ENV === 'production') {
+    await rest.put(Routes.applicationCommands(clientId), {
+      body: commandPayload,
+    });
+    console.log(\`Synced \${commandPayload.length} commands globally.\`);
+    return;
+  }
+
+  const guildId = assertRequiredEnv('GUILD_ID');
+  await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+    body: commandPayload,
+  });
+  console.log(\`Synced \${commandPayload.length} commands to guild \${guildId}.\`);
+}
+`;
+}
+
 function eventTemplate(language: Language, eventName: string, once: boolean) {
 	const eventExport = `export const name = '${eventName}';\nexport const once = ${once};\n`;
 	const argsSignature =
@@ -361,12 +420,13 @@ type LoadedEvent = {
 `
 			: '';
 
-	return `import { Client, Collection, GatewayIntentBits${typeImports} } from 'discord.js';
+return `import { Client, Collection, GatewayIntentBits${typeImports} } from 'discord.js';
 import { config } from 'dotenv';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { assertRequiredEnv } from '${relativeImportPath(manifest.language, './config/env')}';
+import { syncCommands } from '${relativeImportPath(manifest.language, './sync-commands')}';
 ${manifest.language === 'ts' ? "import type { BotClient } from './types/commands.js';" : ''}
 
 config();
@@ -434,6 +494,7 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 await loadCommands();
+await syncCommands(client);
 await loadEvents();
 await client.login(assertRequiredEnv('DISCORD_TOKEN'));
 `;
@@ -582,6 +643,7 @@ import { createClient } from '${relativeImportPath(manifest.language, '../client
 import { loadCommands } from '${relativeImportPath(manifest.language, '../loaders/load-commands')}';
 import { loadEvents } from '${relativeImportPath(manifest.language, '../loaders/load-events')}';
 import { logScope } from '${relativeImportPath(manifest.language, '../logging/logger')}';
+import { syncCommands } from '${relativeImportPath(manifest.language, './sync-commands')}';
 import { assertRequiredEnv } from '${relativeImportPath(manifest.language, '../../config/env')}';
 
 config();
@@ -609,9 +671,39 @@ export async function startBot() {
   });
 
   await loadCommands(client, __dirname);
+  await syncCommands(client);
   await loadEvents(client, __dirname);
   logScope('runtime', 'Starting Discord client');
   await client.login(assertRequiredEnv('DISCORD_TOKEN'));
+}
+`,
+		},
+		{
+			path: `src/core/runtime/sync-commands.${fileExtension}`,
+			content: `import { REST, Routes } from 'discord.js';
+${ts ? "import type { BotClient } from '../../types/commands.js';\n" : ''}
+import { logScope } from '${relativeImportPath(manifest.language, '../logging/logger')}';
+import { assertRequiredEnv } from '${relativeImportPath(manifest.language, '../../config/env')}';
+
+export async function syncCommands(client${ts ? ': BotClient' : ''}) {
+  const commandPayload = [...client.commands.values()].map((command) => command.data.toJSON());
+  const token = assertRequiredEnv('DISCORD_TOKEN');
+  const clientId = assertRequiredEnv('CLIENT_ID');
+  const rest = new REST({ version: '10' }).setToken(token);
+
+  if (process.env.NODE_ENV === 'production') {
+    await rest.put(Routes.applicationCommands(clientId), {
+      body: commandPayload,
+    });
+    logScope('commands', \`Synced \${commandPayload.length} commands globally\`);
+    return;
+  }
+
+  const guildId = assertRequiredEnv('GUILD_ID');
+  await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+    body: commandPayload,
+  });
+  logScope('commands', \`Synced \${commandPayload.length} commands to guild \${guildId}\`);
 }
 `,
 		},
@@ -750,12 +842,20 @@ ${validationStep}
 	];
 }
 
-export function renderProjectFiles(manifest: ForgeLoopManifest): FileSpec[] {
+export function renderProjectFiles(
+	manifest: ForgeLoopManifest,
+	options: RenderProjectFilesOptions = {},
+): FileSpec[] {
 	const fileExtension = ext(manifest.language);
+	const handlerProject = hasHandlers(manifest);
+	const resolvedOptions: Required<RenderProjectFilesOptions> = {
+		cliPackageName: options.cliPackageName ?? 'create-forgeloop',
+		cliPackageVersion: options.cliPackageVersion ?? 'latest',
+	};
 	const files: FileSpec[] = [
 		{
 			path: 'package.json',
-			content: `${packageJson(manifest)}\n`,
+			content: `${packageJson(manifest, resolvedOptions)}\n`,
 		},
 		{
 			path: '.env.example',
@@ -774,7 +874,12 @@ Project shape: ${manifest.preset}
 \`\`\`bash
 ${packageManagerInstallHint(manifest.packageManager)}
 ${manifest.packageManager} run dev
+\n${packageManagerCliCommand(
+	manifest.packageManager,
+	handlerProject ? 'add command status' : 'info',
+)}
 \`\`\`
+${handlerProject ? `\n## Command Sync\n\nCommands sync automatically on startup.\n\n- Development defaults to guild sync and requires \`GUILD_ID\`\n- Production defaults to global sync when \`NODE_ENV=production\`\n- Manual deploy: \`${packageManagerCliCommand(manifest.packageManager, 'deploy commands --guild-only')}\`\n` : ''}
 
 ## Managed by ForgeLoop
 
@@ -866,6 +971,12 @@ This project includes ${manifest.$schema} and is expected to be maintained with 
 
 	files.push(...modularExtras(manifest));
 	files.push(...advancedCoreFiles(manifest));
+	if (manifest.preset === 'modular') {
+		files.push({
+			path: `src/sync-commands.${fileExtension}`,
+			content: modularSyncCommands(manifest),
+		});
+	}
 	files.push(...prismaFiles(manifest));
 	files.push(...dockerFiles(manifest));
 	files.push(...ciFiles(manifest));

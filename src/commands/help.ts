@@ -12,6 +12,9 @@ export function renderHelp(output = new Output()) {
 	);
 	output.plain(`  ${CLI_NAME} add command <name> [--dir ./project]`);
 	output.plain(`  ${CLI_NAME} add event <name> [--dir ./project]`);
+	output.plain(
+		`  ${CLI_NAME} deploy commands [--guild-only] [--dir ./project]`,
+	);
 	output.plain(`  ${CLI_NAME} doctor [--dir ./project]`);
 	output.plain(`  ${CLI_NAME} info [--dir ./project]`);
 	output.section('Init wizard');
