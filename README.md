@@ -98,11 +98,11 @@ Generate an event handler:
 
 ```bash
 pnpm forgeloop add event messageCreate --on
-pnpm forgeloop add event ready --once
+pnpm forgeloop add event clientReady --once
 
 # or run the package directly
 npx create-forgeloop@latest add event messageCreate --on --dir ./my-bot
-npx create-forgeloop@latest add event ready --once --dir ./my-bot
+npx create-forgeloop@latest add event clientReady --once --dir ./my-bot
 ```
 
 Deploy slash commands explicitly:

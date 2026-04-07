@@ -135,13 +135,13 @@ async function resolveEventInput(args: ParsedArgs, output: Output) {
 		? await promptConfirm(
 				output,
 				'Should this event run only once?',
-				eventName === 'ready' ? true : providedOnce,
+				eventName === 'clientReady' ? true : providedOnce,
 			)
 		: providedOnce
 			? true
 			: providedOn
 				? false
-				: eventName === 'ready';
+				: eventName === 'clientReady';
 
 	return { eventName, once };
 }

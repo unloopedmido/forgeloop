@@ -82,7 +82,7 @@ describe('Add and doctor workflows', () => {
 		).toMatch(/setDescription\('Show current bot status'\)/);
 	});
 
-	test('add event supports on and once bindings', async () => {
+	test('add event supports on and once bindings, and scaffolds clientReady by default', async () => {
 		const root = await makeProjectRoot();
 		const manifest = createManifest({
 			projectName: 'events',
@@ -116,6 +116,9 @@ describe('Add and doctor workflows', () => {
 		).toMatch(/export const once = false/);
 		expect(
 			await readFile(path.join(root, 'src/events/guildCreate.ts'), 'utf8'),
+		).toMatch(/export const once = true/);
+		expect(
+			await readFile(path.join(root, 'src/events/clientReady.ts'), 'utf8'),
 		).toMatch(/export const once = true/);
 	});
 
@@ -181,8 +184,8 @@ describe('Add and doctor workflows', () => {
 			language: 'ts',
 			preset: 'modular',
 			packageManager: 'npm',
-			database: 'none',
-			orm: 'none',
+			database: 'postgresql',
+			orm: 'prisma',
 			tooling: 'eslint-prettier',
 			git: false,
 			docker: false,

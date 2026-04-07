@@ -94,6 +94,16 @@ function hasHandlers(manifest: ForgeLoopManifest) {
 	return Boolean(manifest.paths.commandsDir && manifest.paths.eventsDir);
 }
 
+function isClientReadyEvent(eventName: string) {
+	return eventName === 'clientReady';
+}
+
+function databaseRuntimeModulePath(manifest: ForgeLoopManifest) {
+	return manifest.preset === 'advanced'
+		? `src/core/database/client.${ext(manifest.language)}`
+		: `src/lib/database.${ext(manifest.language)}`;
+}
+
 function generatedReadme(manifest: ForgeLoopManifest) {
 	const handlerProject = hasHandlers(manifest);
 	const setupLines = [
@@ -106,7 +116,7 @@ function generatedReadme(manifest: ForgeLoopManifest) {
 
 	if (manifest.features.database?.orm === 'prisma') {
 		setupLines.push(
-			`4. Push the Prisma schema with \`${packageManagerScriptCommand(manifest.packageManager, 'db:push')}\`.`,
+			`4. Generate the Prisma client and push the schema with \`${packageManagerScriptCommand(manifest.packageManager, 'db:push')}\`.`,
 			`5. Start the bot with \`${packageManagerScriptCommand(manifest.packageManager, 'dev')}\`.`,
 		);
 	} else {
@@ -152,7 +162,7 @@ function packageJson(
 		start: isTs ? `node --import tsx ${mainFile}` : `node ${mainFile}`,
 	};
 	const dependencies: Record<string, string> = {
-		'discord.js': '^14.22.1',
+		'discord.js': '^14.26.2',
 		dotenv: '^17.2.3',
 	};
 	const devDependencies: Record<string, string> = isTs
@@ -193,11 +203,12 @@ function packageJson(
 		scripts['db:generate'] = 'prisma generate';
 		scripts['db:push'] = 'prisma db push';
 		scripts['db:migrate'] = 'prisma migrate dev';
+		scripts['db:studio'] = 'prisma studio';
 		Object.assign(dependencies, {
-			'@prisma/client': '^6.7.0',
+			'@prisma/client': '^7.7.0',
 		});
 		Object.assign(devDependencies, {
-			prisma: '^6.7.0',
+			prisma: '^7.7.0',
 		});
 	}
 
@@ -420,7 +431,7 @@ export async function syncCommands(client${ts ? ': BotClient' : ''}) {
 function eventTemplate(language: Language, eventName: string, once: boolean) {
 	const eventExport = `export const name = '${eventName}';\nexport const once = ${once};\n`;
 	const argsSignature =
-		eventName === 'ready'
+		isClientReadyEvent(eventName)
 			? language === 'ts'
 				? 'client: import("discord.js").Client<true>'
 				: 'client'
@@ -430,15 +441,22 @@ function eventTemplate(language: Language, eventName: string, once: boolean) {
 
 	return `${eventExport}
 export async function execute(${argsSignature}) {
-  ${eventName === 'ready' ? 'console.log(`Logged in as ${client.user.tag}`);' : 'void args;'}
+  ${isClientReadyEvent(eventName) ? 'console.log(`Logged in as ${client.user.tag}`);' : 'void args;'}
 }
 `;
 }
 
 function basicBootstrap(manifest: ForgeLoopManifest) {
+	const databaseImport = manifest.features.database
+		? `import { connectDatabase } from '${relativeImportPath(manifest.language, './lib/database')}';\n`
+		: '';
+	const databaseInit = manifest.features.database
+		? '\nawait connectDatabase();'
+		: '';
 	return `import { Client, GatewayIntentBits, SlashCommandBuilder } from 'discord.js';
 import { config } from 'dotenv';
 import { assertRequiredEnv } from '${relativeImportPath(manifest.language, './config/env')}';
+${databaseImport}
 
 config();
 
@@ -450,7 +468,7 @@ const pingCommand = new SlashCommandBuilder()
   .setName('ping')
   .setDescription('Check whether the bot is responding.');
 
-client.once('ready', () => {
+client.once('clientReady', () => {
   console.log(\`Logged in as \${client.user?.tag ?? 'unknown user'}\`);
 });
 
@@ -464,6 +482,7 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
+${databaseInit}
 await client.login(assertRequiredEnv('DISCORD_TOKEN'));
 `;
 }
@@ -471,6 +490,12 @@ await client.login(assertRequiredEnv('DISCORD_TOKEN'));
 function modularBootstrap(manifest: ForgeLoopManifest) {
 	const sourceExtension = sourceFileExtension(manifest.language);
 	const typeImports = manifest.language === 'ts' ? ', type ClientEvents' : '';
+	const databaseImport = manifest.features.database
+		? `import { connectDatabase } from '${relativeImportPath(manifest.language, './lib/database')}';\n`
+		: '';
+	const databaseInit = manifest.features.database
+		? '\nawait connectDatabase();'
+		: '';
 	const eventTypeAlias =
 		manifest.language === 'ts'
 			? `
@@ -489,7 +514,7 @@ import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { assertRequiredEnv } from '${relativeImportPath(manifest.language, './config/env')}';
-import { syncCommands } from '${relativeImportPath(manifest.language, './sync-commands')}';
+${databaseImport}import { syncCommands } from '${relativeImportPath(manifest.language, './sync-commands')}';
 ${manifest.language === 'ts' ? "import type { BotClient } from './types/commands.js';" : ''}
 
 config();
@@ -559,6 +584,7 @@ client.on('interactionCreate', async (interaction) => {
 await loadCommands();
 await syncCommands(client);
 await loadEvents();
+${databaseInit}
 await client.login(assertRequiredEnv('DISCORD_TOKEN'));
 `;
 }
@@ -697,13 +723,13 @@ export async function loadEvents(client${ts ? ': BotClient' : ''}, runtimeDir${t
 }
 `,
 		},
-		{
-			path: `src/core/runtime/start-bot.${fileExtension}`,
-			content: `import { config } from 'dotenv';
+			{
+				path: `src/core/runtime/start-bot.${fileExtension}`,
+				content: `import { config } from 'dotenv';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '${relativeImportPath(manifest.language, '../client/create-client')}';
-import { loadCommands } from '${relativeImportPath(manifest.language, '../loaders/load-commands')}';
+${manifest.features.database ? `import { connectDatabase } from '${relativeImportPath(manifest.language, '../database/client')}';\n` : ''}import { loadCommands } from '${relativeImportPath(manifest.language, '../loaders/load-commands')}';
 import { loadEvents } from '${relativeImportPath(manifest.language, '../loaders/load-events')}';
 import { logScope } from '${relativeImportPath(manifest.language, '../logging/logger')}';
 import { syncCommands } from '${relativeImportPath(manifest.language, './sync-commands')}';
@@ -736,11 +762,12 @@ export async function startBot() {
   await loadCommands(client, __dirname);
   await syncCommands(client);
   await loadEvents(client, __dirname);
+  ${manifest.features.database ? 'await connectDatabase();' : ''}
   logScope('runtime', 'Starting Discord client');
   await client.login(assertRequiredEnv('DISCORD_TOKEN'));
 }
 `,
-		},
+			},
 		{
 			path: `src/core/runtime/sync-commands.${fileExtension}`,
 			content: `import { REST, Routes } from 'discord.js';
@@ -783,7 +810,8 @@ function prismaFiles(manifest: ForgeLoopManifest): FileSpec[] {
 		{
 			path: 'prisma/schema.prisma',
 			content: `generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -793,9 +821,59 @@ datasource db {
 
 model Healthcheck {
   id        Int      @id @default(autoincrement())
-  label     String   @default("ready")
+  label     String   @default("clientReady")
   createdAt DateTime @default(now())
 }
+`,
+		},
+	];
+}
+
+function databaseFiles(manifest: ForgeLoopManifest): FileSpec[] {
+	if (manifest.features.database?.orm !== 'prisma') {
+		return [];
+	}
+
+	const ts = manifest.language === 'ts';
+	const clientImportPath =
+		manifest.preset === 'advanced'
+			? '../../generated/prisma/client'
+			: '../generated/prisma/client';
+	const loggerImport =
+		manifest.preset === 'advanced'
+			? `import { logScope } from '${relativeImportPath(manifest.language, '../logging/logger')}';\n`
+			: '';
+	const loggerCall =
+		manifest.preset === 'advanced'
+			? "  logScope('database', 'Prisma connection established');\n"
+			: "  console.log('[database] Prisma connection established');\n";
+	const globalType = ts
+		? '\ndeclare global {\n  var __forgeloopPrisma__: PrismaClient | undefined;\n}\n'
+		: '';
+	const globalCast = ts
+		? ` as typeof globalThis & {
+  __forgeloopPrisma__?: PrismaClient;
+}`
+		: '';
+
+	return [
+		{
+			path: databaseRuntimeModulePath(manifest),
+			content: `import { PrismaClient } from '${relativeImportPath(manifest.language, clientImportPath)}';
+${loggerImport}${globalType}
+const globalForPrisma = globalThis${globalCast};
+
+export const prisma =
+  globalForPrisma.__forgeloopPrisma__ ??
+  new PrismaClient();
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.__forgeloopPrisma__ = prisma;
+}
+
+export async function connectDatabase() {
+  await prisma.$connect();
+${loggerCall}}
 `,
 		},
 	];
@@ -972,8 +1050,8 @@ export function renderProjectFiles(
 				),
 			},
 			{
-				path: `${manifest.paths.eventsDir!}/ready.${fileExtension}`,
-				content: eventTemplate(manifest.language, 'ready', true),
+				path: `${manifest.paths.eventsDir!}/clientReady.${fileExtension}`,
+				content: eventTemplate(manifest.language, 'clientReady', true),
 			},
 		);
 	}
@@ -1012,6 +1090,7 @@ export function renderProjectFiles(
 
 	files.push(...modularExtras(manifest));
 	files.push(...advancedCoreFiles(manifest));
+	files.push(...databaseFiles(manifest));
 	if (manifest.preset === 'modular') {
 		files.push({
 			path: `src/sync-commands.${fileExtension}`,
@@ -1043,7 +1122,7 @@ export function renderCommandFile(
 export function renderEventFile(
 	manifest: ForgeLoopManifest,
 	eventName: string,
-	once = eventName === 'ready',
+	once = isClientReadyEvent(eventName),
 ): FileSpec {
 	if (!manifest.paths.eventsDir) {
 		throw new Error('Event files require a handler-based project shape.');
