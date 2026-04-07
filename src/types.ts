@@ -20,7 +20,6 @@ export type OrmSelection = (typeof SUPPORTED_ORMS)[number];
 export type Tooling = (typeof SUPPORTED_TOOLING)[number];
 
 export interface ForgeLoopManifest {
-	$schema?: string;
 	manifestVersion: number;
 	projectName: string;
 	createdAt: string;
@@ -48,7 +47,7 @@ export interface ForgeLoopManifest {
 	};
 }
 
-export type ForgeLoopConfig = Omit<ForgeLoopManifest, '$schema'>;
+export type ForgeLoopConfig = ForgeLoopManifest;
 
 export interface ParsedArgs {
 	command: string | null;

@@ -167,13 +167,10 @@ This project includes \`${CONFIG_FILE}\` and is expected to be maintained with F
 }
 
 function projectConfig(manifest: ForgeLoopManifest) {
-	const config = { ...manifest };
-	delete config.$schema;
-
 	return `/** @typedef {import('create-forgeloop/config').ForgeLoopConfig} ForgeLoopConfig */
 
 /** @type {ForgeLoopConfig} */
-const config = ${JSON.stringify(config, null, 2)};
+const config = ${JSON.stringify(manifest, null, 2)};
 
 export default config;
 `;

@@ -230,8 +230,6 @@ describe('Add and doctor workflows', () => {
 			`${JSON.stringify(
 				{
 					...manifest,
-					$schema:
-						'https://raw.githubusercontent.com/unloopedmido/forgeloop/refs/heads/main/schemas/project-manifest.v1.json',
 				},
 				null,
 				2,
