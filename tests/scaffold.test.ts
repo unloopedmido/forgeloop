@@ -44,6 +44,9 @@ describe('Project scaffolds', () => {
 			/startBot/,
 		);
 		expect(
+			await readFile(path.join(root, 'src/core/database/client.ts'), 'utf8'),
+		).toMatch(/connectDatabase/);
+		expect(
 			await readFile(path.join(root, 'src/core/runtime/start-bot.ts'), 'utf8'),
 		).toMatch(/loadCommands/);
 	});
@@ -71,6 +74,9 @@ describe('Project scaffolds', () => {
 		expect(await readFile(path.join(root, 'src/index.ts'), 'utf8')).toMatch(
 			/pingCommand/,
 		);
+		expect(await readFile(path.join(root, 'src/index.ts'), 'utf8')).toMatch(
+			/clientReady/,
+		);
 		await expect(
 			readFile(path.join(root, '.gitignore'), 'utf8'),
 		).rejects.toThrow();
@@ -79,6 +85,9 @@ describe('Project scaffolds', () => {
 		).rejects.toThrow();
 		await expect(
 			readFile(path.join(root, 'src/commands/ping.ts'), 'utf8'),
+		).rejects.toThrow();
+		await expect(
+			readFile(path.join(root, 'src/events/clientReady.ts'), 'utf8'),
 		).rejects.toThrow();
 	});
 
@@ -109,6 +118,9 @@ describe('Project scaffolds', () => {
 		expect(await readFile(path.join(root, 'biome.json'), 'utf8')).toMatch(
 			/biomejs\.dev\/schemas/,
 		);
+		expect(
+			await readFile(path.join(root, 'src/events/clientReady.ts'), 'utf8'),
+		).toMatch(/export const name = 'clientReady'/);
 		await expect(
 			readFile(path.join(root, 'eslint.config.js'), 'utf8'),
 		).rejects.toThrow();

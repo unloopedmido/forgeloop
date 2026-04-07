@@ -116,7 +116,7 @@ describe('Publish readiness', () => {
 		await typecheckProject(root);
 	});
 
-	test('database scaffolds include prisma dependencies and scripts', async () => {
+	test('database scaffolds include Prisma integration files and scripts', async () => {
 		const root = await scaffoldProject({
 			projectName: 'database-smoke',
 			language: 'ts',
@@ -134,12 +134,24 @@ describe('Publish readiness', () => {
 		const packageJson = JSON.parse(
 			await readFile(path.join(root, 'package.json'), 'utf8'),
 		);
+		const schema = await readFile(path.join(root, 'prisma/schema.prisma'), 'utf8');
+		const databaseModule = await readFile(
+			path.join(root, 'src/lib/database.ts'),
+			'utf8',
+		);
 
 		expect(packageJson.dependencies['@prisma/client']).toBeDefined();
 		expect(packageJson.devDependencies.prisma).toBeDefined();
+		expect(packageJson.dependencies['@prisma/client']).toBe('^7.7.0');
+		expect(packageJson.devDependencies.prisma).toBe('^7.7.0');
 		expect(packageJson.scripts['db:generate']).toBe('prisma generate');
 		expect(packageJson.scripts['db:push']).toBe('prisma db push');
 		expect(packageJson.scripts['db:migrate']).toBe('prisma migrate dev');
+		expect(packageJson.scripts['db:studio']).toBe('prisma studio');
+		expect(schema).toContain('provider = "prisma-client"');
+		expect(schema).toContain('output   = "../src/generated/prisma"');
+		expect(databaseModule).toContain("from '../generated/prisma/client.js'");
+		expect(databaseModule).toContain('export async function connectDatabase()');
 	});
 
 	test('bun scaffolds keep Docker and CI on bun', async () => {

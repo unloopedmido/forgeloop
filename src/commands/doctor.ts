@@ -45,7 +45,12 @@ export async function runDoctor(args: ParsedArgs, output = new Output()) {
 	}
 
 	if (manifest.features.database) {
-		requiredPaths.push('prisma/schema.prisma');
+		requiredPaths.push(
+			'prisma/schema.prisma',
+			manifest.preset === 'advanced'
+				? `src/core/database/client.${manifest.language}`
+				: `src/lib/database.${manifest.language}`,
+		);
 	}
 
 	if (manifest.features.docker) {

@@ -453,7 +453,7 @@ export async function runInit(args: ParsedArgs, output = new Output()) {
 				: 'Fill in DISCORD_TOKEN, CLIENT_ID, GUILD_ID, and DATABASE_URL in .env',
 			options.database === 'none'
 				? null
-				: packageManagerScriptCommand(options.packageManager, 'db:push'),
+				: `${packageManagerScriptCommand(options.packageManager, 'db:push')} # generates the Prisma client and syncs the schema`,
 			packageManagerScriptCommand(options.packageManager, 'dev'),
 		].filter((step): step is string => step !== null),
 	);
