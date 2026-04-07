@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/unloopedmido/forgeloop/main/schemas/project-manifest.v1.json",
+  "title": "ForgeLoop Project Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "manifestVersion",
+    "projectName",
+    "createdAt",
+    "runtime",
+    "framework",
+    "language",
+    "preset",
+    "packageManager",
+    "features",
+    "paths"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "https://raw.githubusercontent.com/unloopedmido/forgeloop/main/schemas/project-manifest.v1.json"
+    },
+    "manifestVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "projectName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "runtime": {
+      "type": "string",
+      "const": "node"
+    },
+    "framework": {
+      "type": "string",
+      "const": "discord.js"
+    },
+    "language": {
+      "type": "string",
+      "enum": ["ts", "js"]
+    },
+    "preset": {
+      "type": "string",
+      "enum": ["basic", "modular", "advanced"]
+    },
+    "packageManager": {
+      "type": "string",
+      "enum": ["npm", "pnpm", "yarn", "bun"]
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["docker", "ci", "git", "tooling", "database"],
+      "properties": {
+        "docker": {
+          "type": "boolean"
+        },
+        "ci": {
+          "type": "boolean"
+        },
+        "git": {
+          "type": "boolean"
+        },
+        "tooling": {
+          "type": "string",
+          "enum": ["eslint-prettier", "biome", "none"]
+        },
+        "database": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["orm", "provider"],
+              "properties": {
+                "orm": {
+                  "type": "string",
+                  "const": "prisma"
+                },
+                "provider": {
+                  "type": "string",
+                  "enum": ["sqlite", "postgresql"]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "srcDir",
+        "commandsDir",
+        "eventsDir",
+        "configDir",
+        "coreDir"
+      ],
+      "properties": {
+        "srcDir": {
+          "type": "string",
+          "const": "src"
+        },
+        "commandsDir": {
+          "oneOf": [
+            {
+              "type": "string",
+              "const": "src/commands"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventsDir": {
+          "oneOf": [
+            {
+              "type": "string",
+              "const": "src/events"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "configDir": {
+          "type": "string",
+          "const": "src/config"
+        },
+        "coreDir": {
+          "oneOf": [
+            {
+              "type": "string",
+              "const": "src/core"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
