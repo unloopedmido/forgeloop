@@ -1,5 +1,6 @@
 import { renderHelp } from './commands/help.js';
 import { runAdd } from './commands/add.js';
+import { runDeploy } from './commands/deploy.js';
 import { runDoctor } from './commands/doctor.js';
 import { runInfo } from './commands/info.js';
 import { runInit } from './commands/init.js';
@@ -23,6 +24,9 @@ export async function runCli(argv: string[]) {
 				return;
 			case 'add':
 				await runAdd(args, output);
+				return;
+			case 'deploy':
+				await runDeploy(args, output);
 				return;
 			case 'doctor':
 				await runDoctor(args, output);
