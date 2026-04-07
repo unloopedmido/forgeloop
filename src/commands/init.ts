@@ -314,6 +314,21 @@ export function shouldUseShellForPackageManager(
 	);
 }
 
+function packageManagerScriptCommand(
+	packageManager: PackageManager,
+	scriptName: string,
+) {
+	if (packageManager === 'yarn') {
+		return `yarn ${scriptName}`;
+	}
+
+	if (packageManager === 'bun') {
+		return `bun run ${scriptName}`;
+	}
+
+	return `${packageManager} run ${scriptName}`;
+}
+
 async function runInstall(
 	targetDir: string,
 	packageManager: InitOptions['packageManager'],
@@ -427,7 +442,19 @@ export async function runInit(args: ParsedArgs, output = new Output()) {
 	}
 
 	output.success(`Project ready at ${options.targetDir}`);
-	output.plain(
-		`Next step: cd ${options.targetDir} && ${options.packageManager} run dev`,
+	output.callout(
+		'Next steps',
+		[
+			`cd ${options.targetDir}`,
+			options.install ? null : `${options.packageManager} install`,
+			'Rename .env.example to .env',
+			options.database === 'none'
+				? 'Fill in DISCORD_TOKEN, CLIENT_ID, and GUILD_ID in .env'
+				: 'Fill in DISCORD_TOKEN, CLIENT_ID, GUILD_ID, and DATABASE_URL in .env',
+			options.database === 'none'
+				? null
+				: packageManagerScriptCommand(options.packageManager, 'db:push'),
+			packageManagerScriptCommand(options.packageManager, 'dev'),
+		].filter((step): step is string => step !== null),
 	);
 }
