@@ -281,6 +281,15 @@ export function resolvePackageManagerCommand(
 	return packageManager;
 }
 
+export function shouldUseShellForPackageManager(
+	packageManager: PackageManager,
+	platform = process.platform,
+) {
+	return (
+		platform === 'win32' && ['npm', 'pnpm', 'yarn'].includes(packageManager)
+	);
+}
+
 async function runInstall(
 	targetDir: string,
 	packageManager: InitOptions['packageManager'],
@@ -294,7 +303,7 @@ async function runInstall(
 		const child = spawn(command.cmd, command.args, {
 			cwd: targetDir,
 			stdio: 'inherit',
-			shell: false,
+			shell: shouldUseShellForPackageManager(packageManager),
 		});
 
 		child.on('exit', (code) => {
