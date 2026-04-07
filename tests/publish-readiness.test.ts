@@ -138,6 +138,7 @@ describe('Publish readiness', () => {
 		expect(packageJson.dependencies['@prisma/client']).toBeDefined();
 		expect(packageJson.devDependencies.prisma).toBeDefined();
 		expect(packageJson.scripts['db:generate']).toBe('prisma generate');
+		expect(packageJson.scripts['db:push']).toBe('prisma db push');
 		expect(packageJson.scripts['db:migrate']).toBe('prisma migrate dev');
 	});
 

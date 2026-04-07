@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
 	DEFAULTS,
@@ -270,6 +271,29 @@ async function resolveInitOptions(
 	};
 }
 
+async function resolveCurrentCliPackage() {
+	const packageJsonUrl = new URL('../../package.json', import.meta.url);
+	const packageJsonRaw = await readFile(packageJsonUrl, 'utf8').catch(
+		() => null,
+	);
+
+	if (packageJsonRaw) {
+		const packageJson = JSON.parse(packageJsonRaw) as {
+			name?: string;
+			version?: string;
+		};
+		return {
+			name: packageJson.name ?? 'create-forgeloop',
+			version: packageJson.version ?? 'latest',
+		};
+	}
+
+	return {
+		name: 'create-forgeloop',
+		version: 'latest',
+	};
+}
+
 export function resolvePackageManagerCommand(
 	packageManager: PackageManager,
 	platform = process.platform,
@@ -279,6 +303,30 @@ export function resolvePackageManagerCommand(
 	}
 
 	return packageManager;
+}
+
+export function shouldUseShellForPackageManager(
+	packageManager: PackageManager,
+	platform = process.platform,
+) {
+	return (
+		platform === 'win32' && ['npm', 'pnpm', 'yarn'].includes(packageManager)
+	);
+}
+
+function packageManagerScriptCommand(
+	packageManager: PackageManager,
+	scriptName: string,
+) {
+	if (packageManager === 'yarn') {
+		return `yarn ${scriptName}`;
+	}
+
+	if (packageManager === 'bun') {
+		return `bun run ${scriptName}`;
+	}
+
+	return `${packageManager} run ${scriptName}`;
 }
 
 async function runInstall(
@@ -294,7 +342,7 @@ async function runInstall(
 		const child = spawn(command.cmd, command.args, {
 			cwd: targetDir,
 			stdio: 'inherit',
-			shell: false,
+			shell: shouldUseShellForPackageManager(packageManager),
 		});
 
 		child.on('exit', (code) => {
@@ -336,7 +384,14 @@ async function initializeGitRepository(targetDir: string) {
 export async function runInit(args: ParsedArgs, output = new Output()) {
 	const options = await resolveInitOptions(args, output);
 	const manifest = createManifest(options);
-	const files = renderProjectFiles(manifest);
+	const cliPackage = await resolveCurrentCliPackage();
+	const files = renderProjectFiles(manifest, {
+		cliPackageName: cliPackage.name,
+		cliPackageVersion:
+			cliPackage.version === 'latest'
+				? 'latest'
+				: `^${cliPackage.version}`,
+	});
 
 	output.banner(
 		'ForgeLoop init',
@@ -387,7 +442,19 @@ export async function runInit(args: ParsedArgs, output = new Output()) {
 	}
 
 	output.success(`Project ready at ${options.targetDir}`);
-	output.plain(
-		`Next step: cd ${options.targetDir} && ${options.packageManager} run dev`,
+	output.callout(
+		'Next steps',
+		[
+			`cd ${options.targetDir}`,
+			options.install ? null : `${options.packageManager} install`,
+			'Rename .env.example to .env',
+			options.database === 'none'
+				? 'Fill in DISCORD_TOKEN, CLIENT_ID, and GUILD_ID in .env'
+				: 'Fill in DISCORD_TOKEN, CLIENT_ID, GUILD_ID, and DATABASE_URL in .env',
+			options.database === 'none'
+				? null
+				: packageManagerScriptCommand(options.packageManager, 'db:push'),
+			packageManagerScriptCommand(options.packageManager, 'dev'),
+		].filter((step): step is string => step !== null),
 	);
 }
