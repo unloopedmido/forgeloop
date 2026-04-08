@@ -283,6 +283,7 @@ function tsconfig(manifest: ForgeLoopManifest) {
 				resolveJsonModule: true,
 				esModuleInterop: true,
 				skipLibCheck: true,
+				types: ['node'],
 			},
 			include: ['src/**/*.ts'],
 		},

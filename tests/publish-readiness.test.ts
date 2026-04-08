@@ -68,6 +68,148 @@ async function attachRepoNodeModules(projectRoot: string) {
 		path.join(dotenvDir, 'index.js'),
 		'export function config() {}\n',
 	);
+
+	const discordJsDir = path.join(targetNodeModules, 'discord.js');
+	await mkdir(discordJsDir, { recursive: true });
+	await writeFile(
+		path.join(discordJsDir, 'package.json'),
+		JSON.stringify(
+			{
+				name: 'discord.js',
+				version: '0.0.0-test',
+				type: 'module',
+				exports: {
+					'.': {
+						types: './index.d.ts',
+						default: './index.js',
+					},
+				},
+			},
+			null,
+			2,
+		),
+	);
+	await writeFile(
+		path.join(discordJsDir, 'index.d.ts'),
+		`export class Collection<K, V> extends Map<K, V> {}
+
+export class SlashCommandBuilder {
+  name: string;
+  setName(name: string): this;
+  setDescription(description: string): this;
+  toJSON(): Record<string, unknown>;
+}
+
+export class REST {
+  constructor(options?: { version?: string });
+  setToken(token: string): this;
+  put(route: string, options: { body: unknown }): Promise<unknown>;
+}
+
+export class Client<Ready extends boolean = boolean> {
+  user: Ready extends true ? { tag: string } : { tag?: string } | null;
+  commands: Collection<string, any>;
+  constructor(options?: { intents?: unknown[] });
+  once<EventName extends keyof ClientEvents>(
+    event: EventName,
+    listener: (...args: ClientEvents[EventName]) => unknown,
+  ): this;
+  on<EventName extends keyof ClientEvents>(
+    event: EventName,
+    listener: (...args: ClientEvents[EventName]) => unknown,
+  ): this;
+  login(token: string): Promise<string>;
+}
+
+export interface ChatInputCommandInteraction {
+  createdTimestamp: number;
+  reply(
+    options:
+      | string
+      | {
+          content: string;
+          fetchReply?: boolean;
+          ephemeral?: boolean;
+        },
+  ): Promise<{ createdTimestamp: number }>;
+  editReply(content: string): Promise<unknown>;
+  isChatInputCommand(): boolean;
+  commandName: string;
+}
+
+export interface ClientEvents {
+  clientReady: [Client<true>];
+  interactionCreate: [ChatInputCommandInteraction];
+  [key: string]: any[];
+}
+
+export const GatewayIntentBits: Record<string, number>;
+export const Events: Record<string, keyof ClientEvents>;
+export const Routes: {
+  applicationCommands(clientId: string): string;
+  applicationGuildCommands(clientId: string, guildId: string): string;
+};
+`,
+	);
+	await writeFile(
+		path.join(discordJsDir, 'index.js'),
+		`export class Collection extends Map {}
+
+export class SlashCommandBuilder {
+  setName() {
+    return this;
+  }
+
+  setDescription() {
+    return this;
+  }
+
+  toJSON() {
+    return {};
+  }
+}
+
+export class REST {
+  setToken() {
+    return this;
+  }
+
+  async put() {
+    return {};
+  }
+}
+
+export class Client {
+  constructor() {
+    this.user = { tag: 'Test Bot' };
+    this.commands = new Collection();
+  }
+
+  once() {
+    return this;
+  }
+
+  on() {
+    return this;
+  }
+
+  async login() {
+    return 'token';
+  }
+}
+
+export const GatewayIntentBits = {};
+export const Events = {};
+export const Routes = {
+  applicationCommands(clientId) {
+    return clientId;
+  },
+  applicationGuildCommands(clientId, guildId) {
+    return \`\${clientId}:\${guildId}\`;
+  },
+};
+`,
+	);
 }
 
 async function typecheckProject(projectRoot: string) {
