@@ -3,25 +3,16 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { loadManifest } from '../manifest.js';
 import type { ForgeLoopManifest, ParsedArgs } from '../types.js';
-import { getBooleanFlag, getFlag } from '../utils/args.js';
+import { getBooleanFlag } from '../utils/args.js';
 import { CliError } from '../utils/errors.js';
-import { Output } from '../utils/format.js';
+import { Output, type OutputWriter } from '../utils/format.js';
+import {
+	assertHandlerProject,
+	resolveProjectDir,
+} from '../utils/project.js';
 
 const DISCORD_API_BASE_URL = 'https://discord.com/api/v10';
-
-function getProjectDir(args: ParsedArgs) {
-	return path.resolve(
-		(getFlag(args.flags, 'dir') as string | undefined) ?? process.cwd(),
-	);
-}
-
-function assertHandlerProject(manifest: ForgeLoopManifest) {
-	if (!manifest.paths.commandsDir || !manifest.paths.eventsDir) {
-		throw new CliError(
-			'This ForgeLoop project uses the "basic" shape, so command deployment is only available for "modular" or "advanced" projects.',
-		);
-	}
-}
+const DISCORD_API_TIMEOUT_MS = 20_000;
 
 function resolveSyncTarget(guildOnly: boolean) {
 	if (guildOnly) {
@@ -71,14 +62,24 @@ async function putDiscordCommands(
 	token: string,
 	commandPayload: Array<Record<string, unknown>>,
 ) {
-	const response = await fetch(route, {
-		method: 'PUT',
-		headers: {
-			Authorization: `Bot ${token}`,
-			'Content-Type': 'application/json',
-		},
-		body: JSON.stringify(commandPayload),
-	});
+	let response: Response;
+	try {
+		response = await fetch(route, {
+			method: 'PUT',
+			signal: AbortSignal.timeout(DISCORD_API_TIMEOUT_MS),
+			headers: {
+				Authorization: `Bot ${token}`,
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(commandPayload),
+		});
+	} catch (error) {
+		const message =
+			error instanceof Error ? error.message : 'Unknown network error.';
+		throw new CliError(
+			`Discord API request failed before response (${DISCORD_API_TIMEOUT_MS / 1000}s timeout): ${message}`,
+		);
+	}
 
 	if (response.ok) {
 		return;
@@ -178,7 +179,7 @@ process.stdout.write(JSON.stringify(payload));
 			errorOutput += chunk.toString();
 		});
 
-		child.on('exit', (code) => {
+		child.on('close', (code) => {
 			if (code === 0) {
 				resolve(output);
 				return;
@@ -194,14 +195,22 @@ process.stdout.write(JSON.stringify(payload));
 		child.on('error', (error) => reject(error));
 	});
 
-	return JSON.parse(stdout) as Array<Record<string, unknown>>;
+	try {
+		return JSON.parse(stdout.trim()) as Array<Record<string, unknown>>;
+	} catch (error) {
+		const message =
+			error instanceof Error ? error.message : 'Unknown JSON parse error.';
+		throw new CliError(
+			`Command payload collection returned invalid JSON: ${message}`,
+		);
+	}
 }
 
 async function deployCommands(
 	projectDir: string,
 	manifest: ForgeLoopManifest,
 	guildOnly: boolean,
-	output: Output,
+	output: OutputWriter,
 ) {
 	const projectEnv = await readProjectEnv(projectDir);
 	const commandPayload = await collectCommandPayload(projectDir, manifest);
@@ -230,7 +239,10 @@ async function deployCommands(
 	output.success(`Synced ${commandPayload.length} commands globally.`);
 }
 
-export async function runDeploy(args: ParsedArgs, output = new Output()) {
+export async function runDeploy(
+	args: ParsedArgs,
+	output: OutputWriter = new Output(),
+) {
 	const deployTarget = args.subcommands[0];
 	if (deployTarget !== 'commands') {
 		throw new CliError(
@@ -238,9 +250,12 @@ export async function runDeploy(args: ParsedArgs, output = new Output()) {
 		);
 	}
 
-	const projectDir = getProjectDir(args);
+	const projectDir = resolveProjectDir(args);
 	const manifest = await loadManifest(projectDir);
-	assertHandlerProject(manifest);
+	assertHandlerProject(
+		manifest,
+		'This ForgeLoop project uses the "basic" shape, so command deployment is only available for "modular" or "advanced" projects.',
+	);
 
 	await deployCommands(
 		projectDir,

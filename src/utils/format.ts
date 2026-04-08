@@ -13,7 +13,23 @@ const ANSI = {
 function apply(enabled: boolean, ...parts: string[]) {
 	return enabled
 		? parts.join('')
-		: parts.filter((part) => !part.startsWith('\u001B[')).join('');
+	: parts.filter((part) => !part.startsWith('\u001B[')).join('');
+}
+
+export interface OutputWriter {
+	banner(title: string, subtitle?: string): void;
+	section(label: string): void;
+	item(label: string, value: string): void;
+	choice(index: number, label: string, hint?: string, tag?: string): void;
+	prompt(label: string, hint?: string): void;
+	inlineQuestion(prefix: string): string;
+	hero(title: string, subtitle: string): void;
+	callout(title: string, lines: string[]): void;
+	success(message: string): void;
+	info(message: string): void;
+	warn(message: string): void;
+	error(message: string): void;
+	plain(message: string): void;
 }
 
 export class Output {

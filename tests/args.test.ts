@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import { parseArgs } from '../src/utils/args.js';
 import { normalizeCreateArgv } from '../src/utils/create-entry.js';
+import { resolveProjectDir } from '../src/utils/project.js';
+import { CliError } from '../src/utils/errors.js';
 import {
 	normalizeProjectName,
 	validateProjectName,
@@ -43,5 +45,10 @@ describe('CLI args and validation', () => {
 			'command',
 			'ping',
 		]);
+	});
+
+	test('resolveProjectDir rejects --dir with no value', () => {
+		const parsed = parseArgs(['doctor', '--dir']);
+		expect(() => resolveProjectDir(parsed)).toThrow(CliError);
 	});
 });

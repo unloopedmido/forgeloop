@@ -1,4 +1,4 @@
-import { mkdir, readFile, readdir, writeFile, access } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, access } from 'node:fs/promises';
 import path from 'node:path';
 import { constants as fsConstants } from 'node:fs';
 import { CliError } from './errors.js';
@@ -22,14 +22,35 @@ export async function ensureDirectory(targetPath: string) {
 }
 
 export async function writeFiles(rootDir: string, files: FileSpec[]) {
-	for (const file of files) {
-		const absolutePath = path.join(rootDir, file.path);
-		if (await pathExists(absolutePath)) {
+	const absolutePaths = files.map((file) => path.join(rootDir, file.path));
+	const seenPaths = new Set<string>();
+
+	for (const absolutePath of absolutePaths) {
+		if (seenPaths.has(absolutePath)) {
 			throw new CliError(
 				`Refusing to overwrite existing file: ${absolutePath}`,
 			);
 		}
+		seenPaths.add(absolutePath);
+	}
 
+	const existingPaths = await Promise.all(
+		absolutePaths.map(async (absolutePath) => ({
+			absolutePath,
+			exists: await pathExists(absolutePath),
+		})),
+	);
+
+	for (const { absolutePath, exists } of existingPaths) {
+		if (exists) {
+			throw new CliError(
+				`Refusing to overwrite existing file: ${absolutePath}`,
+			);
+		}
+	}
+
+	for (const [index, file] of files.entries()) {
+		const absolutePath = absolutePaths[index]!;
 		await ensureDirectory(path.dirname(absolutePath));
 		await writeFile(absolutePath, file.content, 'utf8');
 	}
@@ -37,25 +58,13 @@ export async function writeFiles(rootDir: string, files: FileSpec[]) {
 
 export async function readJsonFile<T>(targetPath: string) {
 	const raw = await readFile(targetPath, 'utf8');
-	return JSON.parse(raw) as T;
-}
-
-export async function listFilesRecursive(
-	rootDir: string,
-	prefix = '',
-): Promise<string[]> {
-	const directory = path.join(rootDir, prefix);
-	const entries = await readdir(directory, { withFileTypes: true });
-	const results: string[] = [];
-
-	for (const entry of entries) {
-		const relativePath = path.join(prefix, entry.name);
-		if (entry.isDirectory()) {
-			results.push(...(await listFilesRecursive(rootDir, relativePath)));
-			continue;
-		}
-		results.push(relativePath);
+	try {
+		return JSON.parse(raw) as T;
+	} catch (error) {
+		const message =
+			error instanceof Error ? error.message : 'Unknown parse error.';
+		throw new CliError(
+			`Failed to parse JSON file at ${targetPath}: ${message}`,
+		);
 	}
-
-	return results.sort();
 }

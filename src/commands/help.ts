@@ -1,7 +1,7 @@
 import { CLI_NAME } from '../constants.js';
-import { Output } from '../utils/format.js';
+import { Output, type OutputWriter } from '../utils/format.js';
 
-export function renderHelp(output = new Output()) {
+export function renderHelp(output: OutputWriter = new Output()) {
 	output.hero(
 		'Build and grow Discord bots without hand-wiring the boilerplate.',
 		'Interactive project setup, managed generators, and safer maintenance flows.',

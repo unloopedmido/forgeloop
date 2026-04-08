@@ -53,7 +53,7 @@ You can choose a setup that matches how big or structured you want the bot to be
 ForgeLoop can scaffold with options like:
 
 - **TypeScript or JavaScript**
-- **npm, pnpm, yarn, or bun**
+- **npm, pnpm, or yarn**
 - **SQLite or PostgreSQL**
 - **Prisma**
 - **ESLint + Prettier, Biome, or no tooling**

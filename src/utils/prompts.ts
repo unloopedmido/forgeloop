@@ -1,7 +1,7 @@
 import readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 import { CliError } from './errors.js';
-import { Output } from './format.js';
+import type { OutputWriter } from './format.js';
 
 export interface SelectOption<T extends string> {
 	label: string;
@@ -27,7 +27,7 @@ async function withReadline<T>(run: (rl: readline.Interface) => Promise<T>) {
 }
 
 export async function promptText(
-	outputWriter: Output,
+	outputWriter: OutputWriter,
 	label: string,
 	defaultValue?: string,
 	validate?: (value: string) => string | null,
@@ -64,7 +64,7 @@ export async function promptText(
 }
 
 export async function promptConfirm(
-	outputWriter: Output,
+	outputWriter: OutputWriter,
 	label: string,
 	defaultValue: boolean,
 ) {
@@ -94,7 +94,7 @@ export async function promptConfirm(
 }
 
 export async function promptSelect<T extends string>(
-	outputWriter: Output,
+	outputWriter: OutputWriter,
 	label: string,
 	options: SelectOption<T>[],
 	defaultValue: T,

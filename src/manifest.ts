@@ -4,7 +4,13 @@ import { pathToFileURL } from 'node:url';
 import {
 	LEGACY_MANIFEST_FILE,
 	MANIFEST_VERSION,
+	SUPPORTED_DATABASES,
 	SUPPORTED_CONFIG_FILES,
+	SUPPORTED_LANGUAGES,
+	SUPPORTED_ORMS,
+	SUPPORTED_PACKAGE_MANAGERS,
+	SUPPORTED_PRESETS,
+	SUPPORTED_TOOLING,
 } from './constants.js';
 import type {
 	DatabaseProvider,
@@ -34,6 +40,52 @@ function toDatabaseConfig(
 		orm: orm as Orm,
 		provider: database as DatabaseProvider,
 	};
+}
+
+function assertRecord(value: unknown, label: string) {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) {
+		throw new CliError(`Invalid ${label}. Expected an object.`);
+	}
+
+	return value as Record<string, unknown>;
+}
+
+function assertString(value: unknown, label: string) {
+	if (typeof value !== 'string' || value.length === 0) {
+		throw new CliError(`Invalid ${label}. Expected a non-empty string.`);
+	}
+
+	return value;
+}
+
+function assertOptionalString(value: unknown, label: string) {
+	if (value === null) {
+		return null;
+	}
+
+	return assertString(value, label);
+}
+
+function assertBoolean(value: unknown, label: string) {
+	if (typeof value !== 'boolean') {
+		throw new CliError(`Invalid ${label}. Expected a boolean.`);
+	}
+
+	return value;
+}
+
+function assertEnum<T extends readonly string[]>(
+	value: unknown,
+	supported: T,
+	label: string,
+): T[number] {
+	if (typeof value !== 'string' || !supported.includes(value)) {
+		throw new CliError(
+			`Invalid ${label}. Supported values: ${supported.join(', ')}`,
+		);
+	}
+
+	return value as T[number];
 }
 
 export function createManifest(options: InitOptions): ForgeLoopManifest {
@@ -114,24 +166,30 @@ async function loadModuleManifest(manifestPath: string) {
 
 	if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) {
 		throw new CliError(
-			`Invalid ForgeLoop config in ${manifestPath}. Export a default object from the config file.`,
+			`Invalid ForgeLoop config in ${manifestPath}. Export an object as "default", "config", or "manifest".`,
 		);
 	}
 
 	return manifest as ForgeLoopConfig;
 }
 
-export async function loadManifest(projectDir: string) {
-	const manifestLocation = await resolveManifestLocation(projectDir);
+export async function loadManifestWithLocation(projectDir: string) {
+	const location = await resolveManifestLocation(projectDir);
 	const manifest =
-		manifestLocation.format === 'json'
-			? await readJsonFile<ForgeLoopManifest>(manifestLocation.path)
-			: await loadModuleManifest(manifestLocation.path);
+		location.format === 'json'
+			? await readJsonFile<ForgeLoopManifest>(location.path)
+			: await loadModuleManifest(location.path);
 	validateManifest(manifest);
+	return { manifest, location };
+}
+
+export async function loadManifest(projectDir: string) {
+	const { manifest } = await loadManifestWithLocation(projectDir);
 	return manifest;
 }
 
 export function validateManifest(manifest: ForgeLoopManifest) {
+	const manifestRecord = assertRecord(manifest, 'manifest');
 	if (manifest.manifestVersion !== MANIFEST_VERSION) {
 		throw new CliError(
 			`Unsupported manifest version ${manifest.manifestVersion}. Expected ${MANIFEST_VERSION}.`,
@@ -145,4 +203,52 @@ export function validateManifest(manifest: ForgeLoopManifest) {
 	if (manifest.framework !== 'discord.js') {
 		throw new CliError(`Unsupported framework "${manifest.framework}".`);
 	}
+
+	assertString(manifestRecord.projectName, 'manifest.projectName');
+	assertString(manifestRecord.createdAt, 'manifest.createdAt');
+	assertEnum(
+		manifestRecord.language,
+		SUPPORTED_LANGUAGES,
+		'manifest.language',
+	);
+	assertEnum(manifestRecord.preset, SUPPORTED_PRESETS, 'manifest.preset');
+	assertEnum(
+		manifestRecord.packageManager,
+		SUPPORTED_PACKAGE_MANAGERS,
+		'manifest.packageManager',
+	);
+
+	const features = assertRecord(manifestRecord.features, 'manifest.features');
+	assertBoolean(features.docker, 'manifest.features.docker');
+	assertBoolean(features.ci, 'manifest.features.ci');
+	assertBoolean(features.git, 'manifest.features.git');
+	assertEnum(
+		features.tooling,
+		SUPPORTED_TOOLING,
+		'manifest.features.tooling',
+	);
+
+	if (features.database !== null) {
+		const database = assertRecord(
+			features.database,
+			'manifest.features.database',
+		);
+		assertEnum(
+			database.orm,
+			SUPPORTED_ORMS.filter((orm) => orm !== 'none'),
+			'manifest.features.database.orm',
+		);
+		assertEnum(
+			database.provider,
+			SUPPORTED_DATABASES.filter((provider) => provider !== 'none'),
+			'manifest.features.database.provider',
+		);
+	}
+
+	const paths = assertRecord(manifestRecord.paths, 'manifest.paths');
+	assertString(paths.srcDir, 'manifest.paths.srcDir');
+	assertString(paths.configDir, 'manifest.paths.configDir');
+	assertOptionalString(paths.commandsDir, 'manifest.paths.commandsDir');
+	assertOptionalString(paths.eventsDir, 'manifest.paths.eventsDir');
+	assertOptionalString(paths.coreDir, 'manifest.paths.coreDir');
 }

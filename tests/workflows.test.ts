@@ -4,6 +4,7 @@ import path from 'node:path';
 import { CONFIG_FILE } from '../src/constants.js';
 import { parseArgs } from '../src/utils/args.js';
 import { runAdd } from '../src/commands/add.js';
+import { runDeploy } from '../src/commands/deploy.js';
 import { runDoctor } from '../src/commands/doctor.js';
 import { createManifest } from '../src/manifest.js';
 import { CliError } from '../src/utils/errors.js';
@@ -34,7 +35,7 @@ describe('Add and doctor workflows', () => {
 
 		await runAdd(
 			parseArgs(['add', 'command', 'status', '--dir', root]),
-			new BufferedOutput() as never,
+			new BufferedOutput(),
 		);
 
 		const commandFile = await readFile(
@@ -75,7 +76,7 @@ describe('Add and doctor workflows', () => {
 				'--dir',
 				root,
 			]),
-			new BufferedOutput() as never,
+			new BufferedOutput(),
 		);
 
 		expect(
@@ -105,11 +106,11 @@ describe('Add and doctor workflows', () => {
 
 		await runAdd(
 			parseArgs(['add', 'event', 'messageCreate', '--on', '--dir', root]),
-			new BufferedOutput() as never,
+			new BufferedOutput(),
 		);
 		await runAdd(
 			parseArgs(['add', 'event', 'guildCreate', '--once', '--dir', root]),
-			new BufferedOutput() as never,
+			new BufferedOutput(),
 		);
 
 		expect(
@@ -144,10 +145,10 @@ describe('Add and doctor workflows', () => {
 		await writeFiles(modularRoot, renderProjectFiles(modularManifest));
 
 		await expect(
-			runAdd(
-				parseArgs(['add', 'event', 'isjdfijsdfi', '--dir', modularRoot]),
-				new BufferedOutput() as never,
-			),
+				runAdd(
+					parseArgs(['add', 'event', 'isjdfijsdfi', '--dir', modularRoot]),
+					new BufferedOutput(),
+				),
 		).rejects.toThrow(CliError);
 
 		const basicRoot = await makeProjectRoot();
@@ -170,10 +171,10 @@ describe('Add and doctor workflows', () => {
 		await writeFiles(basicRoot, renderProjectFiles(basicManifest));
 
 		await expect(
-			runAdd(
-				parseArgs(['add', 'command', 'status', '--dir', basicRoot]),
-				new BufferedOutput() as never,
-			),
+				runAdd(
+					parseArgs(['add', 'command', 'status', '--dir', basicRoot]),
+					new BufferedOutput(),
+				),
 		).rejects.toThrow(CliError);
 	});
 
@@ -198,7 +199,7 @@ describe('Add and doctor workflows', () => {
 		await writeFiles(root, renderProjectFiles(manifest));
 
 		const output = new BufferedOutput();
-		await runDoctor(parseArgs(['doctor', '--dir', root]), output as never);
+		await runDoctor(parseArgs(['doctor', '--dir', root]), output);
 		expect(output.errors.length).toBe(0);
 		expect(
 			output.logs.some((line) => line.includes('Project looks healthy.')),
@@ -237,10 +238,43 @@ describe('Add and doctor workflows', () => {
 		);
 
 		const output = new BufferedOutput();
-		await runDoctor(parseArgs(['doctor', '--dir', root]), output as never);
+		await runDoctor(parseArgs(['doctor', '--dir', root]), output);
 		expect(output.errors.length).toBe(0);
 		expect(
 			output.logs.some((line) => line.includes('Found forgeloop.json')),
 		).toBe(true);
+	});
+
+	test('legacy forgeloop.json parse errors surface as CliError', async () => {
+		const root = await makeProjectRoot();
+		const manifest = createManifest({
+			projectName: 'legacy-invalid-json',
+			targetDir: root,
+			language: 'ts',
+			preset: 'modular',
+			packageManager: 'npm',
+			database: 'none',
+			orm: 'none',
+			tooling: 'eslint-prettier',
+			git: false,
+			docker: false,
+			ci: false,
+			install: false,
+		});
+
+		await ensureDirectory(root);
+		await writeFiles(root, renderProjectFiles(manifest));
+		await rm(path.join(root, CONFIG_FILE));
+		await writeFile(path.join(root, 'forgeloop.json'), '{ invalid', 'utf8');
+
+		await expect(
+			runDoctor(parseArgs(['doctor', '--dir', root]), new BufferedOutput()),
+		).rejects.toThrow(/Failed to parse JSON file/);
+	});
+
+	test('deploy enforces explicit deploy target', async () => {
+		await expect(
+			runDeploy(parseArgs(['deploy', 'bad-target']), new BufferedOutput()),
+		).rejects.toThrow(/Usage: forgeloop deploy commands/);
 	});
 });

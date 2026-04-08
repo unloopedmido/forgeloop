@@ -32,8 +32,9 @@ describe('Project scaffolds', () => {
 			path.join(root, CONFIG_FILE),
 			'utf8',
 		);
-		expect(configContent).toMatch(/ForgeLoopConfig/);
-		expect(configContent).toMatch(/export default config/);
+		expect(configContent).toMatch(/defineConfig/);
+		expect(configContent).toMatch(/await import\('create-forgeloop\/config'\)/);
+		expect(configContent).toMatch(/export default defineConfig/);
 		expect(configContent).toMatch(/"projectName": "alpha"/);
 		expect(configContent).toMatch(/"provider": "sqlite"/);
 		expect(await readFile(path.join(root, '.gitignore'), 'utf8')).toMatch(
@@ -116,6 +117,8 @@ describe('Project scaffolds', () => {
 		const packageJson = JSON.parse(
 			await readFile(path.join(root, 'package.json'), 'utf8'),
 		);
+		expect(packageJson.scripts.typecheck).toBe('tsc --noEmit');
+		expect(packageJson.scripts.build).toBe('tsc');
 		expect(packageJson.scripts.lint).toBe('biome check .');
 		expect(await readFile(path.join(root, 'biome.json'), 'utf8')).toMatch(
 			/biomejs\.dev\/schemas/,
@@ -126,5 +129,33 @@ describe('Project scaffolds', () => {
 		await expect(
 			readFile(path.join(root, 'eslint.config.js'), 'utf8'),
 		).rejects.toThrow();
+	});
+
+	test('javascript prisma scaffold uses @prisma/client runtime import', async () => {
+		const root = await makeProjectRoot();
+		const manifest = createManifest({
+			projectName: 'js-prisma',
+			targetDir: root,
+			language: 'js',
+			preset: 'advanced',
+			packageManager: 'npm',
+			database: 'sqlite',
+			orm: 'prisma',
+			tooling: 'none',
+			git: false,
+			docker: false,
+			ci: false,
+			install: false,
+		});
+
+		await ensureDirectory(root);
+		await writeFiles(root, renderProjectFiles(manifest));
+
+		expect(
+			await readFile(path.join(root, 'src/core/database/client.js'), 'utf8'),
+		).toMatch(/from '@prisma\/client'/);
+		expect(await readFile(path.join(root, 'prisma/schema.prisma'), 'utf8')).toMatch(
+			/provider = "prisma-client-js"/,
+		);
 	});
 });

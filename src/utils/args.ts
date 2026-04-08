@@ -52,6 +52,33 @@ export function getFlag(flags: ParsedArgs['flags'], key: string) {
 	return flags.get(key);
 }
 
+export function getOptionalStringFlag(flags: ParsedArgs['flags'], key: string) {
+	const value = flags.get(key);
+	return typeof value === 'string' ? value : undefined;
+}
+
+export function getStringFlag(flags: ParsedArgs['flags'], key: string) {
+	const value = flags.get(key);
+	if (typeof value === 'string') {
+		return value;
+	}
+
+	if (value === undefined) {
+		return null;
+	}
+
+	throw new CliError(`Flag "--${key}" requires a value.`);
+}
+
+export function getRequiredStringFlag(flags: ParsedArgs['flags'], key: string) {
+	const value = getStringFlag(flags, key);
+	if (value === null) {
+		throw new CliError(`Missing required flag "--${key}".`);
+	}
+
+	return value;
+}
+
 export function getBooleanFlag(flags: ParsedArgs['flags'], key: string) {
 	return flags.get(key) === true;
 }

@@ -70,8 +70,3 @@ export interface InitOptions {
 	ci: boolean;
 	install: boolean;
 }
-
-export interface AddArtifactOptions {
-	projectDir: string;
-	name: string;
-}

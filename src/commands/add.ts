@@ -6,32 +6,20 @@ import {
 import { loadManifest } from '../manifest.js';
 import { renderCommandFile, renderEventFile } from '../generators/templates.js';
 import type { ParsedArgs } from '../types.js';
-import { getBooleanFlag, getFlag } from '../utils/args.js';
+import { getBooleanFlag, getOptionalStringFlag } from '../utils/args.js';
 import { CliError } from '../utils/errors.js';
 import { writeFiles } from '../utils/fs.js';
-import { Output } from '../utils/format.js';
+import { Output, type OutputWriter } from '../utils/format.js';
+import {
+	assertHandlerProject,
+	resolveProjectDir,
+} from '../utils/project.js';
 import {
 	canPrompt,
 	promptConfirm,
 	promptSelect,
 	promptText,
 } from '../utils/prompts.js';
-
-function getProjectDir(args: ParsedArgs) {
-	return path.resolve(
-		(getFlag(args.flags, 'dir') as string | undefined) ?? process.cwd(),
-	);
-}
-
-function assertHandlerProject(
-	manifest: Awaited<ReturnType<typeof loadManifest>>,
-) {
-	if (!manifest.paths.commandsDir || !manifest.paths.eventsDir) {
-		throw new CliError(
-			'This ForgeLoop project uses the "basic" shape, so commands and events stay inline in index.ts/js. Switch to "modular" or "advanced" to use handler generators.',
-		);
-	}
-}
 
 function normalizeCommandName(name: string) {
 	if (!/^[a-z0-9-_]+$/i.test(name)) {
@@ -53,9 +41,9 @@ function normalizeEventName(name: string) {
 	return name;
 }
 
-async function resolveCommandInput(args: ParsedArgs, output: Output) {
+async function resolveCommandInput(args: ParsedArgs, output: OutputWriter) {
 	const providedName = args.subcommands[1];
-	const providedDescription = getFlag(args.flags, 'description');
+	const providedDescription = getOptionalStringFlag(args.flags, 'description');
 	const interactive =
 		canPrompt() && !providedName && providedDescription === undefined;
 
@@ -99,7 +87,7 @@ async function resolveCommandInput(args: ParsedArgs, output: Output) {
 	return { name, description };
 }
 
-async function resolveEventInput(args: ParsedArgs, output: Output) {
+async function resolveEventInput(args: ParsedArgs, output: OutputWriter) {
 	const providedName = args.subcommands[1];
 	const providedOnce = getBooleanFlag(args.flags, 'once');
 	const providedOn = getBooleanFlag(args.flags, 'on');
@@ -146,7 +134,10 @@ async function resolveEventInput(args: ParsedArgs, output: Output) {
 	return { eventName, once };
 }
 
-export async function runAdd(args: ParsedArgs, output = new Output()) {
+export async function runAdd(
+	args: ParsedArgs,
+	output: OutputWriter = new Output(),
+) {
 	const artifactType = args.subcommands[0];
 	if (!artifactType) {
 		throw new CliError(
@@ -154,9 +145,12 @@ export async function runAdd(args: ParsedArgs, output = new Output()) {
 		);
 	}
 
-	const projectDir = getProjectDir(args);
+	const projectDir = resolveProjectDir(args);
 	const manifest = await loadManifest(projectDir);
-	assertHandlerProject(manifest);
+	assertHandlerProject(
+		manifest,
+		'This ForgeLoop project uses the "basic" shape, so commands and events stay inline in index.ts/js. Switch to "modular" or "advanced" to use handler generators.',
+	);
 
 	if (artifactType !== 'command' && artifactType !== 'event') {
 		throw new CliError(
@@ -175,7 +169,7 @@ export async function runAdd(args: ParsedArgs, output = new Output()) {
 		if (
 			canPrompt() &&
 			!args.subcommands[1] &&
-			getFlag(args.flags, 'description') === undefined
+			getOptionalStringFlag(args.flags, 'description') === undefined
 		) {
 			output.callout('Command summary', [
 				`Name: ${command.name}`,

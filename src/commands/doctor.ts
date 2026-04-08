@@ -1,21 +1,21 @@
 import path from 'node:path';
-import { loadManifest, resolveManifestLocation } from '../manifest.js';
+import { loadManifestWithLocation } from '../manifest.js';
 import type { ParsedArgs } from '../types.js';
-import { getFlag } from '../utils/args.js';
 import { pathExists } from '../utils/fs.js';
-import { Output } from '../utils/format.js';
+import { Output, type OutputWriter } from '../utils/format.js';
+import { resolveProjectDir } from '../utils/project.js';
 
-export async function runDoctor(args: ParsedArgs, output = new Output()) {
-	const projectDir = path.resolve(
-		(getFlag(args.flags, 'dir') as string | undefined) ?? process.cwd(),
-	);
-	const manifestLocation = await resolveManifestLocation(projectDir);
-	const manifest = await loadManifest(projectDir);
+export async function runDoctor(
+	args: ParsedArgs,
+	output: OutputWriter = new Output(),
+) {
+	const projectDir = resolveProjectDir(args);
+	const { manifest, location } = await loadManifestWithLocation(projectDir);
 
 	output.banner('ForgeLoop doctor', `Inspecting ${projectDir}`);
 
 	const requiredPaths = [
-		manifestLocation.relativePath,
+		location.relativePath,
 		manifest.paths.srcDir,
 		manifest.paths.configDir,
 	];
@@ -62,9 +62,15 @@ export async function runDoctor(args: ParsedArgs, output = new Output()) {
 		requiredPaths.push('.github/workflows/ci.yml');
 	}
 
+	const pathChecks = await Promise.all(
+		requiredPaths.map(async (relativePath) => ({
+			relativePath,
+			exists: await pathExists(path.join(projectDir, relativePath)),
+		})),
+	);
+
 	let issues = 0;
-	for (const relativePath of requiredPaths) {
-		const exists = await pathExists(path.join(projectDir, relativePath));
+	for (const { relativePath, exists } of pathChecks) {
 		if (!exists) {
 			output.error(`Missing ${relativePath}`);
 			issues += 1;

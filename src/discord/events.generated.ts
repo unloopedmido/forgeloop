@@ -95,5 +95,3 @@ export const DISCORD_EVENT_NAMES = [
 	'warn',
 	'webhooksUpdate',
 ] as const;
-
-export type DiscordEventName = (typeof DISCORD_EVENT_NAMES)[number];

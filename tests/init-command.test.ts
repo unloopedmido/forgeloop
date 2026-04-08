@@ -1,8 +1,13 @@
 import { describe, expect, test } from 'bun:test';
 import {
+	runInit,
+} from '../src/commands/init.js';
+import {
 	resolvePackageManagerCommand,
 	shouldUseShellForPackageManager,
-} from '../src/commands/init.js';
+} from '../src/utils/package-manager.js';
+import { parseArgs } from '../src/utils/args.js';
+import { BufferedOutput, makeProjectRoot } from './test-helpers.js';
 
 describe('resolvePackageManagerCommand', () => {
 	test('uses cmd shims for shell package managers on Windows', () => {
@@ -35,5 +40,34 @@ describe('shouldUseShellForPackageManager', () => {
 	test('does not use a shell on non-Windows platforms', () => {
 		expect(shouldUseShellForPackageManager('npm', 'linux')).toBe(false);
 		expect(shouldUseShellForPackageManager('pnpm', 'darwin')).toBe(false);
+	});
+});
+
+describe('runInit', () => {
+	test('supports bun starter scaffolding', async () => {
+		const root = await makeProjectRoot();
+		const output = new BufferedOutput();
+		const args = parseArgs([
+			'init',
+			'alpha',
+			'--dir',
+			root,
+			'--language',
+			'js',
+			'--preset',
+			'advanced',
+			'--package-manager',
+			'bun',
+			'--database',
+			'none',
+			'--orm',
+			'none',
+			'--tooling',
+			'none',
+			'--yes',
+		]);
+
+		await expect(runInit(args, output)).resolves.toBeUndefined();
+		expect(output.errors).toEqual([]);
 	});
 });
