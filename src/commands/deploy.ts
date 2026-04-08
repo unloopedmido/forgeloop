@@ -1,12 +1,13 @@
 import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { REST, Routes } from 'discord.js';
 import { loadManifest } from '../manifest.js';
 import type { ForgeLoopManifest, ParsedArgs } from '../types.js';
 import { getBooleanFlag, getFlag } from '../utils/args.js';
 import { CliError } from '../utils/errors.js';
 import { Output } from '../utils/format.js';
+
+const DISCORD_API_BASE_URL = 'https://discord.com/api/v10';
 
 function getProjectDir(args: ParsedArgs) {
 	return path.resolve(
@@ -28,6 +29,64 @@ function resolveSyncTarget(guildOnly: boolean) {
 	}
 
 	return process.env.NODE_ENV === 'production' ? 'global' : 'guild';
+}
+
+function applicationCommandsRoute(clientId: string, guildId?: string) {
+	const encodedClientId = encodeURIComponent(clientId);
+	if (guildId) {
+		return `${DISCORD_API_BASE_URL}/applications/${encodedClientId}/guilds/${encodeURIComponent(guildId)}/commands`;
+	}
+
+	return `${DISCORD_API_BASE_URL}/applications/${encodedClientId}/commands`;
+}
+
+async function readDiscordApiError(response: Response) {
+	const body = await response.text();
+	if (!body) {
+		return (
+			response.statusText ||
+			`Empty response body (status ${response.status}).`
+		);
+	}
+
+	try {
+		const parsed = JSON.parse(body) as {
+			code?: number;
+			message?: string;
+		};
+		if (typeof parsed.message === 'string') {
+			return typeof parsed.code === 'number'
+				? `${parsed.message} (code ${parsed.code})`
+				: parsed.message;
+		}
+	} catch {
+		// Keep the raw body when Discord returns non-JSON output.
+	}
+
+	return body;
+}
+
+async function putDiscordCommands(
+	route: string,
+	token: string,
+	commandPayload: Array<Record<string, unknown>>,
+) {
+	const response = await fetch(route, {
+		method: 'PUT',
+		headers: {
+			Authorization: `Bot ${token}`,
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify(commandPayload),
+	});
+
+	if (response.ok) {
+		return;
+	}
+
+	throw new CliError(
+		`Discord API request failed (${response.status} ${response.statusText}): ${await readDiscordApiError(response)}`,
+	);
 }
 
 async function readProjectEnv(projectDir: string) {
@@ -149,22 +208,25 @@ async function deployCommands(
 	const target = resolveSyncTarget(guildOnly);
 	const token = assertEnvValue('DISCORD_TOKEN', projectEnv);
 	const clientId = assertEnvValue('CLIENT_ID', projectEnv);
-	const rest = new REST({ version: '10' }).setToken(token);
 
 	if (target === 'guild') {
 		const guildId = assertEnvValue('GUILD_ID', projectEnv);
-		await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
-			body: commandPayload,
-		});
+		await putDiscordCommands(
+			applicationCommandsRoute(clientId, guildId),
+			token,
+			commandPayload,
+		);
 		output.success(
 			`Synced ${commandPayload.length} commands to guild ${guildId}.`,
 		);
 		return;
 	}
 
-	await rest.put(Routes.applicationCommands(clientId), {
-		body: commandPayload,
-	});
+	await putDiscordCommands(
+		applicationCommandsRoute(clientId),
+		token,
+		commandPayload,
+	);
 	output.success(`Synced ${commandPayload.length} commands globally.`);
 }
 

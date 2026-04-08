@@ -1,155 +1,159 @@
-<div align="center">
-<h1>create-forgeloop</h1>
+# ForgeLoop
 
-Scaffold Discord bots with a cleaner starting point and a small set of maintenance commands.
+**A maintenance-first Discord bot scaffolder for `discord.js`.**  
+Create a bot fast, grow it without chaos, and keep the project clean later with built-in generators and health checks.
 
 [![npm version](https://img.shields.io/npm/v/create-forgeloop?style=for-the-badge)](https://www.npmjs.com/package/create-forgeloop)
 [![npm downloads](https://img.shields.io/npm/dm/create-forgeloop?style=for-the-badge)](https://www.npmjs.com/package/create-forgeloop)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![discord.js](https://img.shields.io/badge/discord.js-14-5865F2?style=for-the-badge&logo=discord&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![discord.js](https://img.shields.io/badge/discord.js-14^-5865F2?style=for-the-badge&logo=discord&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-black?style=for-the-badge)
 
-</div>
+ForgeLoop is a **Discord bot starter CLI** built for people who want more than a one-time template.  
+It helps you:
 
-`create-forgeloop` is a scaffold-first CLI for `discord.js` projects. It generates new bot starters, adds commands and events to existing ForgeLoop-managed apps, and checks that generated projects still match their expected structure.
+- **scaffold** a new Discord bot project
+- **add commands and events later**
+- **keep the structure consistent**
+- **avoid starter-template rot**
+- **scale from simple bots to larger projects**
 
-## Quick Start
+If you like `discord.js` but hate repeating setup, reorganizing folders halfway through, or manually wiring everything every time, ForgeLoop is for you.
 
-Create a new bot with the standard package-manager flows:
+---
+
+## Why ForgeLoop?
+
+Most bot starters help you get started.
+
+ForgeLoop helps you **keep going**.
+
+Instead of dumping files and disappearing, ForgeLoop gives you a cleaner path for long-term maintenance:
+
+- **multiple starter shapes** for different project sizes
+- **follow-up generators** for commands and events
+- **project checks** to catch drift and missing structure
+- **config-driven setup** so the project stays understandable
+- **TypeScript and JavaScript support**
+
+---
+
+## What you get
+
+You can choose a setup that matches how big or structured you want the bot to be.
+
+### Starter styles
+
+- **Basic** - quick prototypes and tiny bots
+- **Modular** - clean command/event separation for most real projects
+- **Advanced** - clearer runtime structure for bigger bots
+
+### Project choices
+
+ForgeLoop can scaffold with options like:
+
+- **TypeScript or JavaScript**
+- **npm, pnpm, yarn, or bun**
+- **SQLite or PostgreSQL**
+- **Prisma**
+- **ESLint + Prettier, Biome, or no tooling**
+- optional **Git**, **Docker**, **CI**, and dependency install
+
+---
+
+## Quick start
+
+Create a new bot:
 
 ```bash
 npm create forgeloop@latest my-bot
+```
+
+Other supported flows:
+
+```bash
 pnpm create forgeloop my-bot
 yarn create forgeloop my-bot
 npx create-forgeloop@latest my-bot
 ```
 
-Run the interactive wizard instead:
+Run the interactive wizard:
 
 ```bash
 npm create forgeloop@latest
 ```
 
-> [!TIP]
-> The published package name is `create-forgeloop`, but the create-style commands use the suffix `forgeloop`.
+> The published package name is `create-forgeloop`, but create-style commands use the suffix `forgeloop`.
 
-## What It Generates
+---
 
-ForgeLoop can shape a starter around a few core choices:
+## Keep using it after setup
 
-- Language: `ts` or `js`
-- Preset: `basic`, `modular`, or `advanced`
-- Package manager: `npm`, `pnpm`, `yarn`, or `bun`
-- Database: `none`, `sqlite`, or `postgresql`
-- ORM: currently `prisma`
-- Tooling: `eslint-prettier`, `biome`, or `none`
-- Optional extras: Git, Docker, GitHub Actions CI, dependency install
+ForgeLoop is not just a starter.
 
-Preset overview:
+Inside supported ForgeLoop projects, you can keep using it to grow the bot over time:
 
-| Preset     | Shape                               | Best for                              |
-| ---------- | ----------------------------------- | ------------------------------------- |
-| `basic`    | Inline bot logic in `src/index`     | Fast prototypes and minimal bots      |
-| `modular`  | Separate command and event handlers | Most production bots                  |
-| `advanced` | Core runtime modules plus handlers  | Larger bots with clearer architecture |
+* add a new **slash command**
+* add a new **event**
+* inspect the current project setup
+* run a **doctor** check to catch structural issues
 
-## Usage
+That means less copy-pasting, less forgetting boilerplate, and allows you to focus on the bot code instead of the wiring.
 
-### Create a project
+---
+
+## Example use cases
+
+* Starting a new Discord bot without hand-rolling the same structure again
+* Creating a cleaner base for a production `discord.js` bot
+* Adding commands/events later without manually wiring everything
+* Keeping a team project consistent across updates
+
+---
+
+## Command examples
+
+Create a TypeScript modular bot:
 
 ```bash
 npx create-forgeloop@latest my-bot --language ts --preset modular
 ```
 
-If you install the package globally, the same commands are also available through `forgeloop`.
-
-Generated projects now include `create-forgeloop` as a local dev dependency, so `pnpm forgeloop ...` works inside new pnpm-based ForgeLoop apps after install.
-
-New projects are described by `forgeloop.config.mjs` instead of a JSON manifest. The file is a normal module, so it is easier to read and can opt into package-provided typing with `create-forgeloop/config`.
-
-Common flags:
+Add a slash command to an existing supported project:
 
 ```bash
---dir ./path
---language ts|js
---preset basic|modular|advanced
---package-manager npm|pnpm|yarn|bun
---database none|sqlite|postgresql
---orm prisma
---tooling eslint-prettier|biome|none
---git
---docker
---ci
---install
---yes
-```
-
-### Add files to an existing ForgeLoop project
-
-Generate a slash command:
-
-```bash
-cd my-bot
 pnpm forgeloop add command status --description "Show current bot status"
-
-# or run the package directly
-npx create-forgeloop@latest add command status --description "Show current bot status" --dir ./my-bot
 ```
 
-Generate an event handler:
+Add an event handler:
 
 ```bash
-pnpm forgeloop add event messageCreate --on
 pnpm forgeloop add event clientReady --once
-
-# or run the package directly
-npx create-forgeloop@latest add event messageCreate --on --dir ./my-bot
-npx create-forgeloop@latest add event clientReady --once --dir ./my-bot
 ```
 
-Deploy slash commands explicitly:
-
-```bash
-pnpm forgeloop deploy commands
-pnpm forgeloop deploy commands --guild-only
-```
-
-> [!NOTE]
-> `modular` and `advanced` starters now auto-sync commands on startup. Development defaults to guild sync, and production defaults to global sync when `NODE_ENV=production`.
-
-### Inspect an existing project
-
-Show the current project profile:
-
-```bash
-npx create-forgeloop@latest info --dir ./my-bot
-```
-
-Run structural health checks:
+Run a structural health check:
 
 ```bash
 npx create-forgeloop@latest doctor --dir ./my-bot
 ```
 
-> [!NOTE]
-> `add command` and `add event` are available for `modular` and `advanced` projects. The `basic` preset keeps bot logic inline, so handler generators are intentionally disabled there.
+---
 
-## Why ForgeLoop
+## Docs
 
-- Scaffolds `discord.js` bots without dumping a generic Node template on the user
-- Supports both fast starts and more structured project layouts
-- Keeps generated projects readable and toolable through `forgeloop.config.mjs`
-- Adds follow-up generators instead of treating scaffolding as a one-time step
-- Includes a lightweight `doctor` command for template drift and missing files
+Full docs, setup details, and command reference: **coming soon**.
 
-## Local Development
+For now, check the repository and README sections below for usage examples.
 
-```bash
-npm install
-npm run typecheck
-npm run lint
-npm run test
-npm run build
-```
+---
 
-The published package ships a `create-forgeloop` executable backed by the compiled files in `dist/`.
+## Package
+
+* **npm:** [https://www.npmjs.com/package/create-forgeloop](https://www.npmjs.com/package/create-forgeloop)
+* **GitHub:** [https://github.com/unloopedmido/forgeloop](https://github.com/unloopedmido/forgeloop)
+
+---
+
+## License
+
+[MIT LICENSE](./LICENSE)

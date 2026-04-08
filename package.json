@@ -1,7 +1,7 @@
 {
 	"name": "create-forgeloop",
-	"version": "0.2.1",
-	"description": "Scaffold and grow Discord bots with opinionated starters and maintenance commands.",
+	"version": "0.2.2",
+	"description": "A maintenance-first Discord bot scaffolder and CLI for discord.js with TypeScript/JavaScript starters, generators, and project health checks.",
 	"homepage": "https://github.com/unloopedmido/forgeloop#readme",
 	"repository": {
 		"type": "git",
@@ -25,17 +25,29 @@
 	"files": [
 		"bin",
 		"dist",
-		"README.md"
+		"README.md",
+		"LICENSE"
 	],
 	"keywords": [
 		"discord",
+		"discord-bot",
+		"discord.js",
 		"discordjs",
+		"scaffolder",
 		"scaffold",
+		"generator",
 		"starter",
+		"template",
+		"boilerplate",
 		"cli",
-		"create"
+		"create",
+		"typescript",
+		"javascript",
+		"slash-commands",
+		"bot-framework"
 	],
 	"license": "MIT",
+	"author": "Mohammed Haism <cored.developments@gmail.com>",
 	"publishConfig": {
 		"access": "public"
 	},
@@ -45,10 +57,7 @@
 		"lint": "eslint src tests eslint.config.js",
 		"test": "bun test",
 		"typecheck": "tsc --noEmit",
-		"prepublishOnly": "npm run build"
-	},
-	"dependencies": {
-		"discord.js": "^14.26.2"
+		"prepublishOnly": "npm run typecheck && npm run lint && npm run test && npm run build"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -60,5 +69,8 @@
 		"tsx": "^4.21.0",
 		"typescript": "^6.0.2",
 		"typescript-eslint": "^8.58.0"
+	},
+	"engines": {
+		"node": ">=18"
 	}
 }

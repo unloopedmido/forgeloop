@@ -117,16 +117,16 @@ async function resolveEventInput(args: ParsedArgs, output: Output) {
 		? await promptSelect(
 				output,
 				'Choose an event type',
-				(await getDiscordEventNames()).map((eventName) => ({
+				getDiscordEventNames().map((eventName) => ({
 					label: eventName,
 					value: eventName,
 				})),
 				typeof providedName === 'string'
-					? await assertDiscordEventName(normalizeEventName(providedName))
+					? assertDiscordEventName(normalizeEventName(providedName))
 					: 'interactionCreate',
 			)
 		: providedName
-			? await assertDiscordEventName(normalizeEventName(providedName))
+			? assertDiscordEventName(normalizeEventName(providedName))
 			: (() => {
 					throw new CliError('Usage: forgeloop add event <eventName> [--once]');
 				})();
