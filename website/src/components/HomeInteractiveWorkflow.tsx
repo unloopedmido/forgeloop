@@ -109,11 +109,13 @@ export function HomeInteractiveWorkflow() {
             const Icon = step.icon;
             const isActive = activeStep.id === step.id;
             return (
-              <button
+              <motion.button
                 key={step.id}
                 type="button"
                 onClick={() => setActiveStep(step)}
-                className={`flex flex-col items-start gap-2 rounded-2xl border p-6 text-left transition-all duration-300 ease-out-quint ${
+                whileHover={{ y: -1, scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                className={`flex flex-col items-start gap-2 rounded-2xl border p-6 text-left ${
                   isActive
                     ? 'border-blue-500/30 bg-blue-500/10 shadow-[0_0_30px_rgba(59,130,246,0.1)]'
                     : 'border-fh-edge2 bg-fh-panel hover:bg-fh-install'
@@ -130,7 +132,7 @@ export function HomeInteractiveWorkflow() {
                   <h3 className={`text-lg font-bold ${isActive ? 'text-fh-heading' : 'text-fh-subtle'}`}>{step.title}</h3>
                 </div>
                 <p className={`mt-2 text-sm ${isActive ? 'text-blue-500' : 'text-fh-muted'}`}>{step.desc}</p>
-              </button>
+              </motion.button>
             );
           })}
         </div>

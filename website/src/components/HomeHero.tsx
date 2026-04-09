@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import Link from '@docusaurus/Link';
-import { Terminal, Copy, Check } from 'lucide-react';
+import { Terminal, Copy, Check, ArrowRight } from 'lucide-react';
 import { HomeTerminalFrame } from './HomeTerminalFrame';
 
 export function HomeHero() {
@@ -42,31 +42,86 @@ export function HomeHero() {
           transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mt-10 flex w-full max-w-xl flex-col items-stretch gap-3 sm:max-w-none sm:flex-row sm:items-center sm:gap-3 lg:max-w-none lg:items-start"
         >
-          <Link to="/docs/intro" className="forge-hero-docs-link w-full justify-center sm:w-auto">
-            Read the Docs
-          </Link>
+          <motion.div
+            whileHover={{ y: -2, scale: 1.01 }}
+            whileTap={{ scale: 0.985 }}
+            className="relative w-full sm:w-auto"
+          >
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 -z-10 rounded-full blur-xl"
+              style={{ background: 'color-mix(in srgb, var(--fh-hero-docs-border-hover) 26%, transparent)' }}
+            />
+            <Link
+              to="/docs/intro"
+              className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border px-5 text-[0.88rem] font-semibold tracking-[0.01em] text-fh-heading no-underline backdrop-blur-[14px] sm:w-auto sm:px-6 sm:text-[0.94rem]"
+              style={{
+                backgroundImage:
+                  'linear-gradient(165deg, color-mix(in srgb, var(--ifm-color-primary) 22%, transparent) 0%, color-mix(in srgb, var(--fh-surface) 84%, white 16%) 100%)',
+                borderColor: 'color-mix(in srgb, var(--ifm-color-primary) 48%, var(--fh-edge))',
+                boxShadow:
+                  '0 1px 0 color-mix(in srgb, white 24%, transparent) inset, 0 14px 38px -20px color-mix(in srgb, var(--ifm-color-primary) 46%, transparent)',
+              }}
+            >
+              <span>Read the Docs</span>
+              <motion.span
+                whileHover={{ x: 2 }}
+                className="inline-flex h-6 w-6 items-center justify-center rounded-full border"
+                style={{
+                  borderColor: 'color-mix(in srgb, var(--ifm-color-primary) 46%, transparent)',
+                  background: 'color-mix(in srgb, var(--ifm-color-primary) 16%, transparent)',
+                }}
+              >
+                <ArrowRight className="h-3.5 w-3.5 opacity-95" strokeWidth={2.2} />
+              </motion.span>
+            </Link>
+          </motion.div>
 
-          <div className="forge-hero-install w-full sm:w-auto">
-            <span className="forge-hero-install-accent" aria-hidden />
-            <span className="forge-hero-install-code">
+          <motion.div
+            whileHover={{ y: -1.5 }}
+            className="relative flex min-h-12 w-full min-w-0 max-w-full flex-1 items-center gap-2 rounded-full border px-2 py-1 sm:w-auto sm:max-w-[34rem] sm:flex-none sm:gap-2.5 sm:px-[0.85rem] sm:py-[0.35rem]"
+            style={{
+              backgroundImage: 'var(--fh-hero-cmd-bg)',
+              borderColor: 'var(--fh-hero-cmd-border)',
+              boxShadow: 'var(--fh-hero-cmd-glow)',
+            }}
+          >
+            <span
+              aria-hidden
+              className="h-[1.35rem] w-[3px] shrink-0 rounded-[2px] opacity-90"
+              style={{
+                background: 'var(--fh-hero-cmd-accent)',
+                boxShadow: '0 0 12px color-mix(in srgb, var(--fh-hero-cmd-accent) 45%, transparent)',
+              }}
+            />
+            <span className="min-w-0 flex-1 overflow-x-auto py-1 font-mono text-[0.75rem] leading-[1.45] whitespace-nowrap sm:text-sm">
               <span className="text-[var(--fh-hero-cmd-keyword)]">npm</span>{' '}
               <span className="text-[var(--fh-hero-cmd-keyword)]">create</span>{' '}
               <span className="text-[var(--fh-hero-cmd-pkg)]">forgeloop@latest</span>{' '}
               <span className="text-[var(--fh-hero-cmd-string)]">my-bot</span>
             </span>
-            <button
+            <motion.button
               type="button"
               onClick={copyCommand}
-              className="forge-hero-copy"
+              whileHover={{ scale: 1.05, rotate: -4 }}
+              whileTap={{ scale: 0.95, rotate: 0 }}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border sm:h-[2.375rem] sm:w-[2.375rem]"
               aria-label={copied ? 'Copied' : 'Copy install command'}
+              style={{
+                borderColor: 'var(--fh-hero-copy-border)',
+                backgroundColor: 'var(--fh-hero-copy-bg)',
+                color: 'var(--fh-muted)',
+              }}
             >
               {copied ? (
-                <Check className="h-4 w-4 text-[var(--fh-hero-cmd-accent)]" strokeWidth={2.25} />
+                <motion.span initial={{ scale: 0.7, opacity: 0.4 }} animate={{ scale: 1, opacity: 1 }}>
+                  <Check className="h-4 w-4 text-[var(--fh-hero-cmd-accent)]" strokeWidth={2.25} />
+                </motion.span>
               ) : (
                 <Copy className="h-4 w-4" strokeWidth={2} />
               )}
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         </motion.div>
       </div>
 
@@ -170,7 +225,12 @@ export function HomeHero() {
 
             <div className="mt-4 flex items-center gap-2 text-slate-500">
               <span className="text-emerald-400">~/my-bot</span>
-              <span className="animate-pulse">_</span>
+              <motion.span
+                animate={{ opacity: [1, 0.25, 1] }}
+                transition={{ duration: 1.2, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+              >
+                _
+              </motion.span>
             </div>
           </div>
         </HomeTerminalFrame>

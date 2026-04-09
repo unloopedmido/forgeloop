@@ -58,9 +58,11 @@ export function HomeProblemSolution() {
 
       <div className="mt-16 mx-auto max-w-5xl">
         <div className="flex items-center justify-center gap-4 mb-8">
-          <button
+          <motion.button
             onClick={() => setActiveTab('raw')}
-            className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all duration-300 ${
+            whileHover={{ y: -1 }}
+            whileTap={{ scale: 0.98 }}
+            className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium ${
               activeTab === 'raw'
                 ? 'bg-red-500/10 text-red-400 border border-red-500/20'
                 : 'bg-fh-panel text-fh-muted border border-fh-edge2 hover:bg-fh-install hover:text-fh-heading'
@@ -68,10 +70,12 @@ export function HomeProblemSolution() {
           >
             <ShieldAlert className="h-4 w-4" />
             Raw Discord.js
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={() => setActiveTab('forgeloop')}
-            className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all duration-300 ${
+            whileHover={{ y: -1 }}
+            whileTap={{ scale: 0.98 }}
+            className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium ${
               activeTab === 'forgeloop'
                 ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.15)]'
                 : 'bg-fh-panel text-fh-muted border border-fh-edge2 hover:bg-fh-install hover:text-fh-heading'
@@ -79,7 +83,7 @@ export function HomeProblemSolution() {
           >
             <Zap className="h-4 w-4" />
             ForgeLoop
-          </button>
+          </motion.button>
         </div>
 
         <HomeTerminalFrame

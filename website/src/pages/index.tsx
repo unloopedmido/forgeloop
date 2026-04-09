@@ -57,8 +57,17 @@ export default function Home(): ReactNode {
         
         {/* Abstract background elements */}
         <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-          <div className="forge-home-hero-grid absolute inset-0" />
-          <div className="forge-home-hero-glow absolute left-1/2 top-0 h-[500px] w-[1000px] -translate-x-1/2 -translate-y-1/2 rounded-[100%] blur-[120px]" />
+          <div
+            className="absolute inset-0 [background-size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] [-webkit-mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"
+            style={{
+              backgroundImage:
+                'linear-gradient(to right, color-mix(in srgb, var(--fh-gutter) 18%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--fh-gutter) 18%, transparent) 1px, transparent 1px)',
+            }}
+          />
+          <div
+            className="absolute left-1/2 top-0 h-[500px] w-[1000px] -translate-x-1/2 -translate-y-1/2 rounded-[100%] blur-[120px]"
+            style={{ background: 'radial-gradient(circle, var(--fh-hero-glow) 0%, transparent 70%)' }}
+          />
         </div>
 
         <HomeHero />

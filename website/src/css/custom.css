@@ -110,12 +110,132 @@ body {
   color: var(--ifm-font-color-base);
 }
 
+/* ===== Navbar: refined, but keep Docusaurus behavior intact ===== */
 .navbar {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  --ifm-navbar-padding-horizontal: 1.5rem;
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+  box-shadow: none;
 }
 
-[data-theme='light'] .navbar {
-  border-bottom-color: rgba(15, 23, 42, 0.08);
+@media (min-width: 997px) {
+  .navbar {
+    --ifm-navbar-padding-horizontal: 2rem;
+    --ifm-navbar-background-color: rgba(5, 5, 8, 0.72);
+    backdrop-filter: blur(18px) saturate(170%);
+    -webkit-backdrop-filter: blur(18px) saturate(170%);
+  }
+
+  [data-theme='light'] .navbar {
+    --ifm-navbar-background-color: rgba(248, 250, 252, 0.78);
+  }
+}
+
+/* Typography parity with footer (safe on all breakpoints) */
+.navbar__link {
+  font-family: var(--ifm-font-family-base);
+  font-weight: 500;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  color: var(--ifm-footer-link-color);
+}
+
+.navbar__link:hover,
+.navbar__link--active {
+  color: var(--ifm-color-primary);
+}
+
+/* Desktop-only GitHub pill so mobile navbar layout stays native */
+@media (min-width: 997px) {
+  .navbar__items--right .navbar__link[href*="github"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 2rem;
+    padding: 0 0.75rem;
+    border-radius: 9999px;
+    border: 1px solid var(--ifm-toc-border-color);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .navbar__items--right .navbar__link[href*="github"]:hover {
+    color: var(--ifm-heading-color);
+    border-color: var(--ifm-color-primary);
+    background-color: rgba(142, 78, 198, 0.08);
+  }
+
+  [data-theme='light'] .navbar__items--right .navbar__link[href*="github"]:hover {
+    background-color: rgba(124, 58, 237, 0.06);
+  }
+
+  .navbar__items--right .navbar__link[href*="github"] svg {
+    width: 0.6875rem;
+    height: 0.6875rem;
+    opacity: 0.5;
+  }
+
+  .navbar__items--right .navbar__link[href*="github"]:hover svg {
+    opacity: 0.8;
+  }
+}
+
+/* Mobile: keep native Docusaurus topbar/sidebar behavior */
+@media (max-width: 996px) {
+  .navbar {
+    --ifm-navbar-background-color: var(--ifm-background-color);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* Keep top bar native: show brand + theme toggle + hamburger only */
+  .navbar .navbar__item.navbar__link {
+    display: none;
+  }
+
+  .navbar .navbar__toggle {
+    display: inherit;
+  }
+
+  /* Avoid clipped GitHub text in the sidebar brand row */
+  .navbar-sidebar__brand .navbar__link[href*="github"] {
+    display: none;
+  }
+
+  .navbar__items--right .navbar__link[href*="github"] {
+    display: inline;
+    border: none;
+    padding: 0;
+    height: auto;
+    letter-spacing: normal;
+    text-transform: none;
+    background: transparent;
+  }
+}
+
+.navbar__toggle {
+  color: var(--ifm-footer-link-color);
+}
+
+.navbar__toggle:hover {
+  color: var(--ifm-heading-color);
+}
+
+.navbar-sidebar {
+  background-color: var(--ifm-background-color);
+  border-right: 1px solid var(--ifm-toc-border-color);
+}
+
+.navbar-sidebar .menu__link {
+  font-family: var(--ifm-font-family-base);
+  font-weight: 500;
+  color: var(--ifm-footer-link-color);
+}
+
+.navbar-sidebar .menu__link:hover,
+.navbar-sidebar .menu__link--active {
+  color: var(--ifm-color-primary);
 }
 
 /* Homepage design tokens (children use Tailwind fh-* colors) */
@@ -200,282 +320,6 @@ body {
   --fh-hero-copy-hover: rgba(15, 23, 42, 0.09);
 }
 
-.forge-home-hero-grid {
-  background-image:
-    linear-gradient(to right, rgba(128, 128, 128, 0.07) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(128, 128, 128, 0.07) 1px, transparent 1px);
-  background-size: 24px 24px;
-  mask-image: radial-gradient(ellipse 60% 50% at 50% 0%, #000 70%, transparent 100%);
-  -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 0%, #000 70%, transparent 100%);
-}
-
-[data-theme='light'] .forge-home-hero-grid {
-  background-image:
-    linear-gradient(to right, rgba(15, 23, 42, 0.07) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.07) 1px, transparent 1px);
-}
-
-.forge-home-hero-glow {
-  background: radial-gradient(
-    circle,
-    var(--fh-hero-glow) 0%,
-    transparent 70%
-  );
-}
-
-/* Homepage hero: balanced primary + install pill (tokens on .forge-home) */
-.forge-hero-docs-link {
-  display: inline-flex;
-  height: 3rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  padding-inline: 1.75rem;
-  font-weight: 600;
-  font-size: 0.9375rem;
-  letter-spacing: -0.02em;
-  color: var(--fh-heading);
-  text-decoration: none;
-  background-image: var(--fh-hero-docs-bg);
-  border: 1px solid var(--fh-hero-docs-border);
-  box-shadow: var(--fh-hero-docs-shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  transition:
-    border-color 280ms var(--ease-out-quint),
-    box-shadow 280ms var(--ease-out-quint),
-    transform 280ms var(--ease-out-quint);
-}
-
-.forge-hero-docs-link:hover {
-  border-color: var(--fh-hero-docs-border-hover);
-  box-shadow:
-    var(--fh-hero-docs-shadow),
-    0 0 36px -10px rgba(96, 165, 250, 0.22);
-  transform: translateY(-1px);
-}
-
-.forge-hero-docs-link:active {
-  transform: translateY(0) scale(0.98);
-}
-
-.forge-hero-install {
-  display: flex;
-  min-height: 3rem;
-  min-width: 0;
-  max-width: 100%;
-  flex: 1 1 auto;
-  align-items: center;
-  gap: 0.625rem;
-  border-radius: 9999px;
-  padding: 0.35rem 0.45rem 0.35rem 0.85rem;
-  background-image: var(--fh-hero-cmd-bg);
-  border: 1px solid var(--fh-hero-cmd-border);
-  box-shadow: var(--fh-hero-cmd-glow);
-  transition:
-    border-color 280ms var(--ease-out-quint),
-    box-shadow 280ms var(--ease-out-quint);
-}
-
-@media (min-width: 640px) {
-  .forge-hero-install {
-    flex: 0 1 auto;
-    max-width: min(100%, 32rem);
-  }
-}
-
-.forge-hero-install:hover {
-  border-color: rgba(96, 165, 250, 0.28);
-}
-
-[data-theme='light'] .forge-hero-install:hover {
-  border-color: rgba(37, 99, 235, 0.28);
-}
-
-.forge-hero-install-accent {
-  height: 1.35rem;
-  width: 3px;
-  flex-shrink: 0;
-  border-radius: 2px;
-  background: var(--fh-hero-cmd-accent);
-  opacity: 0.9;
-  box-shadow: 0 0 12px color-mix(in srgb, var(--fh-hero-cmd-accent) 45%, transparent);
-}
-
-.forge-hero-install-code {
-  min-width: 0;
-  flex: 1 1 auto;
-  overflow-x: auto;
-  padding-block: 0.25rem;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  white-space: nowrap;
-  scrollbar-width: thin;
-}
-
-@media (min-width: 640px) {
-  .forge-hero-install-code {
-    font-size: 0.875rem;
-  }
-}
-
-.forge-hero-copy {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 2.375rem;
-  height: 2.375rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--fh-hero-copy-border);
-  background-color: var(--fh-hero-copy-bg);
-  color: var(--fh-muted);
-  cursor: pointer;
-  transition:
-    background-color 200ms var(--ease-out-quint),
-    border-color 200ms var(--ease-out-quint),
-    color 200ms var(--ease-out-quint);
-}
-
-.forge-hero-copy:hover {
-  background-color: var(--fh-hero-copy-hover);
-  border-color: var(--fh-hero-docs-border-hover);
-  color: var(--fh-heading);
-}
-
-.forge-hero-copy:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--fh-hero-docs-border-hover) 70%, transparent);
-  outline-offset: 2px;
-}
-
-/* Homepage bottom CTA — matches hero controls + feature-card rhythm */
-.forge-home-cta-card {
-  position: relative;
-  overflow: hidden;
-  border-radius: 1.5rem;
-  border: 1px solid var(--fh-edge);
-  background-color: var(--fh-surface);
-  background-image: radial-gradient(
-    ellipse 75% 55% at 50% -20%,
-    rgba(64, 123, 255, 0.14),
-    transparent 58%
-  );
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-    0 28px 70px -28px rgba(0, 0, 0, 0.55);
-}
-
-[data-theme='light'] .forge-home-cta-card {
-  background-image: radial-gradient(
-    ellipse 75% 55% at 50% -20%,
-    rgba(59, 130, 246, 0.1),
-    transparent 58%
-  );
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.85) inset,
-    0 22px 56px -22px rgba(15, 23, 42, 0.1);
-}
-
-.forge-cta-docs-link {
-  display: flex;
-  width: 100%;
-  min-height: 3.25rem;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  border-radius: 0.875rem;
-  padding: 0.75rem 1.25rem;
-  font-weight: 600;
-  font-size: 1rem;
-  letter-spacing: -0.02em;
-  color: var(--fh-heading);
-  text-decoration: none;
-  background-image: var(--fh-hero-docs-bg);
-  border: 1px solid var(--fh-hero-docs-border);
-  box-shadow: var(--fh-hero-docs-shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  transition:
-    border-color 280ms var(--ease-out-quint),
-    box-shadow 280ms var(--ease-out-quint),
-    transform 280ms var(--ease-out-quint);
-}
-
-.forge-cta-docs-link:hover {
-  border-color: var(--fh-hero-docs-border-hover);
-  box-shadow:
-    var(--fh-hero-docs-shadow),
-    0 0 36px -10px rgba(96, 165, 250, 0.22);
-  transform: translateY(-1px);
-}
-
-[data-theme='light'] .forge-cta-docs-link:hover {
-  box-shadow:
-    var(--fh-hero-docs-shadow),
-    0 0 36px -10px rgba(37, 99, 235, 0.18);
-}
-
-.forge-cta-docs-link:active {
-  transform: translateY(0) scale(0.995);
-}
-
-.forge-cta-install {
-  display: flex;
-  width: 100%;
-  min-height: 3.25rem;
-  min-width: 0;
-  align-items: center;
-  gap: 0.625rem;
-  border-radius: 0.875rem;
-  padding: 0.4rem 0.5rem 0.4rem 0.85rem;
-  background-image: var(--fh-hero-cmd-bg);
-  border: 1px solid var(--fh-hero-cmd-border);
-  box-shadow: var(--fh-hero-cmd-glow);
-  cursor: pointer;
-  text-align: left;
-  font: inherit;
-  color: inherit;
-  transition:
-    border-color 280ms var(--ease-out-quint),
-    box-shadow 280ms var(--ease-out-quint);
-}
-
-.forge-cta-install:hover {
-  border-color: rgba(96, 165, 250, 0.28);
-}
-
-[data-theme='light'] .forge-cta-install:hover {
-  border-color: rgba(37, 99, 235, 0.28);
-}
-
-.forge-cta-install:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--fh-hero-docs-border-hover) 70%, transparent);
-  outline-offset: 2px;
-}
-
-.forge-cta-install-squircle {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 2.375rem;
-  height: 2.375rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--fh-hero-copy-border);
-  background-color: var(--fh-hero-copy-bg);
-  color: var(--fh-muted);
-  transition:
-    background-color 200ms var(--ease-out-quint),
-    border-color 200ms var(--ease-out-quint),
-    color 200ms var(--ease-out-quint);
-}
-
-.forge-cta-install:hover .forge-cta-install-squircle {
-  background-color: var(--fh-hero-copy-hover);
-  border-color: var(--fh-hero-docs-border-hover);
-  color: var(--fh-heading);
-}
 
 /* Infima styles all `pre` like doc code blocks; reset inside faux terminals only. */
 pre.forge-terminal-pre {
@@ -487,7 +331,7 @@ pre.forge-terminal-pre {
   line-height: inherit;
 }
 
-/* Single wordmark: uppercase, minimal tracking (no separate logo image) */
+/* Single wordmark: uppercase, wide tracking — same treatment as footer wordmark */
 .navbar__brand .navbar__title {
   font-family: var(--ifm-font-family-base);
   font-weight: 500;
@@ -497,25 +341,14 @@ pre.forge-terminal-pre {
   color: var(--ifm-heading-color);
 }
 
-.footer-brand-wordmark {
-  display: inline-block;
-  font-family: var(--ifm-font-family-base);
-  font-weight: 500;
-  font-size: 0.875rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--ifm-heading-color);
-  text-decoration: none;
-  transition: color 200ms var(--ease-out-quint);
-}
-
-.footer-brand-wordmark:hover {
+.navbar__brand:hover .navbar__title {
   color: var(--ifm-color-primary-light);
 }
 
-[data-theme='light'] .footer-brand-wordmark:hover {
-  color: var(--ifm-color-primary-dark);
+[data-theme='light'] .navbar__brand:hover .navbar__title {
+  color: var(--ifm-color-primary);
 }
+
 
 /* Footer atmosphere: same grid density as homepage hero, anchored to bottom */
 .site-footer-grid {
@@ -596,7 +429,6 @@ pre.forge-terminal-pre {
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.1), 0 4px 24px rgba(0, 0, 0, 0.4);
-  transition: all 300ms var(--ease-out-quint);
   position: relative;
   overflow: hidden;
 }
@@ -616,7 +448,6 @@ pre.forge-terminal-pre {
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
   opacity: 0.5;
-  transition: opacity 300ms var(--ease-out-quint);
 }
 
 [data-theme='light'] .astro-card::before {
@@ -642,11 +473,6 @@ pre.forge-terminal-pre {
 
 .astro-card:hover::before {
   opacity: 1;
-}
-
-/* Enable cross-document view transitions */
-@view-transition {
-  navigation: auto;
 }
 
 /* Docusaurus theme overrides */
@@ -711,48 +537,6 @@ pre.forge-terminal-pre {
   font-size: 0.9em;
 }
 
-.docs-doc-page .theme-doc-markdown > * {
-  animation: forge-doc-enter 0.45s var(--ease-out-quart) both;
-}
-
-.docs-doc-page .theme-doc-markdown > *:nth-child(1) {
-  animation-delay: 0ms;
-}
-.docs-doc-page .theme-doc-markdown > *:nth-child(2) {
-  animation-delay: 40ms;
-}
-.docs-doc-page .theme-doc-markdown > *:nth-child(3) {
-  animation-delay: 80ms;
-}
-.docs-doc-page .theme-doc-markdown > *:nth-child(4) {
-  animation-delay: 120ms;
-}
-.docs-doc-page .theme-doc-markdown > *:nth-child(5) {
-  animation-delay: 160ms;
-}
-.docs-doc-page .theme-doc-markdown > *:nth-child(6) {
-  animation-delay: 200ms;
-}
-.docs-doc-page .theme-doc-markdown > *:nth-child(7) {
-  animation-delay: 240ms;
-}
-.docs-doc-page .theme-doc-markdown > *:nth-child(8) {
-  animation-delay: 280ms;
-}
-.docs-doc-page .theme-doc-markdown > *:nth-child(n + 9) {
-  animation-delay: 320ms;
-}
-
-@keyframes forge-doc-enter {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 .docs-doc-page .alert {
   border-radius: 0.75rem;
@@ -902,19 +686,3 @@ pre.forge-terminal-pre {
   color: var(--forge-doc-primary);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-
-  .docs-doc-page .theme-doc-markdown > * {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
-}

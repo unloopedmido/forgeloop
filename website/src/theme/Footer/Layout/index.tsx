@@ -4,6 +4,7 @@ import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import {ThemeClassNames} from '@docusaurus/theme-common';
 import type {Props} from '@theme/Footer/Layout';
+import { motion } from 'motion/react';
 
 export default function FooterLayout({
   style,
@@ -31,9 +32,14 @@ export default function FooterLayout({
           {/* Brand/Identity side (spans 5 cols) */}
           <div className="lg:col-span-5 flex flex-col justify-between items-start">
             <div className="space-y-6">
-              <Link to="/" className="footer-brand-wordmark">
-                {title}
-              </Link>
+              <motion.div whileHover={{ opacity: 0.88 }}>
+                <Link
+                  to="/"
+                  className="inline-block font-sans text-sm font-medium uppercase tracking-[0.22em] text-[var(--ifm-heading-color)] no-underline"
+                >
+                  {title}
+                </Link>
+              </motion.div>
               <p className="font-sans text-sm leading-relaxed max-w-[320px] balance-text m-0 text-[var(--ifm-footer-color)]">
                 Maintenance-first scaffolding for Discord.js bots.<br/>
                 Start modular, build for scale, and craft with absolute precision.

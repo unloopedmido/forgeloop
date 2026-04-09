@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import {ThemeClassNames} from '@docusaurus/theme-common';
 import LinkItem from '@theme/Footer/LinkItem';
 import type {Props} from '@theme/Footer/Links/MultiColumn';
+import { motion } from 'motion/react';
 
 type ColumnType = Props['columns'][number];
 type ColumnItemType = ColumnType['items'][number];
@@ -16,17 +17,17 @@ function ColumnLinkItem({item}: {item: ColumnItemType}) {
     />
   ) : (
     <li key={item.href ?? item.to} className="mb-3">
-      <div className="group/link flex items-center">
+      <motion.div className="group/link flex items-center" whileHover={{ x: 2 }}>
         <LinkItem
           item={{
             ...item,
             className: clsx(
-              'text-[var(--ifm-footer-link-color)] hover:text-[var(--ifm-color-primary)] transition-colors duration-300 ease-out font-sans text-sm block',
+              'text-[var(--ifm-footer-link-color)] hover:text-[var(--ifm-color-primary)] font-sans text-sm block',
               item.className,
             ),
           }}
         />
-      </div>
+      </motion.div>
     </li>
   );
 }

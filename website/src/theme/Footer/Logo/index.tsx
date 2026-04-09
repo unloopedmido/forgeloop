@@ -4,8 +4,7 @@ import Link from '@docusaurus/Link';
 import {useBaseUrlUtils} from '@docusaurus/useBaseUrl';
 import ThemedImage from '@theme/ThemedImage';
 import type {Props} from '@theme/Footer/Logo';
-
-import styles from './styles.module.css';
+import { motion } from 'motion/react';
 
 function LogoImage({logo}: Props) {
   const {withBaseUrl} = useBaseUrlUtils();
@@ -27,12 +26,13 @@ function LogoImage({logo}: Props) {
 
 export default function FooterLogo({logo}: Props): ReactNode {
   return logo.href ? (
-    <Link
-      href={logo.href}
-      className={styles.footerLogoLink}
-      target={logo.target}>
-      <LogoImage logo={logo} />
-    </Link>
+    <motion.div initial={{ opacity: 0.5 }} whileHover={{ opacity: 1 }}>
+      <Link
+        href={logo.href}
+        target={logo.target}>
+        <LogoImage logo={logo} />
+      </Link>
+    </motion.div>
   ) : (
     <LogoImage logo={logo} />
   );
