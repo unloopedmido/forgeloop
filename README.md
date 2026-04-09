@@ -139,6 +139,24 @@ npx create-forgeloop@latest doctor --dir ./my-bot
 
 ---
 
+## Agent Skill
+
+ForgeLoop includes a project skill at `.agents/skills/forgeloop` so AI coding agents can apply ForgeLoop-specific workflows.
+
+Install from this repository:
+
+```bash
+npx skills add unloopedmido/forgeloop --skill forgeloop
+```
+
+Preview skills detected in this repository:
+
+```bash
+npx skills add unloopedmido/forgeloop --list
+```
+
+---
+
 ## Docs
 
 Full docs, setup details, and command reference:
