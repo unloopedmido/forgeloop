@@ -305,7 +305,7 @@ export function renderCommandTemplate(
 
 export const data = new SlashCommandBuilder()
   .setName('${commandName}')
-  .setDescription('${resolvedDescription.replace(/'/g, "\\'")}');
+  .setDescription('${resolvedDescription.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}');
 
 export async function execute(interaction${language === 'ts' ? ': import("discord.js").ChatInputCommandInteraction' : ''}) {
   await interaction.reply('${commandName} is wired up.');
