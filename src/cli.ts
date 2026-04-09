@@ -1,40 +1,66 @@
-import { renderHelp } from './commands/help.js';
+import {
+	renderCommandHelp,
+	renderHelp,
+	renderVersion,
+} from './commands/help.js';
 import { runAdd } from './commands/add.js';
 import { runDeploy } from './commands/deploy.js';
 import { runDoctor } from './commands/doctor.js';
 import { runInfo } from './commands/info.js';
 import { runInit } from './commands/init.js';
-import { parseArgs } from './utils/args.js';
+import { CORE_COMMAND_NAMES } from './commands/registry.js';
+import { expandShortFlags, getBooleanFlag, parseArgs } from './utils/args.js';
 import { CliError } from './utils/errors.js';
 import { Output } from './utils/format.js';
+
+const COMMAND_HANDLERS = {
+	init: runInit,
+	add: runAdd,
+	deploy: runDeploy,
+	doctor: runDoctor,
+	info: runInfo,
+} as const;
+type CoreCommandName = keyof typeof COMMAND_HANDLERS;
+
+function isCoreCommandName(command: string): command is CoreCommandName {
+	return CORE_COMMAND_NAMES.includes(command);
+}
 
 export async function runCli(argv: string[]) {
 	const output = new Output();
 
 	try {
-		const args = parseArgs(argv);
+		const args = parseArgs(expandShortFlags(argv));
+
+		if (getBooleanFlag(args.flags, 'version')) {
+			await renderVersion(output);
+			return;
+		}
+
+		if (getBooleanFlag(args.flags, 'help')) {
+			if (args.command === null || args.command === 'help') {
+				renderHelp(output);
+				return;
+			}
+
+			renderCommandHelp(args.command, output);
+			return;
+		}
+
 		switch (args.command) {
 			case null:
 			case 'help':
-			case '--help':
 				renderHelp(output);
 				return;
-			case 'init':
-				await runInit(args, output);
-				return;
-			case 'add':
-				await runAdd(args, output);
-				return;
-			case 'deploy':
-				await runDeploy(args, output);
-				return;
-			case 'doctor':
-				await runDoctor(args, output);
-				return;
-			case 'info':
-				await runInfo(args, output);
+			case 'version':
+				await renderVersion(output);
 				return;
 			default:
+				if (args.command && isCoreCommandName(args.command)) {
+					await COMMAND_HANDLERS[args.command](args, output);
+					return;
+				}
+
 				throw new CliError(
 					`Unknown command "${args.command}". Run "forgeloop help" for usage.`,
 				);

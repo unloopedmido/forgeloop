@@ -9,7 +9,7 @@ import { FlagTable } from '@site/src/components/docs/FlagTable';
 ## Usage
 
 ```bash
-forgeloop deploy commands [--guild-only] [--dir ./project]
+forgeloop deploy commands [--guild|--global] [--dir ./project]
 ```
 
 Only **modular** and **advanced** projects. Basic preset error:
@@ -24,8 +24,9 @@ The CLI runs **Node** in the project directory, dynamically **imports** each fil
 
 | Condition | API target |
 |-----------|------------|
-| `--guild-only` | Guild commands (`GUILD_ID` required) |
-| `NODE_ENV === 'production'` and not `--guild-only` | **Global** application commands |
+| `--guild` | Guild commands (`GUILD_ID` required) |
+| `--global` | **Global** application commands |
+| `NODE_ENV === 'production'` and no explicit target flag | **Global** application commands |
 | Otherwise | **Guild** commands (`GUILD_ID` required) |
 
 ## Environment
@@ -53,9 +54,14 @@ Missing variable:
       description: 'Project root.',
     },
     {
-      flag: '--guild-only',
+      flag: '--guild',
       type: 'boolean',
       description: 'Force guild command sync (requires GUILD_ID).',
+    },
+    {
+      flag: '--global',
+      type: 'boolean',
+      description: 'Force global command sync.',
     },
   ]}
 />

@@ -44,7 +44,14 @@ bunx forgeloop help
 
 ## Flags and argv
 
-ForgeLoop’s argument parser accepts **long flags only** (`--dir`, `--yes`, …). **Short flags like `-y` are not supported** and produce an error.
+ForgeLoop primarily uses **long flags** (`--dir`, `--yes`, …), with a small set of short aliases:
+
+- `-h` → `--help`
+- `-V` → `--version`
+- `-y` → `--yes`
+- `-d <path>` → `--dir <path>`
+
+Other short flags are rejected with an error.
 
 ---
 

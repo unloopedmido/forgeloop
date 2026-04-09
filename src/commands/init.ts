@@ -12,6 +12,19 @@ import {
 import { resolveInitOptions } from './init-options.js';
 import { packageManagerScriptCommand } from '../utils/package-manager.js';
 
+function previewScaffold(output: OutputWriter, targetDir: string, filePaths: string[]) {
+	output.warn('Dry run enabled: no files were written.');
+	output.callout('Planned files', [
+		...filePaths.slice(0, 20).map((filePath) => `- ${filePath}`),
+		...(filePaths.length > 20
+			? [`- ...and ${filePaths.length - 20} more files`]
+			: []),
+	]);
+	output.callout('Next steps', [
+		`Run again without --dry-run to scaffold into ${targetDir}`,
+	]);
+}
+
 export async function runInit(
 	args: ParsedArgs,
 	output: OutputWriter = new Output(),
@@ -29,6 +42,15 @@ export async function runInit(
 		'ForgeLoop init',
 		`Scaffolding ${options.projectName} in ${options.targetDir}`,
 	);
+	if (options.dryRun) {
+		previewScaffold(
+			output,
+			options.targetDir,
+			files.map((file) => file.path),
+		);
+		return;
+	}
+
 	await ensureDirectory(options.targetDir);
 	await writeFiles(options.targetDir, files);
 

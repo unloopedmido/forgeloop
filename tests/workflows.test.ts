@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { CONFIG_FILE } from '../src/constants.js';
-import { parseArgs } from '../src/utils/args.js';
+import { expandShortFlags, parseArgs } from '../src/utils/args.js';
 import { runAdd } from '../src/commands/add.js';
 import { runDeploy } from '../src/commands/deploy.js';
 import { runDoctor } from '../src/commands/doctor.js';
@@ -276,5 +276,16 @@ describe('Add and doctor workflows', () => {
 		await expect(
 			runDeploy(parseArgs(['deploy', 'bad-target']), new BufferedOutput()),
 		).rejects.toThrow(/Usage: forgeloop deploy commands/);
+	});
+
+	test('deploy rejects conflicting --global and --guild', async () => {
+		await expect(
+			runDeploy(
+				parseArgs(
+					expandShortFlags(['deploy', 'commands', '--global', '--guild']),
+				),
+				new BufferedOutput(),
+			),
+		).rejects.toThrow(/only one of/);
 	});
 });

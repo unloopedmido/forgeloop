@@ -25,8 +25,9 @@ npx forgeloop deploy commands
 
 Rules:
 
-- **`--guild-only`** — always sync to the guild in `GUILD_ID`.
-- **Without `--guild-only`** — same as above: **production → global**, **non-production → guild**.
+- **`--guild`** — always sync to the guild in `GUILD_ID`.
+- **`--global`** — always sync globally.
+- **Without target flags** — same as startup defaults: **production → global**, **non-production → guild**.
 
 Requirements:
 

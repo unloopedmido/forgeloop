@@ -71,6 +71,7 @@ export async function resolveInitOptions(
 	let docker = getBooleanFlag(args.flags, 'docker');
 	let ci = getBooleanFlag(args.flags, 'ci');
 	let install = getBooleanFlag(args.flags, 'install');
+	let dryRun = getBooleanFlag(args.flags, 'dry-run');
 
 	if (interactive) {
 		output.hero(
@@ -217,6 +218,13 @@ export async function resolveInitOptions(
 				false,
 			);
 		}
+		if (!getBooleanFlag(args.flags, 'dry-run')) {
+			dryRun = await promptConfirm(
+				output,
+				'Preview generated files without writing?',
+				false,
+			);
+		}
 	}
 
 	const resolvedLanguage = parseSelection(
@@ -244,6 +252,16 @@ export async function resolveInitOptions(
 		SUPPORTED_ORMS,
 		'ORM',
 	);
+	if (resolvedDatabase === 'none' && resolvedOrm !== 'none') {
+		throw new CliError(
+			'When --database is "none", --orm must also be "none".',
+		);
+	}
+	if (resolvedDatabase !== 'none' && resolvedOrm === 'none') {
+		throw new CliError(
+			'A database selection requires an ORM. Use --orm prisma.',
+		);
+	}
 	const resolvedTooling = parseSelection(
 		tooling ?? DEFAULTS.tooling,
 		SUPPORTED_TOOLING,
@@ -265,5 +283,6 @@ export async function resolveInitOptions(
 		docker,
 		ci,
 		install,
+		dryRun,
 	};
 }

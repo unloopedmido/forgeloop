@@ -14,8 +14,24 @@ import {
 const DISCORD_API_BASE_URL = 'https://discord.com/api/v10';
 const DISCORD_API_TIMEOUT_MS = 20_000;
 
-function resolveSyncTarget(guildOnly: boolean) {
-	if (guildOnly) {
+function assertDeployTargetFlags(args: ParsedArgs) {
+	const explicitGlobal = getBooleanFlag(args.flags, 'global');
+	const explicitGuild = getBooleanFlag(args.flags, 'guild');
+
+	if (explicitGlobal && explicitGuild) {
+		throw new CliError('Use only one of --global or --guild.');
+	}
+}
+
+function resolveSyncTarget(args: ParsedArgs) {
+	const explicitGlobal = getBooleanFlag(args.flags, 'global');
+	const explicitGuild = getBooleanFlag(args.flags, 'guild');
+
+	if (explicitGlobal) {
+		return 'global';
+	}
+
+	if (explicitGuild) {
 		return 'guild';
 	}
 
@@ -209,14 +225,24 @@ process.stdout.write(JSON.stringify(payload));
 async function deployCommands(
 	projectDir: string,
 	manifest: ForgeLoopManifest,
-	guildOnly: boolean,
+	args: ParsedArgs,
 	output: OutputWriter,
 ) {
 	const projectEnv = await readProjectEnv(projectDir);
 	const commandPayload = await collectCommandPayload(projectDir, manifest);
-	const target = resolveSyncTarget(guildOnly);
+	const target = resolveSyncTarget(args);
 	const token = assertEnvValue('DISCORD_TOKEN', projectEnv);
 	const clientId = assertEnvValue('CLIENT_ID', projectEnv);
+
+	const mode =
+		process.env.NODE_ENV === 'production' ? 'production' : 'development';
+	const explicit =
+		getBooleanFlag(args.flags, 'global') ||
+		getBooleanFlag(args.flags, 'guild');
+	const hint = explicit
+		? '(explicit flag)'
+		: `(${mode}: default when no --global / --guild)`;
+	output.info(`Deploy target: ${target} ${hint}`);
 
 	if (target === 'guild') {
 		const guildId = assertEnvValue('GUILD_ID', projectEnv);
@@ -246,9 +272,11 @@ export async function runDeploy(
 	const deployTarget = args.subcommands[0];
 	if (deployTarget !== 'commands') {
 		throw new CliError(
-			'Usage: forgeloop deploy commands [--guild-only] [--dir ./project]',
+			'Usage: forgeloop deploy commands [--guild|--global] [--dir ./project]',
 		);
 	}
+
+	assertDeployTargetFlags(args);
 
 	const projectDir = resolveProjectDir(args);
 	const manifest = await loadManifest(projectDir);
@@ -257,10 +285,5 @@ export async function runDeploy(
 		'This ForgeLoop project uses the "basic" shape, so command deployment is only available for "modular" or "advanced" projects.',
 	);
 
-	await deployCommands(
-		projectDir,
-		manifest,
-		getBooleanFlag(args.flags, 'guild-only'),
-		output,
-	);
+	await deployCommands(projectDir, manifest, args, output);
 }

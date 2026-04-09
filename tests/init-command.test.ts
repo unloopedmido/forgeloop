@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'bun:test';
+import { access } from 'node:fs/promises';
+import path from 'node:path';
 import {
 	runInit,
 } from '../src/commands/init.js';
@@ -69,5 +71,38 @@ describe('runInit', () => {
 
 		await expect(runInit(args, output)).resolves.toBeUndefined();
 		expect(output.errors).toEqual([]);
+	});
+
+	test('dry-run previews scaffold without writing files', async () => {
+		const root = await makeProjectRoot();
+		const target = path.join(root, 'dry-run-target');
+		const output = new BufferedOutput();
+		const args = parseArgs([
+			'init',
+			'alpha',
+			'--dir',
+			target,
+			'--language',
+			'ts',
+			'--preset',
+			'modular',
+			'--package-manager',
+			'npm',
+			'--database',
+			'none',
+			'--orm',
+			'none',
+			'--tooling',
+			'none',
+			'--dry-run',
+			'--yes',
+		]);
+
+		await expect(runInit(args, output)).resolves.toBeUndefined();
+		expect(output.errors).toEqual([]);
+		expect(
+			output.logs.some((line) => line.includes('Dry run enabled')),
+		).toBe(true);
+		await expect(access(target)).rejects.toThrow();
 	});
 });

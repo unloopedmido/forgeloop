@@ -4,7 +4,22 @@ title: forgeloop help
 description: Print ForgeLoop usage, commands, and init feature flags.
 ---
 
-Running `forgeloop`, `forgeloop help`, or `forgeloop --help` prints the same summary as implemented in the CLI: hero text, command lines, init wizard note, and feature flags (`--database`, `--orm`, `--tooling`, `--git`, `--docker`, `--ci`, `--install`, `--yes`).
+Running `forgeloop`, `forgeloop help`, or `forgeloop --help` prints the same summary as implemented in the CLI: hero text, command lines, init wizard note, and feature flags (`--database`, `--orm`, `--tooling`, `--git`, `--docker`, `--ci`, `--install`, `--dry-run`, `--yes`).
+
+Global aliases:
+
+- `-h` → `--help`
+- `-V` → `--version`
+- `-y` → `--yes`
+- `-d <path>` → `--dir <path>`
+
+Command-specific help:
+
+- `forgeloop init --help`
+- `forgeloop add --help`
+- `forgeloop deploy --help`
+- `forgeloop doctor --help`
+- `forgeloop info --help`
 
 ## Command list (quick reference)
 
@@ -15,5 +30,6 @@ Running `forgeloop`, `forgeloop help`, or `forgeloop --help` prints the same sum
 | `deploy commands` | Push slash commands to Discord |
 | `doctor` | File presence checks |
 | `info` | Manifest summary |
+| `version` | Print CLI package version |
 
 For full detail, use the sidebar **Command reference** section or start at [`init`](./init.mdx).

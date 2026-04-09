@@ -4,9 +4,16 @@ title: Troubleshooting
 description: Common ForgeLoop CLI errors, CI behavior, and deploy sync targets.
 ---
 
-## `Short flags are not supported yet: -x`
+## `Unknown short flag "-x"`
 
-ForgeLoop’s parser only accepts **long flags** (`--yes`, `--dir`). Use the long form everywhere.
+ForgeLoop supports only a small short-flag set:
+
+- `-h` (`--help`)
+- `-V` (`--version`)
+- `-y` (`--yes`)
+- `-d <path>` (`--dir <path>`)
+
+Any other short flag (for example `-x`) is rejected.
 
 ## `init` requires a project name in non-interactive mode
 
@@ -39,8 +46,8 @@ The CLI error text states this explicitly.
 
 ## Deploy: missing `GUILD_ID` or wrong sync target
 
-- **Guild** sync (development default, or `--guild-only`) requires **`GUILD_ID`** in `.env` or the environment.
-- **Global** sync happens when **`NODE_ENV=production`** and **`--guild-only` is not set**.
+- **Guild** sync (development default, or `--guild`) requires **`GUILD_ID`** in `.env` or the environment.
+- **Global** sync happens when **`NODE_ENV=production`** by default, or explicitly with `--global`.
 
 See [deploy commands](./commands/deploy) and [Sync slash commands](./workflows/sync-commands).
 

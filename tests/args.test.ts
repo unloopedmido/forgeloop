@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { parseArgs } from '../src/utils/args.js';
+import { expandShortFlags, parseArgs } from '../src/utils/args.js';
 import { normalizeCreateArgv } from '../src/utils/create-entry.js';
 import { resolveProjectDir } from '../src/utils/project.js';
 import { CliError } from '../src/utils/errors.js';
@@ -8,9 +8,13 @@ import {
 	validateProjectName,
 } from '../src/utils/project-name.js';
 
+function parseCli(argv: string[]) {
+	return parseArgs(expandShortFlags(argv));
+}
+
 describe('CLI args and validation', () => {
 	test('parseArgs supports long flags and positionals', () => {
-		const parsed = parseArgs([
+		const parsed = parseCli([
 			'init',
 			'alpha',
 			'--language',
@@ -48,7 +52,33 @@ describe('CLI args and validation', () => {
 	});
 
 	test('resolveProjectDir rejects --dir with no value', () => {
-		const parsed = parseArgs(['doctor', '--dir']);
+		const parsed = parseCli(['doctor', '--dir']);
 		expect(() => resolveProjectDir(parsed)).toThrow(CliError);
+	});
+
+	test('expandShortFlags maps -h -V -y and -d', () => {
+		expect(expandShortFlags(['-h'])).toEqual(['--help']);
+		expect(expandShortFlags(['-V'])).toEqual(['--version']);
+		expect(expandShortFlags(['-y'])).toEqual(['--yes']);
+		expect(expandShortFlags(['-d', './proj'])).toEqual(['--dir', './proj']);
+	});
+
+	test('parseCli treats short flags like long flags', () => {
+		const parsed = parseCli(['doctor', '-d', '/tmp/bot']);
+		expect(parsed.flags.get('dir')).toBe('/tmp/bot');
+	});
+
+	test('boolean flags reject stray values', () => {
+		expect(() =>
+			parseCli(['init', 'x', '--docker', 'oops']),
+		).toThrow(CliError);
+	});
+
+	test('create entry suggests likely command typos', () => {
+		expect(() => normalizeCreateArgv(['int'])).toThrow(/Did you mean "init"/);
+	});
+
+	test('create entry still maps valid project names to init', () => {
+		expect(normalizeCreateArgv(['alpha-bot'])).toEqual(['init', 'alpha-bot']);
 	});
 });

@@ -1,4 +1,9 @@
 import { CLI_NAME } from '../constants.js';
+import { resolveCurrentCliPackage } from './init-runtime.js';
+import {
+	CORE_COMMAND_SPECS,
+	getCommandSpec,
+} from './registry.js';
 import { Output, type OutputWriter } from '../utils/format.js';
 
 export function renderHelp(output: OutputWriter = new Output()) {
@@ -7,16 +12,14 @@ export function renderHelp(output: OutputWriter = new Output()) {
 		'Interactive project setup, managed generators, and safer maintenance flows.',
 	);
 	output.section('Commands');
-	output.plain(
-		`  ${CLI_NAME} init <project-name> [--dir ./path] [--language ts|js] [--preset basic|modular|advanced]`,
-	);
-	output.plain(`  ${CLI_NAME} add command <name> [--dir ./project]`);
-	output.plain(`  ${CLI_NAME} add event <name> [--dir ./project]`);
-	output.plain(
-		`  ${CLI_NAME} deploy commands [--guild-only] [--dir ./project]`,
-	);
-	output.plain(`  ${CLI_NAME} doctor [--dir ./project]`);
-	output.plain(`  ${CLI_NAME} info [--dir ./project]`);
+	for (const spec of CORE_COMMAND_SPECS) {
+		output.plain(`  ${spec.help.usage[0]}`);
+	}
+	output.plain(`  ${CLI_NAME} version`);
+	output.section('Global');
+	output.plain(`  ${CLI_NAME} help`);
+	output.plain(`  ${CLI_NAME} --help   (alias: -h)`);
+	output.plain(`  ${CLI_NAME} --version   (alias: -V)`);
 	output.section('Init wizard');
 	output.plain(`  ${CLI_NAME} init`);
 	output.plain(
@@ -33,5 +36,32 @@ export function renderHelp(output: OutputWriter = new Output()) {
 	output.plain('  --docker');
 	output.plain('  --ci');
 	output.plain('  --install');
-	output.plain('  --yes');
+	output.plain('  --dry-run');
+	output.plain('  --yes   (alias: -y; non-interactive / skip prompts)');
+	output.plain('  --dir <path>   (alias: -d <path>)');
+}
+
+export async function renderVersion(output: OutputWriter = new Output()) {
+	const pkg = await resolveCurrentCliPackage();
+	output.plain(`${pkg.name} ${pkg.version}`);
+}
+
+export function renderCommandHelp(
+	command: string,
+	output: OutputWriter = new Output(),
+) {
+	const spec = getCommandSpec(command);
+	if (!spec) {
+		renderHelp(output);
+		return;
+	}
+
+	output.section(spec.help.title);
+	for (const usageLine of spec.help.usage) {
+		output.plain(`  ${usageLine}`);
+	}
+	output.plain('');
+	for (const detailLine of spec.help.details) {
+		output.plain(`  ${detailLine}`);
+	}
 }

@@ -69,4 +69,5 @@ export interface InitOptions {
 	docker: boolean;
 	ci: boolean;
 	install: boolean;
+	dryRun?: boolean;
 }

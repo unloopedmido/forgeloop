@@ -38,7 +38,7 @@ The CLI validates **`manifestVersion: 1`**. Mismatches produce an unsupported ve
 ## Command sync vs `deploy commands`
 
 - **Modular / advanced** starters include **`syncCommands`**, which runs when the bot starts: **guild** sync when `NODE_ENV` is not `production` (uses `GUILD_ID`), **global** sync when `NODE_ENV === 'production'`.
-- **`forgeloop deploy commands`** pushes the current slash command definitions from disk **without** starting the bot. Target rules: **`--guild-only`** forces guild sync; otherwise **production → global**, **non-production → guild**. See [deploy](./commands/deploy.mdx).
+- **`forgeloop deploy commands`** pushes the current slash command definitions from disk **without** starting the bot. Target rules: use **`--guild`** to force guild sync, **`--global`** to force global sync; otherwise **production → global**, **non-production → guild**. See [deploy](./commands/deploy.mdx).
 
 ## Working directory
 
