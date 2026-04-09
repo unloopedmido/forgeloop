@@ -1,0 +1,31 @@
+---
+sidebar_position: 5
+title: Inspect project metadata
+description: forgeloop info prints the resolved ForgeLoop manifest summary for the current project.
+---
+
+import { CliExample } from '@site/src/components/docs/CliExample';
+
+`forgeloop info` loads `forgeloop.config.*` (or legacy JSON) and prints a short summary: project name, language, preset, framework (`discord.js`), package manager, Docker/CI flags, and database (provider + ORM or none).
+
+<CliExample
+  title="Example (illustrative)"
+  command="npx forgeloop info"
+  output={`┌──────────────────────────────────────────────┐
+│ ForgeLoop info                               │
+└──────────────────────────────────────────────┘
+  /path/to/my-bot
+
+  • Project          my-bot
+  • Language         ts
+  • Preset           modular
+  • Framework        discord.js
+  • Package manager  npm
+  • Docker           disabled
+  • CI               disabled
+  • Database         none`}
+/>
+
+Use **`--dir`** to point at another project root.
+
+Full reference: [`forgeloop info`](../commands/info.mdx).

@@ -1,0 +1,51 @@
+---
+sidebar_position: 2
+title: Install
+description: Node.js requirements and how to run create-forgeloop and forgeloop from npm, pnpm, yarn, or bun.
+---
+
+import { PackageManagerCreateTabs } from '@site/src/components/docs/PackageManagerTabs';
+
+## Requirements
+
+- **ForgeLoop CLI and generated bots** target **Node.js 18+** (see the [package `engines`](https://github.com/unloopedmido/forgeloop/blob/main/package.json) field).
+- **Building this documentation site** locally uses the website package, which declares **Node 20+** for Docusaurus.
+
+## Scaffold a new project
+
+Use your preferred package manager’s “create” flow (all resolve to the same `create-forgeloop` package):
+
+<PackageManagerCreateTabs
+  create={{
+    npm: 'npm create forgeloop@latest my-bot',
+    pnpm: 'pnpm create forgeloop my-bot',
+    yarn: 'yarn create forgeloop my-bot',
+    bun: 'bun create forgeloop my-bot',
+  }}
+/>
+
+You can also run **`npx create-forgeloop@latest my-bot`** directly.
+
+## Run the project CLI after scaffolding
+
+Generated projects add `create-forgeloop` as a dev dependency so **`forgeloop`** is available without a global install. From the project root:
+
+```bash
+npx forgeloop help
+```
+
+Other package managers:
+
+```bash
+pnpm forgeloop help
+yarn forgeloop help
+bunx forgeloop help
+```
+
+## Flags and argv
+
+ForgeLoop’s argument parser accepts **long flags only** (`--dir`, `--yes`, …). **Short flags like `-y` are not supported** and produce an error.
+
+---
+
+**Next:** [Quickstart](./quickstart.mdx) — first project, env vars, and dev script.

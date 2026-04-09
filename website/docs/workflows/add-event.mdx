@@ -1,0 +1,42 @@
+---
+sidebar_position: 2
+title: Add an event handler
+description: Generate a Discord.js event handler under src/events with correct once vs on binding.
+---
+
+import { CliExample } from '@site/src/components/docs/CliExample';
+import { ForgeloopInvokeTabs } from '@site/src/components/docs/PackageManagerTabs';
+
+## When this works
+
+Same as slash commands: **modular** and **advanced** only. Basic preset keeps events inline.
+
+## Add an event by Discord.js name
+
+Event names must match **Discord.js** event names (e.g. `messageCreate`, `interactionCreate`):
+
+<ForgeloopInvokeTabs command="$" forgeloopArgs="add event messageCreate" />
+
+### `once` vs `on`
+
+- **`--once`** — register with `client.once`.
+- **`--on`** — register with `client.on`.
+
+If you omit both, the CLI defaults to **`once` for `clientReady`** and **`on`** for other events.
+
+```bash
+npx forgeloop add event clientReady --once
+npx forgeloop add event guildCreate --on
+```
+
+## Interactive mode
+
+In a TTY, you can run `npx forgeloop add event` with no name and pick from the bundled event list, then confirm once vs on.
+
+## Validation errors
+
+Invalid names show:
+
+> Invalid event name "…". Use the exact Discord.js event name, for example "messageCreate".
+
+Full reference: [`forgeloop add`](../commands/add.mdx).

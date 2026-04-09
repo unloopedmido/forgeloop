@@ -1,0 +1,49 @@
+---
+sidebar_position: 4
+title: Concepts
+description: ForgeLoop manifest, config file locations, presets, and when add and deploy work.
+---
+
+## Project manifest
+
+Every scaffolded project includes a **ForgeLoop manifest**: project name, `preset`, `language`, `packageManager`, enabled features (database, tooling, git, docker, CI), and **paths** (`src`, optional `commands` / `events` / `core` directories). The manifest is written to disk as **`forgeloop.config.mjs`** (preferred) and is also what `forgeloop info` and `forgeloop doctor` read.
+
+### Config file discovery
+
+The CLI looks for, in order:
+
+1. `forgeloop.config.mjs`
+2. `forgeloop.config.js`
+3. `forgeloop.config.cjs`
+4. Legacy **`forgeloop.json`**
+
+The generated `.mjs` file tries to import `defineConfig` from `create-forgeloop/config` after install; before `npm install`, the config still exports a plain object so Node can load it.
+
+### Manifest version
+
+The CLI validates **`manifestVersion: 1`**. Mismatches produce an unsupported version error.
+
+## Presets
+
+| Preset | Layout | `add` / `deploy commands` |
+|--------|--------|-----------------------------|
+| **basic** | Slash command and `clientReady` live **inline** in `src/index.*` | **Not available** — no `src/commands` or `src/events` folders. |
+| **modular** | `src/commands`, `src/events`, `src/sync-commands.*`, loaders in `src/index.*` | **Supported** |
+| **advanced** | Same handler folders plus **`src/core`** (e.g. `start-bot`, database client) | **Supported** |
+
+## Package manager metadata
+
+`package.json` includes a **`packageManager`** field (e.g. `npm@10`, `pnpm@10.22.0`) so tooling can infer the intended client. Scripts use the same manager you selected at init (`dev`, `start`, `db:push`, etc.).
+
+## Command sync vs `deploy commands`
+
+- **Modular / advanced** starters include **`syncCommands`**, which runs when the bot starts: **guild** sync when `NODE_ENV` is not `production` (uses `GUILD_ID`), **global** sync when `NODE_ENV === 'production'`.
+- **`forgeloop deploy commands`** pushes the current slash command definitions from disk **without** starting the bot. Target rules: **`--guild-only`** forces guild sync; otherwise **production → global**, **non-production → guild**. See [deploy](./commands/deploy.mdx).
+
+## Working directory
+
+Commands that operate on an existing project accept **`--dir path`**. If omitted, the current working directory is used.
+
+---
+
+**Next:** try a [workflow](./workflows/add-command.mdx) or skim the [command reference](./commands/init.mdx).

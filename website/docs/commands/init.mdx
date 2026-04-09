@@ -1,0 +1,130 @@
+---
+sidebar_position: 1
+title: forgeloop init
+description: Scaffold a new discord.js bot project with flags or the interactive wizard.
+---
+
+import Admonition from '@theme/Admonition';
+import { CliExample } from '@site/src/components/docs/CliExample';
+import { FlagTable } from '@site/src/components/docs/FlagTable';
+
+## Usage
+
+```bash
+forgeloop init <project-name> [flags]
+forgeloop init
+```
+
+- **With project name + `--yes` or non-TTY:** non-interactive; missing enum flags use **defaults** (TypeScript, **modular**, npm, no database, **eslint-prettier**).
+- **Interactive:** run `forgeloop init` or `forgeloop init` without `--yes` in a TTY — you get prompts for name (if missing), language, preset, package manager, database, ORM, tooling, git, docker, CI, and post-scaffold install.
+
+<Admonition type="warning" title="Non-interactive requires a name">
+  Without a TTY or with <code>--yes</code>, <strong>init</strong> requires a <strong>project name</strong> as the first argument after <code>init</code>. Otherwise the CLI exits with a message like{' '}
+  <code>init requires a project name in non-interactive mode.</code>
+</Admonition>
+
+## Examples
+
+```bash
+npx forgeloop init my-bot --yes --preset advanced --language ts --git --install
+```
+
+```bash
+npx create-forgeloop@latest my-bot -- --yes --database sqlite --orm prisma
+```
+
+Wizard (no args, TTY):
+
+<CliExample
+  command="npx forgeloop init"
+  output={`ForgeLoop • discord bot forge
+Project wizard
+Answer a few questions and ForgeLoop will shape the starter around your bot.
+
+? Project name (default: my-discord-bot)
+> …`}
+/>
+
+## Flags
+
+<FlagTable
+  rows={[
+    {
+      flag: '--dir',
+      type: 'string',
+      defaultValue: '<project-name>',
+      description: 'Output directory (resolved with path.resolve).',
+    },
+    {
+      flag: '--language',
+      type: 'ts | js',
+      defaultValue: 'ts',
+      description: 'Source language.',
+    },
+    {
+      flag: '--preset',
+      type: 'basic | modular | advanced',
+      defaultValue: 'modular',
+      description: 'Project shape; see Concepts.',
+    },
+    {
+      flag: '--package-manager',
+      type: 'npm | pnpm | yarn | bun',
+      defaultValue: 'npm',
+      description: 'Lockfile/scripts style in generated package.json.',
+    },
+    {
+      flag: '--database',
+      type: 'none | sqlite | postgresql',
+      defaultValue: 'none',
+      description: 'Database wiring; when not none, use --orm prisma.',
+    },
+    {
+      flag: '--orm',
+      type: 'none | prisma',
+      defaultValue: 'none (or prisma if database ≠ none)',
+      description: 'Only Prisma is supported today when a database is selected.',
+    },
+    {
+      flag: '--tooling',
+      type: 'eslint-prettier | biome | none',
+      defaultValue: 'eslint-prettier',
+      description: 'Lint/format setup.',
+    },
+    {
+      flag: '--git',
+      type: 'boolean',
+      description: 'Initialize a git repo and add .gitignore.',
+    },
+    {
+      flag: '--docker',
+      type: 'boolean',
+      description: 'Add Dockerfile and dockerignore-style rules.',
+    },
+    {
+      flag: '--ci',
+      type: 'boolean',
+      description: 'Add GitHub Actions workflow for validation.',
+    },
+    {
+      flag: '--install',
+      type: 'boolean',
+      description: 'Run package manager install after writing files (5 min timeout).',
+    },
+    {
+      flag: '--yes',
+      type: 'boolean',
+      description: 'Skip interactive prompts when combined with TTY; always non-interactive path when used with full args.',
+    },
+  ]}
+/>
+
+## Output
+
+Prints a banner, **Project profile** lines, optional git/install progress, **Next steps** (cd, install, `.env`, optional `db:push`, `dev`).
+
+## Failure modes
+
+- Unsupported enum value → lists supported values.
+- `npm|pnpm|yarn|bun install` failure → non-zero exit with CLI error message.
+- **`--orm none` with `--database` not `none`** → manifest validation error when building the manifest.

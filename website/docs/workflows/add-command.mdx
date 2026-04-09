@@ -1,0 +1,53 @@
+---
+sidebar_position: 1
+title: Add a slash command
+description: Generate a new slash command module in src/commands for modular or advanced ForgeLoop projects.
+---
+
+import { CliExample } from '@site/src/components/docs/CliExample';
+import { ForgeloopInvokeTabs } from '@site/src/components/docs/PackageManagerTabs';
+
+## When this works
+
+Only **modular** and **advanced** projects have `src/commands`. The **basic** preset keeps commands inline in `src/index.*` — `forgeloop add command` will error with:
+
+> This ForgeLoop project uses the "basic" shape, so commands and events stay inline in index.ts/js. Switch to "modular" or "advanced" to use handler generators.
+
+## Add a command by name
+
+From the project root:
+
+<ForgeloopInvokeTabs command="$" forgeloopArgs="add command status --description &quot;Show bot status&quot;" />
+
+The generator writes `src/commands/status.ts` (or `.js`) with a `SlashCommandBuilder` named **`status`** and a stub `execute` implementation.
+
+## Interactive mode
+
+With a TTY and no name on the command line, the CLI prompts for name and description:
+
+<CliExample
+  title="Interactive flow (illustrative)"
+  command="npx forgeloop add command"
+  output={`ForgeLoop • discord bot forge
+Command generator
+Shape a slash command with a clean prompt flow instead of raw file creation.
+
+? Command name
+> status
+
+? Description (default: …)
+> Show bot status
+
+Command summary
+  │ Name: status
+  │ Description: Show bot status
+
+✓ Added command "status" to …/src/commands/status.ts`}
+/>
+
+## After adding
+
+- **Development:** restart the bot or rely on your workflow so `syncCommands` runs again, or use [`deploy commands`](../commands/deploy.mdx).
+- **Command name rules:** letters, numbers, hyphens, underscores — normalized to lowercase.
+
+Full flags and edge cases: [`forgeloop add`](../commands/add.mdx).

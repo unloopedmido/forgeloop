@@ -1,0 +1,195 @@
+---
+sidebar_position: 3
+title: Quickstart
+description: Create a ForgeLoop discord.js project, configure .env, install dependencies, and start the dev script.
+---
+
+import Admonition from '@theme/Admonition';
+import { CliExample } from '@site/src/components/docs/CliExample';
+import { PackageManagerCreateTabs } from '@site/src/components/docs/PackageManagerTabs';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 1. Create a project
+
+**Non-interactive** (CI or scripts) — you **must** pass a project name and **`--yes`** skips the wizard. Unspecified options use CLI defaults (`modular`, `ts`, `npm`, `eslint-prettier`, no database, no git/docker/ci/install unless flags are set):
+
+<PackageManagerCreateTabs
+  create={{
+    npm: 'npm create forgeloop@latest my-bot -- --yes --preset modular --language ts',
+    pnpm: 'pnpm create forgeloop my-bot --yes --preset modular --language ts',
+    yarn: 'yarn create forgeloop my-bot --yes --preset modular --language ts',
+    bun: 'bun create forgeloop my-bot --yes --preset modular --language ts',
+  }}
+/>
+
+<Admonition type="info" title="CI and non-TTY sessions">
+  Without a TTY, <code>git</code>, <code>docker</code>, <code>ci</code>, and <code>install</code> are <strong>not</strong> prompted and default to <strong>off</strong> unless you pass <code>--git</code>, <code>--docker</code>, <code>--ci</code>, or <code>--install</code> explicitly.
+</Admonition>
+
+**Interactive** — run create **without** a name or with only `init` to step through prompts (requires a terminal):
+
+```bash
+npm create forgeloop@latest
+```
+
+or
+
+```bash
+npx create-forgeloop@latest init
+```
+
+## 2. Enter the directory and install
+
+<Tabs groupId="package-manager" queryString>
+  <TabItem value="npm" label="npm">
+
+```bash
+cd my-bot
+npm install
+```
+
+  </TabItem>
+  <TabItem value="pnpm" label="pnpm">
+
+```bash
+cd my-bot
+pnpm install
+```
+
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+
+```bash
+cd my-bot
+yarn install
+```
+
+  </TabItem>
+  <TabItem value="bun" label="bun">
+
+```bash
+cd my-bot
+bun install
+```
+
+  </TabItem>
+</Tabs>
+
+If you passed **`--install`** during `init`, dependencies were already installed.
+
+## 3. Environment variables
+
+Copy the example env file and fill in values from the [Discord Developer Portal](https://discord.com/developers/applications):
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Purpose |
+|----------|---------|
+| `DISCORD_TOKEN` | Bot token |
+| `CLIENT_ID` | Application (client) ID |
+| `GUILD_ID` | Guild used for **development** command sync (modular/advanced) |
+| `DATABASE_URL` | Only when you chose a database — see [Database](./guides/database.mdx) |
+
+## 4. Database (optional)
+
+If you selected SQLite or PostgreSQL + Prisma during `init`, run the Prisma workflow once before dev:
+
+<Tabs groupId="package-manager" queryString>
+  <TabItem value="npm" label="npm">
+
+```bash
+npm run db:push
+```
+
+  </TabItem>
+  <TabItem value="pnpm" label="pnpm">
+
+```bash
+pnpm run db:push
+```
+
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+
+```bash
+yarn db:push
+```
+
+  </TabItem>
+  <TabItem value="bun" label="bun">
+
+```bash
+bun run db:push
+```
+
+  </TabItem>
+</Tabs>
+
+## 5. Start the bot
+
+<Tabs groupId="package-manager" queryString>
+  <TabItem value="npm" label="npm">
+
+```bash
+npm run dev
+```
+
+  </TabItem>
+  <TabItem value="pnpm" label="pnpm">
+
+```bash
+pnpm run dev
+```
+
+  </TabItem>
+  <TabItem value="yarn" label="yarn">
+
+```bash
+yarn dev
+```
+
+  </TabItem>
+  <TabItem value="bun" label="bun">
+
+```bash
+bun run dev
+```
+
+  </TabItem>
+</Tabs>
+
+For **modular** and **advanced** projects, the generated runtime calls **`syncCommands`** on startup: in development (`NODE_ENV` not `production`) commands sync to the **guild** from `GUILD_ID`; in **production** they sync **globally**.
+
+## What `init` prints
+
+After files are written, the CLI prints a **Project profile** summary and a **Next steps** callout (install, `.env`, optional `db:push`, `dev`). Conceptually:
+
+<CliExample
+  title="Example (illustrative output)"
+  command="forgeloop init my-bot --yes --preset modular --language ts"
+  output={`┌──────────────────────────────────────────────┐
+│ ForgeLoop init                               │
+└──────────────────────────────────────────────┘
+  Scaffolding my-bot in …/my-bot
+
+Project profile
+  • Language           ts
+  • Preset             modular
+  • Package manager    npm
+  …
+
+✓ Project ready at …/my-bot
+
+Next steps
+  │ cd my-bot
+  │ npm install
+  │ Rename .env.example to .env
+  …`}
+/>
+
+---
+
+**Next:** [Concepts](./concepts.mdx) — manifest, presets, and config files.

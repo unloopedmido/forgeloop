@@ -1,0 +1,46 @@
+---
+sidebar_position: 1
+title: Database and Prisma
+description: How ForgeLoop wires Prisma with SQLite or PostgreSQL in generated bots.
+---
+
+ForgeLoop only supports **Prisma** as the ORM when a database is enabled (`--database sqlite` or `postgresql` with `--orm prisma`). **No database** keeps the starter free of Prisma files.
+
+## What gets generated
+
+- **`prisma.config.ts`** — loads `DATABASE_URL` via Prisma’s config helper.
+- **`prisma/schema.prisma`** — datasource matches your provider; includes a small **`Healthcheck`** model to validate connectivity.
+- **Runtime module**
+  - **Modular:** `src/lib/database.ts`
+  - **Advanced:** `src/core/database/client.ts`
+- **TypeScript:** Prisma client output is configured under **`src/generated/prisma/`** (see schema `generator` block).
+- **`package.json` scripts:** `db:generate`, `db:push`, `db:migrate`, `db:studio`.
+
+Dependencies include **`@prisma/client`**, **`prisma`** (dev), and an adapter (**`@prisma/adapter-better-sqlite3`** or **`@prisma/adapter-pg`** + **`pg`** for PostgreSQL).
+
+## Environment
+
+`.env.example` includes **`DATABASE_URL`** when a database is selected:
+
+- **SQLite** — typically `DATABASE_URL="file:./dev.db"` (the runtime also falls back to `file:./dev.db` if unset in dev for SQLite).
+- **PostgreSQL** — connection string placeholder you must replace.
+
+You still need Discord vars (`DISCORD_TOKEN`, `CLIENT_ID`, `GUILD_ID` for dev guild sync).
+
+## First-time setup
+
+From the project root (after `npm install` or equivalent):
+
+```bash
+npm run db:push
+```
+
+This runs **`prisma db push`** and **`prisma generate`** so the client matches the schema.
+
+## Choosing a preset
+
+Database wiring is **imported from the entry path** (`basic` inlines `connectDatabase` in `index`; `modular`/`advanced` call it before login). Pick **modular** or **advanced** if you also want **`forgeloop add`** and **`deploy commands`**.
+
+---
+
+Related: [Quickstart](../quickstart.mdx), [Concepts](../concepts.mdx), [Troubleshooting](../troubleshooting.mdx).

@@ -1,0 +1,32 @@
+---
+sidebar_position: 4
+title: Check project health
+description: Run forgeloop doctor to verify expected files exist for your manifest.
+---
+
+import { CliExample } from '@site/src/components/docs/CliExample';
+
+`forgeloop doctor` walks the **manifest** and checks that expected paths exist: config file, `src`, `src/config`, handler folders when applicable, tooling configs, Prisma files when database is enabled, Docker/CI artifacts when those flags are on, and `.gitignore` when Git was enabled at init.
+
+## Example
+
+<CliExample
+  title="Healthy project"
+  command="npx forgeloop doctor"
+  output={`┌──────────────────────────────────────────────┐
+│ ForgeLoop doctor                             │
+└──────────────────────────────────────────────┘
+  Inspecting …/my-bot
+
+✓ Found forgeloop.config.mjs
+✓ Found src
+✓ Found src/config
+✓ Found src/commands
+✓ Found src/events
+…
+✓ Project looks healthy.`}
+/>
+
+Missing paths print **`x Missing …`** and the process exits with code **1**.
+
+See also: [Command reference: doctor](../commands/doctor.mdx).

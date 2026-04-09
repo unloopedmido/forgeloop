@@ -1,0 +1,39 @@
+---
+sidebar_position: 3
+title: Sync slash commands to Discord
+description: How ForgeLoop syncs application commands on startup and when to use forgeloop deploy commands.
+---
+
+## Automatic sync (modular / advanced)
+
+Generated **modular** and **advanced** bots call **`syncCommands`** during startup (see `src/sync-commands.*`). Behavior:
+
+| `NODE_ENV` | Target | Required env |
+|------------|--------|----------------|
+| **`production`** | **Global** application commands | `DISCORD_TOKEN`, `CLIENT_ID` |
+| **Anything else** (e.g. development) | **Guild** commands | `DISCORD_TOKEN`, `CLIENT_ID`, **`GUILD_ID`** |
+
+Logs indicate whether commands were synced globally or to a guild.
+
+## Manual deploy: `forgeloop deploy commands`
+
+Use this when you want to push definitions from `src/commands` **without** running the bot, or from CI.
+
+```bash
+npx forgeloop deploy commands
+```
+
+Rules:
+
+- **`--guild-only`** — always sync to the guild in `GUILD_ID`.
+- **Without `--guild-only`** — same as above: **production → global**, **non-production → guild**.
+
+Requirements:
+
+- **Modular or advanced** project (command modules on disk).
+- Env: **`DISCORD_TOKEN`**, **`CLIENT_ID`**, and **`GUILD_ID`** whenever the target is guild (including default dev behavior).
+- **TypeScript** projects: deploy runs Node with `tsx` to import `.ts` command files — ensure dev dependencies are installed.
+
+Timeout: **20 seconds** per Discord API request; failures include Discord’s error message when JSON is returned.
+
+Full flags and errors: [`forgeloop deploy`](../commands/deploy.mdx).

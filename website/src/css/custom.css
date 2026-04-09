@@ -1,0 +1,885 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Shared (not mode-specific) */
+:root {
+  /* Match fonts loaded in docusaurus.config.ts headTags (DM Sans, Outfit, JetBrains Mono) */
+  --ifm-font-family-base: 'DM Sans', system-ui, sans-serif;
+  --ifm-heading-font-family: 'Outfit', 'DM Sans', system-ui, sans-serif;
+
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Dark — docs shell + homepage when toggled dark */
+[data-theme='dark'] {
+  --ifm-color-primary: #8e4ec6;
+  --ifm-color-primary-dark: #7c44ad;
+  --ifm-color-primary-darker: #7540a3;
+  --ifm-color-primary-darkest: #603586;
+  --ifm-color-primary-light: #995ed0;
+  --ifm-color-primary-lighter: #9f66d3;
+  --ifm-color-primary-lightest: #b182db;
+
+  --ifm-background-color: #050508;
+  --ifm-navbar-background-color: rgba(5, 5, 8, 0.92);
+  --ifm-card-background-color: rgba(20, 20, 28, 0.4);
+
+  --ifm-font-color-base: #e2e8f0;
+  --ifm-heading-color: #ffffff;
+
+  --ifm-toc-border-color: rgba(255, 255, 255, 0.08);
+  /* Footer: same canvas as page + homepage (.forge-home --fh-page) */
+  --ifm-footer-background-color: var(--ifm-background-color);
+  --ifm-footer-color: #94a3b8;
+  --ifm-footer-link-color: #cbd5e1;
+  --ifm-footer-title-color: #ffffff;
+
+  --docusaurus-highlighted-code-line-bg: rgba(142, 78, 198, 0.15);
+
+  color-scheme: dark;
+}
+
+/* Light — Infima / docs (was accidentally identical to dark before) */
+[data-theme='light'] {
+  --ifm-color-primary: #7c3aed;
+  --ifm-color-primary-dark: #6d28d9;
+  --ifm-color-primary-darker: #5b21b6;
+  --ifm-color-primary-darkest: #4c1d95;
+  --ifm-color-primary-light: #8b5cf6;
+  --ifm-color-primary-lighter: #a78bfa;
+  --ifm-color-primary-lightest: #c4b5fd;
+
+  --ifm-background-color: #f8fafc;
+  --ifm-navbar-background-color: rgba(248, 250, 252, 0.94);
+  --ifm-card-background-color: #ffffff;
+
+  --ifm-font-color-base: #334155;
+  --ifm-heading-color: #0f172a;
+
+  --ifm-toc-border-color: rgba(15, 23, 42, 0.08);
+  --ifm-footer-background-color: var(--ifm-background-color);
+  --ifm-footer-color: #64748b;
+  --ifm-footer-link-color: #475569;
+  --ifm-footer-title-color: #0f172a;
+
+  --docusaurus-highlighted-code-line-bg: rgba(124, 58, 237, 0.12);
+
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--ifm-background-color);
+  color: var(--ifm-font-color-base);
+}
+
+.navbar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='light'] .navbar {
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+/* Homepage design tokens (children use Tailwind fh-* colors) */
+.forge-home {
+  --fh-page: #050508;
+  --fh-heading: #ffffff;
+  --fh-muted: #94a3b8;
+  --fh-subtle: #94a3b8;
+  --fh-faint: #64748b;
+  --fh-edge: rgba(255, 255, 255, 0.1);
+  --fh-edge2: rgba(255, 255, 255, 0.05);
+  --fh-surface: #0b0b0f;
+  --fh-panel: rgba(255, 255, 255, 0.02);
+  --fh-install-bg: rgba(255, 255, 255, 0.05);
+  --fh-install-stroke: rgba(255, 255, 255, 0.1);
+  --fh-cta-band: #000000;
+  --fh-nested-bg: rgba(255, 255, 255, 0.02);
+  --fh-nested-stroke: rgba(255, 255, 255, 0.05);
+  --fh-gutter: #475569;
+  --fh-selection-bg: rgba(59, 130, 246, 0.3);
+  --fh-selection-fg: #bfdbfe;
+  --fh-hero-glow: rgba(59, 130, 246, 0.1);
+  --fh-separator: rgba(255, 255, 255, 0.1);
+  /* Hero CTA row */
+  --fh-hero-docs-bg: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  --fh-hero-docs-border: rgba(255, 255, 255, 0.18);
+  --fh-hero-docs-border-hover: rgba(96, 165, 250, 0.45);
+  --fh-hero-docs-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 12px 40px -18px rgba(0, 0, 0, 0.65);
+  --fh-hero-cmd-bg: linear-gradient(180deg, #14141c 0%, #0c0c10 100%);
+  --fh-hero-cmd-border: rgba(255, 255, 255, 0.16);
+  --fh-hero-cmd-glow: 0 0 0 1px rgba(59, 130, 246, 0.12), 0 8px 32px -12px rgba(0, 0, 0, 0.8);
+  --fh-hero-cmd-accent: #34d399;
+  --fh-hero-cmd-keyword: #94a3b8;
+  --fh-hero-cmd-string: #e2e8f0;
+  --fh-hero-cmd-pkg: #7dd3fc;
+  --fh-hero-copy-bg: rgba(255, 255, 255, 0.07);
+  --fh-hero-copy-border: rgba(255, 255, 255, 0.14);
+  --fh-hero-copy-hover: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme='light'] .forge-home {
+  --fh-page: #f8fafc;
+  --fh-heading: #0f172a;
+  --fh-muted: #64748b;
+  --fh-subtle: #64748b;
+  --fh-faint: #94a3b8;
+  --fh-edge: rgba(15, 23, 42, 0.12);
+  --fh-edge2: rgba(15, 23, 42, 0.08);
+  --fh-surface: #ffffff;
+  --fh-panel: rgba(15, 23, 42, 0.04);
+  --fh-install-bg: rgba(15, 23, 42, 0.04);
+  --fh-install-stroke: rgba(15, 23, 42, 0.12);
+  --fh-cta-band: #f1f5f9;
+  --fh-nested-bg: #f8fafc;
+  --fh-nested-stroke: rgba(15, 23, 42, 0.1);
+  --fh-gutter: #94a3b8;
+  --fh-selection-bg: rgba(59, 130, 246, 0.15);
+  --fh-selection-fg: #1e40af;
+  --fh-hero-glow: rgba(59, 130, 246, 0.12);
+  --fh-separator: rgba(15, 23, 42, 0.12);
+  --fh-hero-docs-bg: linear-gradient(
+    165deg,
+    rgba(15, 23, 42, 0.06) 0%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  --fh-hero-docs-border: rgba(15, 23, 42, 0.14);
+  --fh-hero-docs-border-hover: rgba(37, 99, 235, 0.45);
+  --fh-hero-docs-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 10px 36px -16px rgba(15, 23, 42, 0.12);
+  --fh-hero-cmd-bg: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+  --fh-hero-cmd-border: rgba(15, 23, 42, 0.14);
+  --fh-hero-cmd-glow: 0 0 0 1px rgba(37, 99, 235, 0.1), 0 8px 28px -14px rgba(15, 23, 42, 0.1);
+  --fh-hero-cmd-accent: #059669;
+  --fh-hero-cmd-keyword: #64748b;
+  --fh-hero-cmd-string: #0f172a;
+  --fh-hero-cmd-pkg: #0369a1;
+  --fh-hero-copy-bg: rgba(15, 23, 42, 0.05);
+  --fh-hero-copy-border: rgba(15, 23, 42, 0.12);
+  --fh-hero-copy-hover: rgba(15, 23, 42, 0.09);
+}
+
+.forge-home-hero-grid {
+  background-image:
+    linear-gradient(to right, rgba(128, 128, 128, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(128, 128, 128, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse 60% 50% at 50% 0%, #000 70%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 0%, #000 70%, transparent 100%);
+}
+
+[data-theme='light'] .forge-home-hero-grid {
+  background-image:
+    linear-gradient(to right, rgba(15, 23, 42, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.07) 1px, transparent 1px);
+}
+
+.forge-home-hero-glow {
+  background: radial-gradient(
+    circle,
+    var(--fh-hero-glow) 0%,
+    transparent 70%
+  );
+}
+
+/* Homepage hero: balanced primary + install pill (tokens on .forge-home) */
+.forge-hero-docs-link {
+  display: inline-flex;
+  height: 3rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding-inline: 1.75rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: -0.02em;
+  color: var(--fh-heading);
+  text-decoration: none;
+  background-image: var(--fh-hero-docs-bg);
+  border: 1px solid var(--fh-hero-docs-border);
+  box-shadow: var(--fh-hero-docs-shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition:
+    border-color 280ms var(--ease-out-quint),
+    box-shadow 280ms var(--ease-out-quint),
+    transform 280ms var(--ease-out-quint);
+}
+
+.forge-hero-docs-link:hover {
+  border-color: var(--fh-hero-docs-border-hover);
+  box-shadow:
+    var(--fh-hero-docs-shadow),
+    0 0 36px -10px rgba(96, 165, 250, 0.22);
+  transform: translateY(-1px);
+}
+
+.forge-hero-docs-link:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.forge-hero-install {
+  display: flex;
+  min-height: 3rem;
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 0.625rem;
+  border-radius: 9999px;
+  padding: 0.35rem 0.45rem 0.35rem 0.85rem;
+  background-image: var(--fh-hero-cmd-bg);
+  border: 1px solid var(--fh-hero-cmd-border);
+  box-shadow: var(--fh-hero-cmd-glow);
+  transition:
+    border-color 280ms var(--ease-out-quint),
+    box-shadow 280ms var(--ease-out-quint);
+}
+
+@media (min-width: 640px) {
+  .forge-hero-install {
+    flex: 0 1 auto;
+    max-width: min(100%, 32rem);
+  }
+}
+
+.forge-hero-install:hover {
+  border-color: rgba(96, 165, 250, 0.28);
+}
+
+[data-theme='light'] .forge-hero-install:hover {
+  border-color: rgba(37, 99, 235, 0.28);
+}
+
+.forge-hero-install-accent {
+  height: 1.35rem;
+  width: 3px;
+  flex-shrink: 0;
+  border-radius: 2px;
+  background: var(--fh-hero-cmd-accent);
+  opacity: 0.9;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--fh-hero-cmd-accent) 45%, transparent);
+}
+
+.forge-hero-install-code {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow-x: auto;
+  padding-block: 0.25rem;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  white-space: nowrap;
+  scrollbar-width: thin;
+}
+
+@media (min-width: 640px) {
+  .forge-hero-install-code {
+    font-size: 0.875rem;
+  }
+}
+
+.forge-hero-copy {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.375rem;
+  height: 2.375rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--fh-hero-copy-border);
+  background-color: var(--fh-hero-copy-bg);
+  color: var(--fh-muted);
+  cursor: pointer;
+  transition:
+    background-color 200ms var(--ease-out-quint),
+    border-color 200ms var(--ease-out-quint),
+    color 200ms var(--ease-out-quint);
+}
+
+.forge-hero-copy:hover {
+  background-color: var(--fh-hero-copy-hover);
+  border-color: var(--fh-hero-docs-border-hover);
+  color: var(--fh-heading);
+}
+
+.forge-hero-copy:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--fh-hero-docs-border-hover) 70%, transparent);
+  outline-offset: 2px;
+}
+
+/* Homepage bottom CTA — matches hero controls + feature-card rhythm */
+.forge-home-cta-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  border: 1px solid var(--fh-edge);
+  background-color: var(--fh-surface);
+  background-image: radial-gradient(
+    ellipse 75% 55% at 50% -20%,
+    rgba(64, 123, 255, 0.14),
+    transparent 58%
+  );
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 28px 70px -28px rgba(0, 0, 0, 0.55);
+}
+
+[data-theme='light'] .forge-home-cta-card {
+  background-image: radial-gradient(
+    ellipse 75% 55% at 50% -20%,
+    rgba(59, 130, 246, 0.1),
+    transparent 58%
+  );
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.85) inset,
+    0 22px 56px -22px rgba(15, 23, 42, 0.1);
+}
+
+.forge-cta-docs-link {
+  display: flex;
+  width: 100%;
+  min-height: 3.25rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 0.875rem;
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+  color: var(--fh-heading);
+  text-decoration: none;
+  background-image: var(--fh-hero-docs-bg);
+  border: 1px solid var(--fh-hero-docs-border);
+  box-shadow: var(--fh-hero-docs-shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition:
+    border-color 280ms var(--ease-out-quint),
+    box-shadow 280ms var(--ease-out-quint),
+    transform 280ms var(--ease-out-quint);
+}
+
+.forge-cta-docs-link:hover {
+  border-color: var(--fh-hero-docs-border-hover);
+  box-shadow:
+    var(--fh-hero-docs-shadow),
+    0 0 36px -10px rgba(96, 165, 250, 0.22);
+  transform: translateY(-1px);
+}
+
+[data-theme='light'] .forge-cta-docs-link:hover {
+  box-shadow:
+    var(--fh-hero-docs-shadow),
+    0 0 36px -10px rgba(37, 99, 235, 0.18);
+}
+
+.forge-cta-docs-link:active {
+  transform: translateY(0) scale(0.995);
+}
+
+.forge-cta-install {
+  display: flex;
+  width: 100%;
+  min-height: 3.25rem;
+  min-width: 0;
+  align-items: center;
+  gap: 0.625rem;
+  border-radius: 0.875rem;
+  padding: 0.4rem 0.5rem 0.4rem 0.85rem;
+  background-image: var(--fh-hero-cmd-bg);
+  border: 1px solid var(--fh-hero-cmd-border);
+  box-shadow: var(--fh-hero-cmd-glow);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition:
+    border-color 280ms var(--ease-out-quint),
+    box-shadow 280ms var(--ease-out-quint);
+}
+
+.forge-cta-install:hover {
+  border-color: rgba(96, 165, 250, 0.28);
+}
+
+[data-theme='light'] .forge-cta-install:hover {
+  border-color: rgba(37, 99, 235, 0.28);
+}
+
+.forge-cta-install:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--fh-hero-docs-border-hover) 70%, transparent);
+  outline-offset: 2px;
+}
+
+.forge-cta-install-squircle {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.375rem;
+  height: 2.375rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--fh-hero-copy-border);
+  background-color: var(--fh-hero-copy-bg);
+  color: var(--fh-muted);
+  transition:
+    background-color 200ms var(--ease-out-quint),
+    border-color 200ms var(--ease-out-quint),
+    color 200ms var(--ease-out-quint);
+}
+
+.forge-cta-install:hover .forge-cta-install-squircle {
+  background-color: var(--fh-hero-copy-hover);
+  border-color: var(--fh-hero-docs-border-hover);
+  color: var(--fh-heading);
+}
+
+/* Infima styles all `pre` like doc code blocks; reset inside faux terminals only. */
+pre.forge-terminal-pre {
+  margin: 0;
+  padding: 0 !important;
+  background-color: transparent !important;
+  border-radius: 0 !important;
+  font: inherit;
+  line-height: inherit;
+}
+
+/* Single wordmark: uppercase, minimal tracking (no separate logo image) */
+.navbar__brand .navbar__title {
+  font-family: var(--ifm-font-family-base);
+  font-weight: 500;
+  font-size: 0.8125rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ifm-heading-color);
+}
+
+.footer-brand-wordmark {
+  display: inline-block;
+  font-family: var(--ifm-font-family-base);
+  font-weight: 500;
+  font-size: 0.875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ifm-heading-color);
+  text-decoration: none;
+  transition: color 200ms var(--ease-out-quint);
+}
+
+.footer-brand-wordmark:hover {
+  color: var(--ifm-color-primary-light);
+}
+
+[data-theme='light'] .footer-brand-wordmark:hover {
+  color: var(--ifm-color-primary-dark);
+}
+
+/* Footer atmosphere: same grid density as homepage hero, anchored to bottom */
+.site-footer-grid {
+  background-image:
+    linear-gradient(to right, rgba(128, 128, 128, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(128, 128, 128, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse 75% 55% at 50% 100%, #000 55%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 55% at 50% 100%, #000 55%, transparent 100%);
+}
+
+[data-theme='light'] .site-footer-grid {
+  background-image:
+    linear-gradient(to right, rgba(15, 23, 42, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.07) 1px, transparent 1px);
+}
+
+.site-footer-glow {
+  background: radial-gradient(
+    ellipse 90% 60% at 50% 100%,
+    rgba(59, 130, 246, 0.12) 0%,
+    transparent 62%
+  );
+}
+
+[data-theme='light'] .site-footer-glow {
+  background: radial-gradient(
+    ellipse 90% 60% at 50% 100%,
+    rgba(59, 130, 246, 0.1) 0%,
+    transparent 62%
+  );
+}
+
+/* Subtle background grid pattern inspired by Astro */
+.astro-bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 64px 64px;
+  background-position: center top;
+  mask-image: linear-gradient(to bottom, white 0%, transparent 80%);
+  -webkit-mask-image: linear-gradient(to bottom, white 0%, transparent 80%);
+}
+
+[data-theme='light'] .astro-bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(15, 23, 42, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.06) 1px, transparent 1px);
+}
+
+.astro-glow-orb-1 {
+  position: absolute;
+  top: -10%;
+  left: 20%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(64, 123, 255, 0.15) 0%, rgba(64, 123, 255, 0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.astro-glow-orb-2 {
+  position: absolute;
+  top: 10%;
+  right: 15%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(142, 78, 198, 0.15) 0%, rgba(142, 78, 198, 0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Glassmorphism Card Style */
+.astro-card {
+  background: linear-gradient(180deg, rgba(30, 30, 42, 0.5) 0%, rgba(15, 15, 22, 0.5) 100%);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.1), 0 4px 24px rgba(0, 0, 0, 0.4);
+  transition: all 300ms var(--ease-out-quint);
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme='light'] .astro-card {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.8), 0 4px 24px rgba(15, 23, 42, 0.06);
+}
+
+.astro-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  opacity: 0.5;
+  transition: opacity 300ms var(--ease-out-quint);
+}
+
+[data-theme='light'] .astro-card::before {
+  background: linear-gradient(90deg, transparent, rgba(15, 23, 42, 0.12), transparent);
+}
+
+.astro-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow:
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.2),
+    0 12px 40px rgba(0, 0, 0, 0.6),
+    0 0 30px rgba(142, 78, 198, 0.1);
+}
+
+[data-theme='light'] .astro-card:hover {
+  border-color: rgba(15, 23, 42, 0.15);
+  box-shadow:
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.9),
+    0 12px 40px rgba(15, 23, 42, 0.08),
+    0 0 30px rgba(124, 58, 237, 0.08);
+}
+
+.astro-card:hover::before {
+  opacity: 1;
+}
+
+/* Enable cross-document view transitions */
+@view-transition {
+  navigation: auto;
+}
+
+/* Docusaurus theme overrides */
+.footer {
+  background-color: transparent !important;
+}
+
+/* --- Documentation pages: CLI-studio theme (scoped to .docs-doc-page) --- */
+.docs-doc-page {
+  --forge-doc-primary: #0d9488;
+  --forge-doc-primary-dim: #0f766e;
+  --forge-doc-accent: #34d399;
+  --forge-doc-muted: #64748b;
+  --forge-doc-terminal-bg: #0c1118;
+  --forge-doc-terminal-border: rgba(148, 163, 184, 0.2);
+  --ifm-color-primary: var(--forge-doc-primary);
+  --ifm-color-primary-dark: var(--forge-doc-primary-dim);
+  --ifm-color-primary-darker: #115e59;
+  --ifm-color-primary-darkest: #134e4a;
+  --ifm-color-primary-light: #14b8a6;
+  --ifm-color-primary-lighter: #2dd4bf;
+  --ifm-color-primary-lightest: #5eead4;
+  --ifm-link-color: #2dd4bf;
+  --ifm-menu-color-active: var(--forge-doc-primary);
+}
+
+[data-theme='light'] .docs-doc-page {
+  --forge-doc-terminal-bg: #f1f5f9;
+  --forge-doc-terminal-border: rgba(15, 23, 42, 0.12);
+  --ifm-link-color: #0d9488;
+}
+
+.docs-doc-page .theme-doc-markdown {
+  font-family:
+    'DM Sans',
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
+  font-optical-sizing: auto;
+  max-width: 52rem;
+}
+
+.docs-doc-page .theme-doc-markdown h1,
+.docs-doc-page .theme-doc-markdown h2,
+.docs-doc-page .theme-doc-markdown h3 {
+  font-family:
+    'Outfit',
+    'DM Sans',
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.docs-doc-page .theme-doc-markdown code,
+.docs-doc-page .theme-doc-toc code,
+.docs-doc-page table code {
+  font-family:
+    'JetBrains Mono',
+    ui-monospace,
+    monospace;
+  font-size: 0.9em;
+}
+
+.docs-doc-page .theme-doc-markdown > * {
+  animation: forge-doc-enter 0.45s var(--ease-out-quart) both;
+}
+
+.docs-doc-page .theme-doc-markdown > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.docs-doc-page .theme-doc-markdown > *:nth-child(2) {
+  animation-delay: 40ms;
+}
+.docs-doc-page .theme-doc-markdown > *:nth-child(3) {
+  animation-delay: 80ms;
+}
+.docs-doc-page .theme-doc-markdown > *:nth-child(4) {
+  animation-delay: 120ms;
+}
+.docs-doc-page .theme-doc-markdown > *:nth-child(5) {
+  animation-delay: 160ms;
+}
+.docs-doc-page .theme-doc-markdown > *:nth-child(6) {
+  animation-delay: 200ms;
+}
+.docs-doc-page .theme-doc-markdown > *:nth-child(7) {
+  animation-delay: 240ms;
+}
+.docs-doc-page .theme-doc-markdown > *:nth-child(8) {
+  animation-delay: 280ms;
+}
+.docs-doc-page .theme-doc-markdown > *:nth-child(n + 9) {
+  animation-delay: 320ms;
+}
+
+@keyframes forge-doc-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.docs-doc-page .alert {
+  border-radius: 0.75rem;
+  border-width: 1px;
+}
+
+.docs-doc-page .theme-doc-markdown .forge-cli-example {
+  margin: 1.25rem 0;
+}
+
+/* CliExample uses HomeTerminalFrame (same chrome as homepage hero terminal) */
+.docs-doc-page .forge-cli-example .forge-home-terminal {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+    0 24px 56px -20px rgba(0, 0, 0, 0.65);
+}
+
+[data-theme='light'] .docs-doc-page .forge-cli-example .forge-home-terminal {
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.2) inset,
+    0 28px 60px -24px rgba(15, 23, 42, 0.35);
+}
+
+.forge-cli-example__title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ifm-color-content-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.forge-cli-example__caption {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--ifm-color-content-secondary);
+}
+
+/* Markdown / MDX code blocks: rounded shell + readable Prism tokens */
+.docs-doc-page .theme-code-block {
+  border-radius: 0.75rem;
+  border: 1px solid var(--ifm-toc-border-color);
+  overflow: hidden;
+  box-shadow: 0 10px 32px -20px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='light'] .docs-doc-page .theme-code-block {
+  box-shadow: 0 10px 28px -18px rgba(15, 23, 42, 0.12);
+}
+
+.docs-doc-page .theme-code-block pre {
+  font-family:
+    'JetBrains Mono',
+    ui-monospace,
+    monospace;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.forge-flag-table-wrap {
+  overflow-x: auto;
+  margin: 1rem 0 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--ifm-toc-border-color);
+}
+
+.forge-flag-table {
+  width: 100%;
+  margin: 0;
+  font-size: 0.875rem;
+  border-collapse: collapse;
+}
+
+.forge-flag-table th,
+.forge-flag-table td {
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+  vertical-align: top;
+}
+
+.forge-flag-table th {
+  font-family:
+    'Outfit',
+    'DM Sans',
+    sans-serif;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ifm-color-content-secondary);
+  background: color-mix(in srgb, var(--ifm-background-color) 88%, var(--ifm-color-emphasis-200) 12%);
+}
+
+.forge-flag-table tr:last-child td {
+  border-bottom: none;
+}
+
+.forge-flag-table__flag {
+  white-space: nowrap;
+}
+
+.forge-file-tree {
+  margin: 1.25rem 0;
+  border-radius: 0.75rem;
+  border: 1px solid var(--forge-doc-terminal-border);
+  background: var(--forge-doc-terminal-bg);
+  padding: 0.85rem 1rem;
+}
+
+.forge-file-tree__pre {
+  margin: 0 !important;
+  font-family:
+    'JetBrains Mono',
+    ui-monospace,
+    monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--ifm-heading-color);
+}
+
+.forge-file-tree__caption {
+  margin-top: 0.65rem;
+  font-size: 0.8125rem;
+  color: var(--ifm-color-content-secondary);
+}
+
+.forge-pm-tab-pre {
+  margin: 0.5rem 0 0 !important;
+  padding: 0.85rem 1rem !important;
+  border-radius: 0.5rem;
+  border: 1px solid var(--ifm-toc-border-color);
+  background: var(--ifm-code-background);
+  font-size: 0.8125rem;
+}
+
+.docs-doc-page .tabs {
+  border-bottom: 1px solid var(--ifm-toc-border-color);
+}
+
+.docs-doc-page .tabs__item {
+  font-family:
+    'DM Sans',
+    sans-serif;
+  font-weight: 500;
+}
+
+.docs-doc-page .tabs__item--active {
+  border-bottom-color: var(--forge-doc-primary) !important;
+  color: var(--forge-doc-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .docs-doc-page .theme-doc-markdown > * {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

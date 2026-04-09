@@ -141,9 +141,27 @@ npx create-forgeloop@latest doctor --dir ./my-bot
 
 ## Docs
 
-Full docs, setup details, and command reference: **coming soon**.
+Full docs, setup details, and command reference:
 
-For now, check the repository and README sections below for usage examples.
+- **GitHub Pages:** [https://unloopedmido.github.io/forgeloop/](https://unloopedmido.github.io/forgeloop/) — enable **Settings → Pages → Build and deployment: GitHub Actions** on the repo the first time you publish.
+
+Local docs development:
+
+```bash
+npm run docs:dev
+```
+
+Build docs locally:
+
+```bash
+npm run docs:build
+```
+
+Preview the built site:
+
+```bash
+npm run docs:serve
+```
 
 ---
 

@@ -1,0 +1,40 @@
+---
+sidebar_position: 5
+title: forgeloop info
+description: Print ForgeLoop manifest fields for the current project directory.
+---
+
+import { FlagTable } from '@site/src/components/docs/FlagTable';
+
+## Usage
+
+```bash
+forgeloop info [--dir ./project]
+```
+
+Prints a banner with the resolved directory, then:
+
+- **Project** — `manifest.projectName`
+- **Language** — `ts` | `js`
+- **Preset** — `basic` | `modular` | `advanced`
+- **Framework** — `discord.js` (as stored in manifest)
+- **Package manager**
+- **Docker** / **CI** — enabled or disabled
+- **Database** — `none`, or `sqlite via prisma` / `postgresql via prisma`, etc.
+
+## Flags
+
+<FlagTable
+  rows={[
+    {
+      flag: '--dir',
+      type: 'string',
+      defaultValue: 'cwd',
+      description: 'Project root.',
+    },
+  ]}
+/>
+
+## Related
+
+[Workflow: info](../workflows/info.mdx)

@@ -1,0 +1,49 @@
+---
+sidebar_position: 4
+title: forgeloop doctor
+description: Verify files expected by the ForgeLoop manifest exist on disk.
+---
+
+import { FlagTable } from '@site/src/components/docs/FlagTable';
+
+## Usage
+
+```bash
+forgeloop doctor [--dir ./project]
+```
+
+Loads the ForgeLoop config from `--dir` (default: current directory), then checks paths derived from the manifest:
+
+- Config file path that was loaded
+- `srcDir`, `configDir`
+- `commandsDir` / `eventsDir` when preset uses handlers
+- `coreDir` for **advanced**
+- `.gitignore` when `features.git`
+- `eslint.config.js` + `.prettierrc.json` when tooling is **eslint-prettier**
+- `biome.json` when tooling is **biome**
+- Prisma paths when database enabled: `prisma.config.ts`, `prisma/schema.prisma`, and client file under `src/core/...` (advanced) or `src/lib/...` (modular)
+- `Dockerfile` when Docker enabled
+- `.github/workflows/ci.yml` when CI enabled
+
+Each missing path → **`x Missing …`** and exit code **1** after all checks. If none missing → **`✓ Project looks healthy.`**
+
+## Flags
+
+<FlagTable
+  rows={[
+    {
+      flag: '--dir',
+      type: 'string',
+      defaultValue: 'cwd',
+      description: 'Project root to inspect.',
+    },
+  ]}
+/>
+
+## Related
+
+No ForgeLoop config in directory:
+
+> No ForgeLoop project config found in …. Expected one of forgeloop.config.mjs, forgeloop.config.js, forgeloop.config.cjs or forgeloop.json.
+
+See [Workflow: doctor](../workflows/doctor.mdx).

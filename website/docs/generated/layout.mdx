@@ -1,0 +1,113 @@
+---
+sidebar_position: 1
+title: Generated project layout
+description: Typical files and folders ForgeLoop creates for each preset and optional features.
+---
+
+import Admonition from '@theme/Admonition';
+import { FileTree } from '@site/src/components/docs/FileTree';
+
+Layouts depend on **`preset`**, **`language`**, and feature flags (**database**, **tooling**, **git**, **docker**, **ci**). Below are **TypeScript** examples; JavaScript uses the same paths with `.js` instead of `.ts` where applicable.
+
+## Basic (minimal)
+
+**Preset `basic`**, no database, no tooling, no git: everything lives in **`src/index.ts`** plus config and env helper.
+
+<FileTree
+  caption="Core files only"
+  lines={[
+    'my-bot/',
+    '├── package.json',
+    '├── .env.example',
+    '├── README.md',
+    '├── forgeloop.config.mjs',
+    '└── src/',
+    '    ├── index.ts',
+    '    └── config/',
+    '        └── env.ts',
+  ]}
+/>
+
+With **`--git`**, a **`.gitignore`** is added. With **`eslint-prettier`**, you get **`eslint.config.js`** and **`.prettierrc.json`**. With **`biome`**, you get **`biome.json`** instead.
+
+## Modular (handlers + sync)
+
+**Preset `modular`** adds command/event folders, **`sync-commands`**, and TypeScript **`src/types/commands.ts`**. Starter files **`ping`** and **`clientReady`** are included.
+
+<FileTree
+  lines={[
+    'my-bot/',
+    '├── package.json',
+    '├── .env.example',
+    '├── README.md',
+    '├── forgeloop.config.mjs',
+    '├── tsconfig.json',
+    '└── src/',
+    '    ├── index.ts',
+    '    ├── sync-commands.ts',
+    '    ├── types/',
+    '    │   └── commands.ts',
+    '    ├── commands/',
+    '    │   └── ping.ts',
+    '    ├── events/',
+    '    │   └── clientReady.ts',
+    '    └── config/',
+    '        └── env.ts',
+  ]}
+/>
+
+Optional layers (not shown unless selected):
+
+- **Git** → `.gitignore`
+- **eslint-prettier** → `eslint.config.js`, `.prettierrc.json`
+- **biome** → `biome.json`
+- **Prisma** → `prisma.config.ts`, `prisma/schema.prisma`, `src/lib/database.ts`, and generated client under `src/generated/prisma/` (TypeScript) after `db:push` / generate
+- **Docker** → `Dockerfile`
+- **CI** → `.github/workflows/ci.yml`
+
+## Advanced (core runtime)
+
+**Preset `advanced`** keeps handler folders but moves orchestration under **`src/core`**: logging, client factory, loaders, **`startBot`**, and **`sync-commands`** next to the runtime. **`src/index.ts`** only boots **`startBot()`**.
+
+<FileTree
+  lines={[
+    'my-bot/',
+    '├── package.json',
+    '├── forgeloop.config.mjs',
+    '└── src/',
+    '    ├── index.ts',
+    '    ├── types/',
+    '    │   └── commands.ts',
+    '    ├── commands/',
+    '    │   └── ping.ts',
+    '    ├── events/',
+    '    │   └── clientReady.ts',
+    '    ├── config/',
+    '    │   └── env.ts',
+    '    └── core/',
+    '        ├── logging/',
+    '        │   └── logger.ts',
+    '        ├── client/',
+    '        │   └── create-client.ts',
+    '        ├── loaders/',
+    '        │   ├── load-commands.ts',
+    '        │   └── load-events.ts',
+    '        ├── runtime/',
+    '        │   ├── start-bot.ts',
+    '        │   └── sync-commands.ts',
+    '        └── database/',
+    '            └── client.ts   # when database enabled',
+  ]}
+/>
+
+<Admonition type="tip" title="Verify on disk">
+  The most reliable check is <code>forgeloop doctor</code> after changing or deleting files. Scaffold tests under <code>tests/scaffold.test.ts</code> in the repo assert key files for representative manifests.
+</Admonition>
+
+## Entry behavior
+
+- **basic** — registers a sample slash command and `clientReady` in **`index.ts`**, then `client.login`.
+- **modular** — loads commands/events from disk, runs **`syncCommands`**, then logs in.
+- **advanced** — **`startBot`** performs the same phases using core modules.
+
+See [Concepts: command sync](../concepts.mdx) for guild vs global registration rules.

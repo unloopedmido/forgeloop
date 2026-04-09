@@ -1,0 +1,27 @@
+---
+sidebar_position: 2
+title: Lint and format
+description: eslint-prettier vs biome in ForgeLoop-generated projects.
+---
+
+`forgeloop init` sets **`--tooling`** to one of:
+
+| Value | Generated files | Typical scripts |
+|-------|-----------------|-----------------|
+| **`eslint-prettier`** | `eslint.config.js`, `.prettierrc.json` | `npm run lint`, `npm run format` |
+| **`biome`** | `biome.json` | `npm run lint` → `biome check .`, `npm run format` → `biome format --write .` |
+| **`none`** | (no linter/formatter config) | — |
+
+TypeScript projects also get **`typescript`**, **`tsx`**, and **`@types/node`**. ESLint stacks add **`typescript-eslint`** for `.ts` projects.
+
+## Choosing a stack
+
+- **eslint-prettier** — familiar split setup; two tools, widely used in Node/discord.js tutorials.
+- **biome** — single fast tool for lint + format; fewer files.
+- **none** — you bring your own rules; `doctor` will not expect eslint or biome files.
+
+`forgeloop doctor` checks for the files that match **`manifest.features.tooling`** — if you delete them, doctor reports missing paths.
+
+---
+
+Related: [Command reference: doctor](../commands/doctor.mdx).

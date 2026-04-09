@@ -1,0 +1,69 @@
+---
+sidebar_position: 99
+title: Troubleshooting
+description: Common ForgeLoop CLI errors, CI behavior, and deploy sync targets.
+---
+
+## `Short flags are not supported yet: -x`
+
+ForgeLoop’s parser only accepts **long flags** (`--yes`, `--dir`). Use the long form everywhere.
+
+## `init` requires a project name in non-interactive mode
+
+In CI, Docker, or any **non-interactive** run, pass the name after `init`:
+
+```bash
+npx forgeloop init my-bot --yes
+```
+
+Using **`create-forgeloop`**, a bare project name is already treated as `init my-bot`.
+
+## Git, Docker, CI, or install skipped in CI
+
+**Boolean** flags **`--git`**, **`--docker`**, **`--ci`**, **`--install`** are only **prompted** in interactive mode. In **non-TTY** sessions they default to **false** unless you pass the flag explicitly:
+
+```bash
+npx forgeloop init my-bot --yes --git --install
+```
+
+Selects like `--language` still use **defaults** when omitted in non-interactive mode (`ts`, `modular`, `npm`, etc.).
+
+## Basic preset: `add` / `deploy commands` fails
+
+**basic** keeps commands and events **inline** in `src/index.*`. Use **`modular`** or **`advanced`** if you need:
+
+- `forgeloop add command` / `add event`
+- `forgeloop deploy commands`
+
+The CLI error text states this explicitly.
+
+## Deploy: missing `GUILD_ID` or wrong sync target
+
+- **Guild** sync (development default, or `--guild-only`) requires **`GUILD_ID`** in `.env` or the environment.
+- **Global** sync happens when **`NODE_ENV=production`** and **`--guild-only` is not set**.
+
+See [deploy commands](./commands/deploy) and [Sync slash commands](./workflows/sync-commands).
+
+## Deploy: TypeScript import / JSON errors
+
+`deploy commands` **imports** `src/commands/*.ts` via **`tsx`**. Run from a machine with **dependencies installed** (`node_modules` present). Parse errors surface as:
+
+> Command payload collection returned invalid JSON: …
+
+## No ForgeLoop config found
+
+The CLI expects **`forgeloop.config.mjs`**, **`.js`**, **`.cjs`**, or legacy **`forgeloop.json`** in the project root (or the directory given by **`--dir`**).
+
+## Manifest load errors
+
+- Wrong **`manifestVersion`** → unsupported version message.
+- **`framework` ≠ discord.js** or **`runtime` ≠ node** → rejected by validation.
+- Invalid or missing exports in `.mjs` config → load error with the underlying Node message.
+
+## Doctor reports missing files
+
+Either restore the file or align your **manifest** with reality (e.g. disable a feature you removed manually). `doctor` is strict about paths implied by the manifest.
+
+---
+
+Still stuck? Open an issue on [GitHub](https://github.com/unloopedmido/forgeloop/issues) with the **exact command**, **ForgeLoop version**, and **redacted** error output.

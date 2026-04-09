@@ -1,0 +1,71 @@
+---
+sidebar_position: 2
+title: forgeloop add
+description: Add a slash command or Discord.js event handler file to modular and advanced projects.
+---
+
+import { FlagTable } from '@site/src/components/docs/FlagTable';
+
+## Usage
+
+```bash
+forgeloop add command <name> [--description "..."]
+forgeloop add event <eventName> [--once] [--on]
+```
+
+**Basic** preset projects **cannot** use `add` — handlers are inline. Error message:
+
+> This ForgeLoop project uses the "basic" shape, so commands and events stay inline in index.ts/js. Switch to "modular" or "advanced" to use handler generators.
+
+Wrong subcommand:
+
+> Unsupported add target "…". Try "command" or "event".
+
+Missing name (non-interactive):
+
+`Usage: forgeloop add command <name> [--description "..."]`
+
+`Usage: forgeloop add event <eventName> [--once]`
+
+## Command generator
+
+- **Name:** letters, numbers, hyphens, underscores — stored **lowercase**.
+- **Description:** optional; default stub text in the `SlashCommandBuilder` if empty.
+
+## Event generator
+
+- **Name:** must be a valid Discord.js event identifier (e.g. `messageCreate`).
+- **`--once` / `--on`:** control `client.once` vs `client.on`. Default: **`once` for `clientReady`**, otherwise **`on`** if neither flag is set.
+
+## Flags
+
+<FlagTable
+  rows={[
+    {
+      flag: '--dir',
+      type: 'string',
+      defaultValue: 'cwd',
+      description: 'Project root containing ForgeLoop config.',
+    },
+    {
+      flag: '--description',
+      type: 'string',
+      description: 'Only for add command — slash command description.',
+    },
+    {
+      flag: '--once',
+      type: 'boolean',
+      description: 'Only for add event — register with client.once.',
+    },
+    {
+      flag: '--on',
+      type: 'boolean',
+      description: 'Only for add event — register with client.on.',
+    },
+  ]}
+/>
+
+## Files written
+
+- Command: `src/commands/<name>.ts` or `.js` (from manifest paths).
+- Event: `src/events/<eventName>.ts` or `.js`.

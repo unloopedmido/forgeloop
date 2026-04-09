@@ -2,7 +2,7 @@
 	"name": "create-forgeloop",
 	"version": "0.2.4",
 	"description": "A maintenance-first Discord bot scaffolder and CLI for discord.js with TypeScript/JavaScript starters, generators, and project health checks.",
-	"homepage": "https://github.com/unloopedmido/forgeloop#readme",
+	"homepage": "https://unloopedmido.github.io/forgeloop/",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/unloopedmido/forgeloop.git"
@@ -54,6 +54,9 @@
 	"scripts": {
 		"build": "tsc -p tsconfig.build.json",
 		"dev": "bun run src/index.ts",
+		"docs:dev": "npm --prefix website run start",
+		"docs:build": "npm --prefix website run build",
+		"docs:serve": "npm --prefix website run serve",
 		"lint": "eslint src tests eslint.config.js",
 		"test": "bun test",
 		"typecheck": "tsc --noEmit",
