@@ -1,7 +1,7 @@
 ---
 sidebar_position: 3
 title: Sync slash commands to Discord
-description: How ForgeLoop syncs application commands on startup and when to use forgeloop deploy commands.
+description: How ForgeLoop syncs application commands on startup and when to use forgeloop commands deploy.
 ---
 
 ## Automatic sync (modular / advanced)
@@ -15,19 +15,19 @@ Generated **modular** and **advanced** bots call **`syncCommands`** during start
 
 Logs indicate whether commands were synced globally or to a guild.
 
-## Manual deploy: `forgeloop deploy commands`
+## Manual deploy: `forgeloop commands deploy`
 
 Use this when you want to push definitions from `src/commands` **without** running the bot, or from CI.
 
 ```bash
-npx forgeloop deploy commands
+npx forgeloop commands deploy
 ```
 
 Rules:
 
 - **`--guild`** — always sync to the guild in `GUILD_ID`.
 - **`--global`** — always sync globally.
-- **Without target flags** — same as startup defaults: **production → global**, **non-production → guild**.
+- **Without target flags** — same as startup defaults: **production -> global**, **non-production -> guild**.
 
 Requirements:
 
@@ -37,4 +37,4 @@ Requirements:
 
 Timeout: **20 seconds** per Discord API request; failures include Discord’s error message when JSON is returned.
 
-Full flags and errors: [`forgeloop deploy`](../commands/deploy.mdx).
+Related command reference: [`forgeloop commands`](../commands/commands.mdx).

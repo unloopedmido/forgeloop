@@ -1,0 +1,67 @@
+---
+sidebar_position: 4
+title: forgeloop remove
+description: Remove generated handler files and optionally sync slash commands.
+---
+
+import { FlagTable } from '@site/src/components/docs/FlagTable';
+
+## Usage
+
+```bash
+forgeloop remove command <name> [--sync] [--guild|--global] [--dir ./project]
+forgeloop remove event <eventName> [--dir ./project]
+forgeloop remove modal [--custom-id <id>] [<customId>] [--dir ./project]
+forgeloop remove button [--custom-id <id>] [<customId>] [--dir ./project]
+forgeloop remove select-menu [--custom-id <id>] [<customId>] [--dir ./project]
+```
+
+`remove` is available for **modular** and **advanced** projects only.
+
+## Behavior
+
+- Deletes the matching generated file from disk.
+- If the target file does not exist, returns:
+  - `Nothing to remove: <path> does not exist.`
+
+For `command` only:
+
+- `--sync` triggers a Discord slash-command deploy after deletion.
+- `--guild` / `--global` apply to that sync target.
+
+For non-command targets:
+
+- `--sync` is ignored with a warning because component custom IDs are not synced through application command PUT.
+
+## Flags
+
+<FlagTable
+  rows={[
+    {
+      flag: '--dir',
+      type: 'string',
+      defaultValue: 'cwd',
+      description: 'Project root containing ForgeLoop config.',
+    },
+    {
+      flag: '--custom-id',
+      type: 'string',
+      description: 'Identifier for modal/button/select-menu removal.',
+    },
+    {
+      flag: '--sync',
+      type: 'boolean',
+      description: 'After removing a command, redeploy slash commands.',
+    },
+    {
+      flag: '--guild',
+      type: 'boolean',
+      description: 'With --sync, deploy command set to guild scope.',
+    },
+    {
+      flag: '--global',
+      type: 'boolean',
+      description: 'With --sync, deploy command set to global scope.',
+    },
+  ]}
+/>

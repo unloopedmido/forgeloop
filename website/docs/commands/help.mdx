@@ -4,7 +4,7 @@ title: forgeloop help
 description: Print ForgeLoop usage, commands, and init feature flags.
 ---
 
-Running `forgeloop`, `forgeloop help`, or `forgeloop --help` prints the same summary as implemented in the CLI: hero text, command lines, init wizard note, and feature flags (`--database`, `--orm`, `--tooling`, `--git`, `--docker`, `--ci`, `--install`, `--dry-run`, `--yes`).
+Running `forgeloop`, `forgeloop help`, or `forgeloop --help` prints the same summary as implemented in the CLI: hero text, command lines, init wizard note, and feature flags (`--database`, `--orm`, `--tooling`, `--git`, `--docker`, `--ci`, `--install`, `--yes`).
 
 Global aliases:
 
@@ -17,19 +17,23 @@ Command-specific help:
 
 - `forgeloop init --help`
 - `forgeloop add --help`
-- `forgeloop deploy --help`
+- `forgeloop commands --help`
+- `forgeloop remove --help`
 - `forgeloop doctor --help`
 - `forgeloop info --help`
+- `forgeloop docs --help`
 
 ## Command list (quick reference)
 
 | Command | Purpose |
 |---------|---------|
 | `init` | Scaffold a project |
-| `add command` / `add event` | Generate handler files |
-| `deploy commands` | Push slash commands to Discord |
-| `doctor` | File presence checks |
+| `add ...` | Generate command/event/interaction files |
+| `commands list` / `commands deploy` | Inspect or push slash commands |
+| `remove ...` | Delete generated files (optional command sync) |
+| `doctor` | File + env checks |
 | `info` | Manifest summary |
+| `docs` | Open the docs site |
 | `version` | Print CLI package version |
 
 For full detail, use the sidebar **Command reference** section or start at [`init`](./init.mdx).

@@ -8,7 +8,6 @@ type PackageManagerTabsProps = {
     npm: string;
     pnpm: string;
     yarn: string;
-    bun: string;
   };
 };
 
@@ -24,9 +23,6 @@ export function PackageManagerCreateTabs({ create }: PackageManagerTabsProps) {
       <TabItem value="yarn" label="yarn">
         <DocsBashSnippet code={create.yarn} />
       </TabItem>
-      <TabItem value="bun" label="bun">
-        <DocsBashSnippet code={create.bun} />
-      </TabItem>
     </Tabs>
   );
 }
@@ -38,14 +34,13 @@ type ForgeloopCommandTabsProps = {
 };
 
 /**
- * Matches {@link packageManagerCliCommand} in the CLI: npx / pnpm / yarn / bunx forgeloop …
+ * Matches {@link packageManagerCliCommand} in the CLI: npx / pnpm / yarn forgeloop …
  */
 export function ForgeloopInvokeTabs({ command, forgeloopArgs }: ForgeloopCommandTabsProps) {
   const lines: Record<string, string> = {
     npm: `${command} npx forgeloop ${forgeloopArgs}`,
     pnpm: `${command} pnpm forgeloop ${forgeloopArgs}`,
     yarn: `${command} yarn forgeloop ${forgeloopArgs}`,
-    bun: `${command} bunx forgeloop ${forgeloopArgs}`,
   };
 
   return (
@@ -58,9 +53,6 @@ export function ForgeloopInvokeTabs({ command, forgeloopArgs }: ForgeloopCommand
       </TabItem>
       <TabItem value="yarn" label="yarn">
         <DocsBashSnippet code={lines.yarn} />
-      </TabItem>
-      <TabItem value="bun" label="bun">
-        <DocsBashSnippet code={lines.bun} />
       </TabItem>
     </Tabs>
   );

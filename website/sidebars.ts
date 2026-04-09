@@ -24,9 +24,11 @@ const sidebars: SidebarsConfig = {
       items: [
         'commands/init',
         'commands/add',
-        'commands/deploy',
+        'commands/commands',
+        'commands/remove',
         'commands/doctor',
         'commands/info',
+        'commands/docs',
         'commands/help',
       ],
     },

@@ -4,15 +4,16 @@ title: Introduction
 description: ForgeLoop scaffolds and maintains discord.js bots with a small CLI and generated project manifest.
 ---
 
-ForgeLoop is a **maintenance-first** scaffolder for [discord.js](https://discord.js.org/) bots. It generates a working TypeScript or JavaScript project, keeps a **project manifest** on disk (`forgeloop.config.mjs`), and ships commands to add slash commands and events, validate the tree, and (for handler-based projects) push command definitions to Discord.
+ForgeLoop is a **maintenance-first** scaffolder for [discord.js](https://discord.js.org/) bots. It generates a working TypeScript or JavaScript project, keeps a **project manifest** on disk (`forgeloop.config.mjs`), and ships commands to add/remove handlers, validate project health, inspect commands, and deploy slash command definitions to Discord.
 
 ## What you get
 
 - **Interactive or scripted `init`** — pick language, preset, package manager, optional Prisma database, lint/format stack, Git, Docker, and GitHub Actions CI.
 - **Three presets** — `basic` (inline bot), `modular` (handler folders + sync on startup), `advanced` (core runtime modules under `src/core`).
-- **Generators** — `add command` and `add event` for modular and advanced projects only.
-- **Health checks** — `doctor` verifies expected files exist for your manifest.
-- **Slash command deploy** — `deploy commands` builds payloads from `src/commands` and calls the Discord API (guild vs global rules apply).
+- **Generators** — `add` supports commands, events, modals, buttons, and select menus for modular/advanced projects.
+- **Removal** — `remove` deletes generated command/event/interaction handlers.
+- **Health checks** — `doctor` verifies expected files and required `.env` values.
+- **Slash command tooling** — `commands list` inspects local payload names and `commands deploy` syncs with Discord.
 
 ## Two ways to run the same CLI
 
@@ -21,9 +22,9 @@ The npm package **`create-forgeloop`** exposes two binaries:
 | Binary | Typical use |
 |--------|-------------|
 | `create-forgeloop` | `npm create forgeloop@latest`, `pnpm create forgeloop`, etc. Bare arguments are treated as **`init`** (e.g. project name). |
-| `forgeloop` | Inside a generated project: `npx forgeloop …`, `pnpm forgeloop …`, `yarn forgeloop …`, `bunx forgeloop …` |
+| `forgeloop` | Inside a generated project: `npx forgeloop …`, `pnpm forgeloop …`, `yarn forgeloop …` |
 
-If the first argument to `create-forgeloop` is already a known command (`init`, `add`, `deploy`, `doctor`, `info`, `help`), it is passed through unchanged.
+If the first argument to `create-forgeloop` is already a known command (`init`, `add`, `commands`, `remove`, `doctor`, `info`, `docs`, `help`), it is passed through unchanged.
 
 ## What ForgeLoop is not
 

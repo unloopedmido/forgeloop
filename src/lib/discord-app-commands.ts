@@ -1,20 +1,15 @@
 import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { loadManifest } from '../manifest.js';
 import type { ForgeLoopManifest, ParsedArgs } from '../types.js';
 import { getBooleanFlag } from '../utils/args.js';
 import { CliError } from '../utils/errors.js';
-import { Output, type OutputWriter } from '../utils/format.js';
-import {
-	assertHandlerProject,
-	resolveProjectDir,
-} from '../utils/project.js';
+import { pathExists } from '../utils/fs.js';
 
 const DISCORD_API_BASE_URL = 'https://discord.com/api/v10';
-const DISCORD_API_TIMEOUT_MS = 20_000;
+export const DISCORD_API_TIMEOUT_MS = 20_000;
 
-function assertDeployTargetFlags(args: ParsedArgs) {
+export function assertDeployTargetFlags(args: ParsedArgs) {
 	const explicitGlobal = getBooleanFlag(args.flags, 'global');
 	const explicitGuild = getBooleanFlag(args.flags, 'guild');
 
@@ -23,7 +18,7 @@ function assertDeployTargetFlags(args: ParsedArgs) {
 	}
 }
 
-function resolveSyncTarget(args: ParsedArgs) {
+export function resolveSyncTarget(args: ParsedArgs) {
 	const explicitGlobal = getBooleanFlag(args.flags, 'global');
 	const explicitGuild = getBooleanFlag(args.flags, 'guild');
 
@@ -38,7 +33,7 @@ function resolveSyncTarget(args: ParsedArgs) {
 	return process.env.NODE_ENV === 'production' ? 'global' : 'guild';
 }
 
-function applicationCommandsRoute(clientId: string, guildId?: string) {
+export function applicationCommandsRoute(clientId: string, guildId?: string) {
 	const encodedClientId = encodeURIComponent(clientId);
 	if (guildId) {
 		return `${DISCORD_API_BASE_URL}/applications/${encodedClientId}/guilds/${encodeURIComponent(guildId)}/commands`;
@@ -73,7 +68,7 @@ async function readDiscordApiError(response: Response) {
 	return body;
 }
 
-async function putDiscordCommands(
+export async function putDiscordCommands(
 	route: string,
 	token: string,
 	commandPayload: Array<Record<string, unknown>>,
@@ -106,7 +101,7 @@ async function putDiscordCommands(
 	);
 }
 
-async function readProjectEnv(projectDir: string) {
+export async function readProjectEnv(projectDir: string) {
 	const envPath = path.join(projectDir, '.env');
 	const envRaw = await readFile(envPath, 'utf8').catch(() => '');
 	const values: Record<string, string> = {};
@@ -133,7 +128,7 @@ async function readProjectEnv(projectDir: string) {
 	return values;
 }
 
-function assertEnvValue(
+export function assertEnvValue(
 	key: 'DISCORD_TOKEN' | 'CLIENT_ID' | 'GUILD_ID',
 	projectEnv: Record<string, string>,
 ) {
@@ -145,10 +140,86 @@ function assertEnvValue(
 	return value;
 }
 
-async function collectCommandPayload(
+function installHint(packageManager: ForgeLoopManifest['packageManager']) {
+	switch (packageManager) {
+		case 'pnpm':
+			return 'pnpm install';
+		case 'yarn':
+			return 'yarn install';
+		default:
+			return 'npm install';
+	}
+}
+
+/**
+ * Command modules import `discord.js`; verify Node can resolve it from the project
+ * (same resolution rules as loading `src/commands/*.js`).
+ */
+async function assertDiscordJsImportable(
+	projectDir: string,
+	packageManager: ForgeLoopManifest['packageManager'],
+) {
+	const pkgRoot = path.join(projectDir, 'node_modules', 'discord.js');
+	if (!(await pathExists(pkgRoot))) {
+		throw new CliError(
+			`Missing discord.js in ${projectDir}. Run \`${installHint(packageManager)}\` in that project (commands list/deploy load command files and need node_modules).`,
+		);
+	}
+
+	const probe =
+		"import('discord.js').then(() => process.exit(0)).catch((e) => { console.error(e); process.exit(1); });";
+	const stderr = await new Promise<string>((resolve, reject) => {
+		const child = spawn(
+			'node',
+			['--input-type=module', '--eval', probe],
+			{
+				cwd: projectDir,
+				stdio: ['ignore', 'pipe', 'pipe'],
+				shell: false,
+			},
+		);
+		let err = '';
+		child.stderr.on('data', (chunk) => {
+			err += chunk.toString();
+		});
+		child.on('close', (code) => {
+			if (code === 0) {
+				resolve('');
+				return;
+			}
+
+			resolve(err);
+		});
+		child.on('error', reject);
+	});
+
+	if (stderr) {
+		throw new CliError(
+			`discord.js could not be loaded from ${projectDir}. Slash command files import this package.\n${stderr.trim()}\n\nTry \`${installHint(packageManager)}\` in that directory, or delete node_modules and reinstall if the install looks corrupted.`,
+		);
+	}
+}
+
+function formatPayloadCollectionFailure(
+	errorOutput: string,
+	projectDir: string,
+	packageManager: ForgeLoopManifest['packageManager'],
+) {
+	const trimmed = errorOutput.trim();
+	const hint =
+		/\bERR_MODULE_NOT_FOUND\b/u.test(trimmed) ||
+		/Cannot find module/u.test(trimmed)
+			? `\n\nHint: ensure dependencies are installed in ${projectDir} (\`${installHint(packageManager)}\`). If the error persists, delete node_modules and reinstall.`
+			: '';
+	return `Failed to load slash command modules: ${trimmed || 'unknown error'}${hint}`;
+}
+
+export async function collectCommandPayload(
 	projectDir: string,
 	manifest: ForgeLoopManifest,
 ) {
+	await assertDiscordJsImportable(projectDir, manifest.packageManager);
+
 	const commandsDir = path.join(projectDir, manifest.paths.commandsDir!);
 	const sourceExtension = manifest.language === 'ts' ? 'ts' : 'js';
 	const script = `import { readdir } from 'node:fs/promises';
@@ -203,7 +274,11 @@ process.stdout.write(JSON.stringify(payload));
 
 			reject(
 				new CliError(
-					errorOutput.trim() || `Command payload collection failed with exit code ${code ?? 'unknown'}.`,
+					formatPayloadCollectionFailure(
+						errorOutput,
+						projectDir,
+						manifest.packageManager,
+					),
 				),
 			);
 		});
@@ -222,11 +297,11 @@ process.stdout.write(JSON.stringify(payload));
 	}
 }
 
-async function deployCommands(
+export async function deploySlashCommandsToDiscord(
 	projectDir: string,
 	manifest: ForgeLoopManifest,
 	args: ParsedArgs,
-	output: OutputWriter,
+	output: { info: (msg: string) => void; success: (msg: string) => void },
 ) {
 	const projectEnv = await readProjectEnv(projectDir);
 	const commandPayload = await collectCommandPayload(projectDir, manifest);
@@ -263,27 +338,4 @@ async function deployCommands(
 		commandPayload,
 	);
 	output.success(`Synced ${commandPayload.length} commands globally.`);
-}
-
-export async function runDeploy(
-	args: ParsedArgs,
-	output: OutputWriter = new Output(),
-) {
-	const deployTarget = args.subcommands[0];
-	if (deployTarget !== 'commands') {
-		throw new CliError(
-			'Usage: forgeloop deploy commands [--guild|--global] [--dir ./project]',
-		);
-	}
-
-	assertDeployTargetFlags(args);
-
-	const projectDir = resolveProjectDir(args);
-	const manifest = await loadManifest(projectDir);
-	assertHandlerProject(
-		manifest,
-		'This ForgeLoop project uses the "basic" shape, so command deployment is only available for "modular" or "advanced" projects.',
-	);
-
-	await deployCommands(projectDir, manifest, args, output);
 }

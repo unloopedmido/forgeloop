@@ -44,6 +44,8 @@ export interface ForgeLoopManifest {
 		eventsDir: string | null;
 		configDir: string;
 		coreDir: string | null;
+		/** Handler projects only: generated interaction components (modals, buttons, selects). */
+		interactionsDir?: string | null;
 	};
 }
 
@@ -69,5 +71,4 @@ export interface InitOptions {
 	docker: boolean;
 	ci: boolean;
 	install: boolean;
-	dryRun?: boolean;
 }

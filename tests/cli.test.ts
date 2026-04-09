@@ -57,7 +57,7 @@ describe('CLI smoke behavior', () => {
 		}
 
 		expect(output.getStdout()).toContain('forgeloop init');
-		expect(output.getStdout()).toContain('--package-manager npm|pnpm|yarn|bun');
+		expect(output.getStdout()).toContain('--package-manager npm|pnpm|yarn');
 		expect(output.getStderr()).toBe('');
 	});
 

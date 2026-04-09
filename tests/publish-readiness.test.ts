@@ -54,7 +54,7 @@ describe('publish readiness', () => {
 		expect(ciWorkflow).toMatch(/npm run build/);
 	});
 
-	test('loadManifest accepts bun package manager in config files', async () => {
+	test('loadManifest rejects unsupported package managers in config files', async () => {
 		const root = await makeProjectRoot();
 		const manifest = createManifest({
 			projectName: 'unsupported-pm',
@@ -77,7 +77,7 @@ describe('publish readiness', () => {
 			`export default ${JSON.stringify(
 				{
 					...manifest,
-					packageManager: 'bun',
+					packageManager: 'unsupported-package-manager',
 				},
 				null,
 				2,
@@ -85,6 +85,8 @@ describe('publish readiness', () => {
 			'utf8',
 		);
 
-		await expect(loadManifest(root)).resolves.toBeDefined();
+		await expect(loadManifest(root)).rejects.toThrow(
+			/Invalid manifest\.packageManager/,
+		);
 	});
 });

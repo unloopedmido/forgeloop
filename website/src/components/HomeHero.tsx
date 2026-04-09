@@ -63,7 +63,7 @@ export function HomeHero() {
                   '0 1px 0 color-mix(in srgb, white 24%, transparent) inset, 0 14px 38px -20px color-mix(in srgb, var(--ifm-color-primary) 46%, transparent)',
               }}
             >
-              <span>Read the Docs</span>
+              <span>Documentation</span>
               <motion.span
                 whileHover={{ x: 2 }}
                 className="inline-flex h-6 w-6 items-center justify-center rounded-full border"

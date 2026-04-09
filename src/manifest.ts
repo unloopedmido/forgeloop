@@ -113,6 +113,7 @@ export function createManifest(options: InitOptions): ForgeLoopManifest {
 			eventsDir: usesHandlers ? 'src/events' : null,
 			configDir: 'src/config',
 			coreDir: usesCore ? 'src/core' : null,
+			interactionsDir: usesHandlers ? 'src/interactions' : null,
 		},
 	};
 }
@@ -251,4 +252,10 @@ export function validateManifest(manifest: ForgeLoopManifest) {
 	assertOptionalString(paths.commandsDir, 'manifest.paths.commandsDir');
 	assertOptionalString(paths.eventsDir, 'manifest.paths.eventsDir');
 	assertOptionalString(paths.coreDir, 'manifest.paths.coreDir');
+	if (
+		paths.interactionsDir !== undefined &&
+		paths.interactionsDir !== null
+	) {
+		assertString(paths.interactionsDir, 'manifest.paths.interactionsDir');
+	}
 }

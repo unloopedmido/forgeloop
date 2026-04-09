@@ -28,22 +28,153 @@ export type BotClient = import('discord.js').Client & {
 `;
 }
 
-function interactionHandler() {
-	return `client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isChatInputCommand()) {
+function modularInteractionBlock(sourceExtension: string) {
+	return `const modalHandlers = new Map();
+const buttonHandlers = new Map();
+const stringSelectHandlers = new Map();
+
+async function loadInteractionHandlers() {
+  const base = path.join(__dirname, 'interactions');
+
+  async function loadMap(subdir, map) {
+    const dir = path.join(base, subdir);
+    let entries;
+    try {
+      entries = await readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    for (const entry of entries) {
+      if (!entry.isFile() || !entry.name.endsWith('.${sourceExtension}')) {
+        continue;
+      }
+
+      const modulePath = pathToFileURL(path.join(dir, entry.name)).href;
+      const mod = await import(modulePath);
+      if (typeof mod.customId === 'string' && typeof mod.execute === 'function') {
+        map.set(mod.customId, mod.execute);
+      }
+    }
+  }
+
+  await loadMap('modals', modalHandlers);
+  await loadMap('buttons', buttonHandlers);
+  await loadMap('selectMenus', stringSelectHandlers);
+}
+
+client.on('interactionCreate', async (interaction) => {
+  if (interaction.isChatInputCommand()) {
+    const command = client.commands.get(interaction.commandName);
+    if (!command) {
+      await interaction.reply({
+        content: 'This command is not registered in the runtime.',
+        ephemeral: true,
+      });
+      return;
+    }
+
+    await command.execute(interaction);
     return;
   }
 
-  const command = client.commands.get(interaction.commandName);
-  if (!command) {
-    await interaction.reply({
-      content: 'This command is not registered in the runtime.',
-      ephemeral: true,
-    });
+  if (interaction.isModalSubmit()) {
+    const handler = modalHandlers.get(interaction.customId);
+    if (handler) {
+      await handler(interaction);
+    }
     return;
   }
 
-  await command.execute(interaction);
+  if (interaction.isButton()) {
+    const handler = buttonHandlers.get(interaction.customId);
+    if (handler) {
+      await handler(interaction);
+    }
+    return;
+  }
+
+  if (interaction.isStringSelectMenu()) {
+    const handler = stringSelectHandlers.get(interaction.customId);
+    if (handler) {
+      await handler(interaction);
+    }
+  }
+});`;
+}
+
+function advancedInteractionBlock(sourceExtension: string) {
+	return `const modalHandlers = new Map();
+const buttonHandlers = new Map();
+const stringSelectHandlers = new Map();
+
+async function loadInteractionHandlers() {
+  const base = path.join(__dirname, '..', '..', 'interactions');
+
+  async function loadMap(subdir, map) {
+    const dir = path.join(base, subdir);
+    let entries;
+    try {
+      entries = await readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    for (const entry of entries) {
+      if (!entry.isFile() || !entry.name.endsWith('.${sourceExtension}')) {
+        continue;
+      }
+
+      const modulePath = pathToFileURL(path.join(dir, entry.name)).href;
+      const mod = await import(modulePath);
+      if (typeof mod.customId === 'string' && typeof mod.execute === 'function') {
+        map.set(mod.customId, mod.execute);
+      }
+    }
+  }
+
+  await loadMap('modals', modalHandlers);
+  await loadMap('buttons', buttonHandlers);
+  await loadMap('selectMenus', stringSelectHandlers);
+}
+
+client.on('interactionCreate', async (interaction) => {
+  if (interaction.isChatInputCommand()) {
+    const command = client.commands.get(interaction.commandName);
+    if (!command) {
+      await interaction.reply({
+        content: 'This command is not registered in the runtime.',
+        ephemeral: true,
+      });
+      return;
+    }
+
+    await command.execute(interaction);
+    return;
+  }
+
+  if (interaction.isModalSubmit()) {
+    const handler = modalHandlers.get(interaction.customId);
+    if (handler) {
+      await handler(interaction);
+    }
+    return;
+  }
+
+  if (interaction.isButton()) {
+    const handler = buttonHandlers.get(interaction.customId);
+    if (handler) {
+      await handler(interaction);
+    }
+    return;
+  }
+
+  if (interaction.isStringSelectMenu()) {
+    const handler = stringSelectHandlers.get(interaction.customId);
+    if (handler) {
+      await handler(interaction);
+    }
+  }
 });`;
 }
 
@@ -221,11 +352,12 @@ ${commandLoaderFunction(sourceExtension, "path.join(__dirname, 'commands')")}
 
 ${eventLoaderFunction(sourceExtension, "path.join(__dirname, 'events')", ts)}
 
-${interactionHandler()}
+${modularInteractionBlock(sourceExtension)}
 
 await loadCommands();
 await syncCommands(client);
 await loadEvents();
+await loadInteractionHandlers();
 ${databaseInit}
 await client.login(assertRequiredEnv('DISCORD_TOKEN'));
 `;
@@ -332,6 +464,91 @@ export const once = ${once};
 
 export async function execute(${argsSignature}) {
   ${isClientReadyEvent(eventName) ? 'console.log(`Logged in as ${client.user.tag}`);' : 'void args;'}
+}
+`;
+}
+
+function escapeJsSingleQuotedString(value: string): string {
+	return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+export function renderModalTemplate(language: Language, customId: string) {
+	const id = escapeJsSingleQuotedString(customId);
+	if (language === 'ts') {
+		return `import type { ModalSubmitInteraction } from 'discord.js';
+
+export const customId = '${id}';
+
+export async function execute(interaction: ModalSubmitInteraction) {
+  await interaction.reply({
+    content: 'Modal handler is wired up.',
+    ephemeral: true,
+  });
+}
+`;
+	}
+
+	return `export const customId = '${id}';
+
+export async function execute(interaction) {
+  await interaction.reply({
+    content: 'Modal handler is wired up.',
+    ephemeral: true,
+  });
+}
+`;
+}
+
+export function renderButtonTemplate(language: Language, customId: string) {
+	const id = escapeJsSingleQuotedString(customId);
+	if (language === 'ts') {
+		return `import type { ButtonInteraction } from 'discord.js';
+
+export const customId = '${id}';
+
+export async function execute(interaction: ButtonInteraction) {
+  await interaction.reply({
+    content: 'Button handler is wired up.',
+    ephemeral: true,
+  });
+}
+`;
+	}
+
+	return `export const customId = '${id}';
+
+export async function execute(interaction) {
+  await interaction.reply({
+    content: 'Button handler is wired up.',
+    ephemeral: true,
+  });
+}
+`;
+}
+
+export function renderSelectMenuTemplate(language: Language, customId: string) {
+	const id = escapeJsSingleQuotedString(customId);
+	if (language === 'ts') {
+		return `import type { StringSelectMenuInteraction } from 'discord.js';
+
+export const customId = '${id}';
+
+export async function execute(interaction: StringSelectMenuInteraction) {
+  await interaction.reply({
+    content: 'Select menu handler is wired up.',
+    ephemeral: true,
+  });
+}
+`;
+	}
+
+	return `export const customId = '${id}';
+
+export async function execute(interaction) {
+  await interaction.reply({
+    content: 'Select menu handler is wired up.',
+    ephemeral: true,
+  });
 }
 `;
 }
@@ -446,8 +663,9 @@ export function createClient() {
 		{
 			path: `src/core/runtime/start-bot.${extension}`,
 			content: `import { config } from 'dotenv';
+import { readdir } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createClient } from '../client/create-client.js';
 ${manifest.features.database ? `import { connectDatabase } from '../database/client.js';\n` : ''}import { loadCommands } from '../loaders/load-commands.js';
 import { loadEvents } from '../loaders/load-events.js';
@@ -462,11 +680,12 @@ export async function startBot() {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
 
-  ${interactionHandler()}
+  ${advancedInteractionBlock(sourceExtension)}
 
   await loadCommands(client, __dirname);
   await syncCommands(client);
   await loadEvents(client, __dirname);
+  await loadInteractionHandlers();
   ${manifest.features.database ? 'await connectDatabase();' : ''}
   logScope('runtime', 'Starting Discord client');
   await client.login(assertRequiredEnv('DISCORD_TOKEN'));

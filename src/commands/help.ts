@@ -13,7 +13,9 @@ export function renderHelp(output: OutputWriter = new Output()) {
 	);
 	output.section('Commands');
 	for (const spec of CORE_COMMAND_SPECS) {
-		output.plain(`  ${spec.help.usage[0]}`);
+		for (const usageLine of spec.help.usage) {
+			output.plain(`  ${usageLine}`);
+		}
 	}
 	output.plain(`  ${CLI_NAME} version`);
 	output.section('Global');
@@ -36,7 +38,6 @@ export function renderHelp(output: OutputWriter = new Output()) {
 	output.plain('  --docker');
 	output.plain('  --ci');
 	output.plain('  --install');
-	output.plain('  --dry-run');
 	output.plain('  --yes   (alias: -y; non-interactive / skip prompts)');
 	output.plain('  --dir <path>   (alias: -d <path>)');
 }

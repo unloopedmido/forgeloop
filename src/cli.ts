@@ -4,9 +4,11 @@ import {
 	renderVersion,
 } from './commands/help.js';
 import { runAdd } from './commands/add.js';
-import { runDeploy } from './commands/deploy.js';
+import { runCommands } from './commands/commands.js';
+import { runDocs } from './commands/docs.js';
 import { runDoctor } from './commands/doctor.js';
 import { runInfo } from './commands/info.js';
+import { runRemove } from './commands/remove.js';
 import { runInit } from './commands/init.js';
 import { CORE_COMMAND_NAMES } from './commands/registry.js';
 import { expandShortFlags, getBooleanFlag, parseArgs } from './utils/args.js';
@@ -16,9 +18,11 @@ import { Output } from './utils/format.js';
 const COMMAND_HANDLERS = {
 	init: runInit,
 	add: runAdd,
-	deploy: runDeploy,
+	commands: runCommands,
+	remove: runRemove,
 	doctor: runDoctor,
 	info: runInfo,
+	docs: runDocs,
 } as const;
 type CoreCommandName = keyof typeof COMMAND_HANDLERS;
 

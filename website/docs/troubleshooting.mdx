@@ -1,7 +1,7 @@
 ---
 sidebar_position: 99
 title: Troubleshooting
-description: Common ForgeLoop CLI errors, CI behavior, and deploy sync targets.
+description: Common ForgeLoop CLI errors, CI behavior, and command sync targets.
 ---
 
 ## `Unknown short flag "-x"`
@@ -35,27 +35,28 @@ npx forgeloop init my-bot --yes --git --install
 
 Selects like `--language` still use **defaults** when omitted in non-interactive mode (`ts`, `modular`, `npm`, etc.).
 
-## Basic preset: `add` / `deploy commands` fails
+## Basic preset: `add` / `commands` fails
 
 **basic** keeps commands and events **inline** in `src/index.*`. Use **`modular`** or **`advanced`** if you need:
 
-- `forgeloop add command` / `add event`
-- `forgeloop deploy commands`
+- `forgeloop add ...`
+- `forgeloop remove ...`
+- `forgeloop commands list|deploy`
 
 The CLI error text states this explicitly.
 
-## Deploy: missing `GUILD_ID` or wrong sync target
+## Commands deploy: missing `GUILD_ID` or wrong sync target
 
 - **Guild** sync (development default, or `--guild`) requires **`GUILD_ID`** in `.env` or the environment.
 - **Global** sync happens when **`NODE_ENV=production`** by default, or explicitly with `--global`.
 
-See [deploy commands](../commands/deploy) and [Sync slash commands](../workflows/sync-commands).
+See [commands](./commands/commands.mdx) and [Sync slash commands](./workflows/sync-commands.mdx).
 
-## Deploy: TypeScript import / JSON errors
+## Commands list/deploy: TypeScript import errors
 
-`deploy commands` **imports** `src/commands/*.ts` via **`tsx`**. Run from a machine with **dependencies installed** (`node_modules` present). Parse errors surface as:
+`commands list` and `commands deploy` import command modules from `src/commands`. Run from a machine with **dependencies installed** (`node_modules` present). Missing packages surface as:
 
-> Command payload collection returned invalid JSON: …
+> Failed to load slash command modules: …
 
 ## No ForgeLoop config found
 
@@ -69,7 +70,7 @@ The CLI expects **`forgeloop.config.mjs`**, **`.js`**, **`.cjs`**, or legacy **`
 
 ## Doctor reports missing files
 
-Either restore the file or align your **manifest** with reality (e.g. disable a feature you removed manually). `doctor` is strict about paths implied by the manifest.
+Either restore the file or align your **manifest** with reality (e.g. disable a feature you removed manually). `doctor` is strict about paths implied by the manifest and required `.env` values.
 
 ---
 

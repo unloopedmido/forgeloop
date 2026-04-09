@@ -19,7 +19,6 @@ import TabItem from '@theme/TabItem';
     npm: 'npm create forgeloop@latest my-bot -- --yes --preset modular --language ts',
     pnpm: 'pnpm create forgeloop my-bot --yes --preset modular --language ts',
     yarn: 'yarn create forgeloop my-bot --yes --preset modular --language ts',
-    bun: 'bun create forgeloop my-bot --yes --preset modular --language ts',
   }}
 />
 
@@ -66,23 +65,9 @@ yarn install
 ```
 
   </TabItem>
-  <TabItem value="bun" label="bun">
-
-```bash
-cd my-bot
-bun install
-```
-
-  </TabItem>
 </Tabs>
 
 If you passed **`--install`** during `init`, dependencies were already installed.
-
-If you only want to inspect what would be generated first, run:
-
-```bash
-npx forgeloop init my-bot --yes --dry-run
-```
 
 ## 3. Environment variables
 
@@ -125,13 +110,6 @@ yarn db:push
 ```
 
   </TabItem>
-  <TabItem value="bun" label="bun">
-
-```bash
-bun run db:push
-```
-
-  </TabItem>
 </Tabs>
 
 ## 5. Start the bot
@@ -155,13 +133,6 @@ pnpm run dev
 
 ```bash
 yarn dev
-```
-
-  </TabItem>
-  <TabItem value="bun" label="bun">
-
-```bash
-bun run dev
 ```
 
   </TabItem>

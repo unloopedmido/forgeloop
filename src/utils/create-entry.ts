@@ -10,7 +10,7 @@ const TYPO_TO_COMMAND: Record<string, string> = {
 	hel: 'help',
 	hlp: 'help',
 	inf: 'info',
-	depl: 'deploy',
+	depl: 'commands',
 	doc: 'doctor',
 };
 

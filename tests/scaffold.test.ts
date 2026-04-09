@@ -52,6 +52,9 @@ describe('Project scaffolds', () => {
 		expect(
 			await readFile(path.join(root, 'src/core/runtime/start-bot.ts'), 'utf8'),
 		).toMatch(/loadCommands/);
+		expect(
+			await readFile(path.join(root, 'src/core/runtime/start-bot.ts'), 'utf8'),
+		).toMatch(/loadInteractionHandlers/);
 	});
 
 	test('basic scaffold keeps logic inline and skips handlers and git files when disabled', async () => {

@@ -71,7 +71,6 @@ export async function resolveInitOptions(
 	let docker = getBooleanFlag(args.flags, 'docker');
 	let ci = getBooleanFlag(args.flags, 'ci');
 	let install = getBooleanFlag(args.flags, 'install');
-	let dryRun = getBooleanFlag(args.flags, 'dry-run');
 
 	if (interactive) {
 		output.hero(
@@ -142,7 +141,6 @@ export async function resolveInitOptions(
 					{ label: 'npm', value: 'npm' },
 					{ label: 'pnpm', value: 'pnpm' },
 					{ label: 'yarn', value: 'yarn' },
-					{ label: 'bun', value: 'bun' },
 				],
 				DEFAULTS.packageManager,
 			);
@@ -218,13 +216,6 @@ export async function resolveInitOptions(
 				false,
 			);
 		}
-		if (!getBooleanFlag(args.flags, 'dry-run')) {
-			dryRun = await promptConfirm(
-				output,
-				'Preview generated files without writing?',
-				false,
-			);
-		}
 	}
 
 	const resolvedLanguage = parseSelection(
@@ -283,6 +274,5 @@ export async function resolveInitOptions(
 		docker,
 		ci,
 		install,
-		dryRun,
 	};
 }

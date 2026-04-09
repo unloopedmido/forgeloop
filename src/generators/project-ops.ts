@@ -22,14 +22,6 @@ function packageManagerTemplates(
 			ciInstallSteps: ['corepack enable', 'yarn install'],
 		};
 	}
-	if (packageManager === 'bun') {
-		return {
-			installCommand: 'bun install',
-			startCommand: '["bun", "run", "start"]',
-			ciCache: null,
-			ciInstallSteps: ['bun install'],
-		};
-	}
 
 	return {
 		installCommand: 'npm install',
@@ -79,12 +71,7 @@ export function ciFiles(manifest: ForgeLoopManifest): FileSpec[] {
 	const { ciCache, ciInstallSteps } = packageManagerTemplates(
 		manifest.packageManager,
 	);
-	const setupStep =
-		manifest.packageManager === 'bun'
-			? `      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.2.21"`
-			: `      - uses: actions/setup-node@v4
+	const setupStep = `      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: ${ciCache}`;

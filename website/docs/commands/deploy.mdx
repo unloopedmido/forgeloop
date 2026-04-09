@@ -1,78 +1,12 @@
 ---
-sidebar_position: 3
-title: forgeloop deploy
-description: Push slash command definitions from src/commands to the Discord API without running the bot.
+title: forgeloop deploy (removed)
+description: This command has been replaced by forgeloop commands deploy.
 ---
 
-import { FlagTable } from '@site/src/components/docs/FlagTable';
-
-## Usage
+`forgeloop deploy commands` is deprecated and replaced by:
 
 ```bash
-forgeloop deploy commands [--guild|--global] [--dir ./project]
+forgeloop commands deploy [--guild|--global] [--dir ./project]
 ```
 
-Only **modular** and **advanced** projects. Basic preset error:
-
-> This ForgeLoop project uses the "basic" shape, so command deployment is only available for "modular" or "advanced" projects.
-
-## How payloads are built
-
-The CLI runs **Node** in the project directory, dynamically **imports** each file in `src/commands` with extension `.ts` or `.js`, and collects `commandModule.data.toJSON()`. TypeScript projects use **`tsx`** (`node --import tsx`).
-
-## Sync target
-
-| Condition | API target |
-|-----------|------------|
-| `--guild` | Guild commands (`GUILD_ID` required) |
-| `--global` | **Global** application commands |
-| `NODE_ENV === 'production'` and no explicit target flag | **Global** application commands |
-| Otherwise | **Guild** commands (`GUILD_ID` required) |
-
-## Environment
-
-Read from **process.env** first, then from **`.env`** in the project root (simple `KEY=value` lines; quotes stripped).
-
-| Variable | When required |
-|----------|----------------|
-| `DISCORD_TOKEN` | Always |
-| `CLIENT_ID` | Always |
-| `GUILD_ID` | Whenever syncing to a **guild** |
-
-Missing variable:
-
-> Missing required environment variable: DISCORD_TOKEN | CLIENT_ID | GUILD_ID
-
-## Flags
-
-<FlagTable
-  rows={[
-    {
-      flag: '--dir',
-      type: 'string',
-      defaultValue: 'cwd',
-      description: 'Project root.',
-    },
-    {
-      flag: '--guild',
-      type: 'boolean',
-      description: 'Force guild command sync (requires GUILD_ID).',
-    },
-    {
-      flag: '--global',
-      type: 'boolean',
-      description: 'Force global command sync.',
-    },
-  ]}
-/>
-
-## Failure modes
-
-- Discord HTTP errors → status and parsed `message` / `code` when JSON.
-- Network timeout **20s** → `Discord API request failed before response (20s timeout): …`
-- Invalid JSON from collector → `Command payload collection returned invalid JSON: …`
-
-Success lines look like:
-
-> Synced N commands to guild …  
-> Synced N commands globally.
+See [forgeloop commands](./commands.mdx) for current behavior and flags.

@@ -4,7 +4,7 @@ import path from 'node:path';
 import { CONFIG_FILE } from '../src/constants.js';
 import { expandShortFlags, parseArgs } from '../src/utils/args.js';
 import { runAdd } from '../src/commands/add.js';
-import { runDeploy } from '../src/commands/deploy.js';
+import { runCommands } from '../src/commands/commands.js';
 import { runDoctor } from '../src/commands/doctor.js';
 import { createManifest } from '../src/manifest.js';
 import { CliError } from '../src/utils/errors.js';
@@ -197,6 +197,17 @@ describe('Add and doctor workflows', () => {
 
 		await ensureDirectory(root);
 		await writeFiles(root, renderProjectFiles(manifest));
+		await writeFile(
+			path.join(root, '.env'),
+			[
+				'DISCORD_TOKEN=mock',
+				'CLIENT_ID=123456789012345678',
+				'GUILD_ID=987654321098765432',
+				'DATABASE_URL=postgresql://user:pass@localhost:5432/forgeloop',
+				'',
+			].join('\n'),
+			'utf8',
+		);
 
 		const output = new BufferedOutput();
 		await runDoctor(parseArgs(['doctor', '--dir', root]), output);
@@ -225,6 +236,16 @@ describe('Add and doctor workflows', () => {
 
 		await ensureDirectory(root);
 		await writeFiles(root, renderProjectFiles(manifest));
+		await writeFile(
+			path.join(root, '.env'),
+			[
+				'DISCORD_TOKEN=mock',
+				'CLIENT_ID=123456789012345678',
+				'GUILD_ID=987654321098765432',
+				'',
+			].join('\n'),
+			'utf8',
+		);
 		await rm(path.join(root, CONFIG_FILE));
 		await writeFile(
 			path.join(root, 'forgeloop.json'),
@@ -272,17 +293,17 @@ describe('Add and doctor workflows', () => {
 		).rejects.toThrow(/Failed to parse JSON file/);
 	});
 
-	test('deploy enforces explicit deploy target', async () => {
+	test('commands enforces deploy or list subcommand', async () => {
 		await expect(
-			runDeploy(parseArgs(['deploy', 'bad-target']), new BufferedOutput()),
-		).rejects.toThrow(/Usage: forgeloop deploy commands/);
+			runCommands(parseArgs(['commands', 'bad']), new BufferedOutput()),
+		).rejects.toThrow(/Usage: forgeloop commands deploy\|list/);
 	});
 
-	test('deploy rejects conflicting --global and --guild', async () => {
+	test('commands deploy rejects conflicting --global and --guild', async () => {
 		await expect(
-			runDeploy(
+			runCommands(
 				parseArgs(
-					expandShortFlags(['deploy', 'commands', '--global', '--guild']),
+					expandShortFlags(['commands', 'deploy', '--global', '--guild']),
 				),
 				new BufferedOutput(),
 			),

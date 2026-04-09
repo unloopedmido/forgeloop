@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: forgeloop add
-description: Add a slash command or Discord.js event handler file to modular and advanced projects.
+description: Add command, event, modal, button, or select-menu handlers for modular and advanced projects.
 ---
 
 import { FlagTable } from '@site/src/components/docs/FlagTable';
@@ -11,6 +11,9 @@ import { FlagTable } from '@site/src/components/docs/FlagTable';
 ```bash
 forgeloop add command <name> [--description "..."]
 forgeloop add event <eventName> [--once] [--on]
+forgeloop add modal [--custom-id <id>] [<customId>]
+forgeloop add button [--custom-id <id>] [<customId>]
+forgeloop add select-menu [--custom-id <id>] [<customId>]
 ```
 
 **Basic** preset projects **cannot** use `add` — handlers are inline. Error message:
@@ -19,13 +22,15 @@ forgeloop add event <eventName> [--once] [--on]
 
 Wrong subcommand:
 
-> Unsupported add target "…". Try "command" or "event".
+> Unsupported add target "…". Try "command", "event", "modal", "button", or "select-menu".
 
 Missing name (non-interactive):
 
 `Usage: forgeloop add command <name> [--description "..."]`
 
 `Usage: forgeloop add event <eventName> [--once]`
+
+`Usage: forgeloop add <modal|button|select-menu> [--custom-id <id>] [<customId>]`
 
 ## Command generator
 
@@ -36,6 +41,15 @@ Missing name (non-interactive):
 
 - **Name:** must be a valid Discord.js event identifier (e.g. `messageCreate`).
 - **`--once` / `--on`:** control `client.once` vs `client.on`. Default: **`once` for `clientReady`**, otherwise **`on`** if neither flag is set.
+
+## Interaction generators
+
+- **Targets:** `modal`, `button`, `select-menu`.
+- **`customId`:** required (positional or `--custom-id`), max length 100.
+- Files are generated under `src/interactions`:
+  - `modals/<slug>.ts|js`
+  - `buttons/<slug>.ts|js`
+  - `selectMenus/<slug>.ts|js`
 
 ## Flags
 
@@ -62,6 +76,11 @@ Missing name (non-interactive):
       type: 'boolean',
       description: 'Only for add event — register with client.on.',
     },
+    {
+      flag: '--custom-id',
+      type: 'string',
+      description: 'Only for modal/button/select-menu — custom interaction ID.',
+    },
   ]}
 />
 
@@ -69,3 +88,6 @@ Missing name (non-interactive):
 
 - Command: `src/commands/<name>.ts` or `.js` (from manifest paths).
 - Event: `src/events/<eventName>.ts` or `.js`.
+- Modal: `src/interactions/modals/<slug>.ts` or `.js`.
+- Button: `src/interactions/buttons/<slug>.ts` or `.js`.
+- Select menu: `src/interactions/selectMenus/<slug>.ts` or `.js`.

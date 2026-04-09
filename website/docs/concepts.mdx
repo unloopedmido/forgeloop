@@ -1,12 +1,12 @@
 ---
 sidebar_position: 4
 title: Concepts
-description: ForgeLoop manifest, config file locations, presets, and when add and deploy work.
+description: ForgeLoop manifest, config file locations, presets, and when add/commands tooling works.
 ---
 
 ## Project manifest
 
-Every scaffolded project includes a **ForgeLoop manifest**: project name, `preset`, `language`, `packageManager`, enabled features (database, tooling, git, docker, CI), and **paths** (`src`, optional `commands` / `events` / `core` directories). The manifest is written to disk as **`forgeloop.config.mjs`** (preferred) and is also what `forgeloop info` and `forgeloop doctor` read.
+Every scaffolded project includes a **ForgeLoop manifest**: project name, `preset`, `language`, `packageManager`, enabled features (database, tooling, git, docker, CI), and **paths** (`src`, optional `commands` / `events` / `interactions` / `core` directories). The manifest is written to disk as **`forgeloop.config.mjs`** (preferred) and is also what `forgeloop info` and `forgeloop doctor` read.
 
 ### Config file discovery
 
@@ -25,20 +25,20 @@ The CLI validates **`manifestVersion: 1`**. Mismatches produce an unsupported ve
 
 ## Presets
 
-| Preset | Layout | `add` / `deploy commands` |
+| Preset | Layout | `add` / `commands` |
 |--------|--------|-----------------------------|
 | **basic** | Slash command and `clientReady` live **inline** in `src/index.*` | **Not available** — no `src/commands` or `src/events` folders. |
-| **modular** | `src/commands`, `src/events`, `src/sync-commands.*`, loaders in `src/index.*` | **Supported** |
+| **modular** | `src/commands`, `src/events`, `src/interactions`, `src/sync-commands.*`, loaders in `src/index.*` | **Supported** |
 | **advanced** | Same handler folders plus **`src/core`** (e.g. `start-bot`, database client) | **Supported** |
 
 ## Package manager metadata
 
 `package.json` includes a **`packageManager`** field (e.g. `npm@10`, `pnpm@10.22.0`) so tooling can infer the intended client. Scripts use the same manager you selected at init (`dev`, `start`, `db:push`, etc.).
 
-## Command sync vs `deploy commands`
+## Command sync vs `commands deploy`
 
 - **Modular / advanced** starters include **`syncCommands`**, which runs when the bot starts: **guild** sync when `NODE_ENV` is not `production` (uses `GUILD_ID`), **global** sync when `NODE_ENV === 'production'`.
-- **`forgeloop deploy commands`** pushes the current slash command definitions from disk **without** starting the bot. Target rules: use **`--guild`** to force guild sync, **`--global`** to force global sync; otherwise **production → global**, **non-production → guild**. See [deploy](./commands/deploy.mdx).
+- **`forgeloop commands deploy`** pushes the current slash command definitions from disk **without** starting the bot. Target rules: use **`--guild`** to force guild sync, **`--global`** to force global sync; otherwise **production -> global**, **non-production -> guild**. See [commands](./commands/commands.mdx).
 
 ## Working directory
 

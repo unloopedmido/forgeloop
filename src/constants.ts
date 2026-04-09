@@ -1,4 +1,5 @@
 export const CLI_NAME = 'forgeloop';
+export const DOCS_SITE_URL = 'https://unloopedmido.github.io/forgeloop/';
 export const CONFIG_FILE = 'forgeloop.config.mjs';
 export const SUPPORTED_CONFIG_FILES = [
 	CONFIG_FILE,
@@ -14,7 +15,6 @@ export const SUPPORTED_PACKAGE_MANAGERS = [
 	'npm',
 	'pnpm',
 	'yarn',
-	'bun',
 ] as const;
 export const SUPPORTED_DATABASES = ['none', 'sqlite', 'postgresql'] as const;
 export const SUPPORTED_ORMS = ['none', 'prisma'] as const;

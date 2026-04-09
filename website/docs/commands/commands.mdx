@@ -1,0 +1,61 @@
+---
+sidebar_position: 3
+title: forgeloop commands
+description: List local slash commands or deploy them to Discord.
+---
+
+import { FlagTable } from '@site/src/components/docs/FlagTable';
+
+## Usage
+
+```bash
+forgeloop commands list [--dir ./project]
+forgeloop commands deploy [--guild|--global] [--dir ./project]
+```
+
+`commands` is available for **modular** and **advanced** projects only.
+
+Basic preset error:
+
+> This ForgeLoop project uses the "basic" shape, so slash command tooling is only available for "modular" or "advanced" projects.
+
+Invalid subcommand:
+
+> `Usage: forgeloop commands deploy|list [--guild|--global] [--dir <path>]`
+
+## `list`
+
+- Loads command modules from your project `src/commands`.
+- Prints the local slash command names.
+- If none are found, prints a warning.
+
+## `deploy`
+
+- Builds command payload from local modules and sends a PUT request to Discord.
+- `--guild` forces guild-scoped deploy (requires `GUILD_ID`).
+- `--global` forces global deploy.
+- If neither is set: `production -> global`, otherwise `guild`.
+- Requires `.env` values: `DISCORD_TOKEN`, `CLIENT_ID`, and `GUILD_ID` for guild deploy.
+
+## Flags
+
+<FlagTable
+  rows={[
+    {
+      flag: '--dir',
+      type: 'string',
+      defaultValue: 'cwd',
+      description: 'Project root containing ForgeLoop config.',
+    },
+    {
+      flag: '--guild',
+      type: 'boolean',
+      description: 'Deploy to a guild application command scope.',
+    },
+    {
+      flag: '--global',
+      type: 'boolean',
+      description: 'Deploy to global application command scope.',
+    },
+  ]}
+/>

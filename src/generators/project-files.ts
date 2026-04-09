@@ -66,7 +66,7 @@ ${packageManagerCliCommand(
 	handlerProject ? 'add command status' : 'info',
 )}
 \`\`\`
-${handlerProject ? `\n## Command Sync\n\nCommands sync automatically on startup.\n\n- Development defaults to guild sync and requires \`GUILD_ID\`\n- Production defaults to global sync when \`NODE_ENV=production\`\n- Manual deploy: \`${packageManagerCliCommand(manifest.packageManager, 'deploy commands --guild')}\` (or \`--global\` for global commands)\n` : ''}
+${handlerProject ? `\n## Command Sync\n\nCommands sync automatically on startup.\n\n- Development defaults to guild sync and requires \`GUILD_ID\`\n- Production defaults to global sync when \`NODE_ENV=production\`\n- Manual deploy: \`${packageManagerCliCommand(manifest.packageManager, 'commands deploy --guild')}\` (or \`--global\` for global commands)\n` : ''}
 
 ## Managed by ForgeLoop
 

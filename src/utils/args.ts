@@ -4,7 +4,6 @@ import type { ParsedArgs } from '../types.js';
 /** Flags that must be boolean (no value) or explicit true/false. */
 const BOOLEAN_FLAG_KEYS = new Set([
 	'ci',
-	'dry-run',
 	'docker',
 	'git',
 	'global',
@@ -13,6 +12,7 @@ const BOOLEAN_FLAG_KEYS = new Set([
 	'install',
 	'on',
 	'once',
+	'sync',
 	'version',
 	'yes',
 ]);

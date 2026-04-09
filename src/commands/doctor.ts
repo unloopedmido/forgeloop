@@ -1,9 +1,23 @@
 import path from 'node:path';
+import { readProjectEnv } from '../lib/discord-app-commands.js';
 import { loadManifestWithLocation } from '../manifest.js';
 import type { ParsedArgs } from '../types.js';
 import { pathExists } from '../utils/fs.js';
 import { Output, type OutputWriter } from '../utils/format.js';
 import { resolveProjectDir } from '../utils/project.js';
+
+function isUnsetEnvValue(value: string | undefined) {
+	if (value === undefined) {
+		return true;
+	}
+
+	const trimmed = value.trim();
+	if (trimmed === '') {
+		return true;
+	}
+
+	return trimmed.toLowerCase() === 'replace-me';
+}
 
 export async function runDoctor(
 	args: ParsedArgs,
@@ -78,6 +92,31 @@ export async function runDoctor(
 		}
 
 		output.success(`Found ${relativePath}`);
+	}
+
+	if (await pathExists(path.join(projectDir, '.env'))) {
+		output.section('Environment variables (.env)');
+		const projectEnv = await readProjectEnv(projectDir);
+		const envKeys: string[] = ['DISCORD_TOKEN', 'CLIENT_ID', 'GUILD_ID'];
+		if (manifest.features.database) {
+			envKeys.push('DATABASE_URL');
+		}
+
+		for (const key of envKeys) {
+			const value = projectEnv[key];
+			if (isUnsetEnvValue(value)) {
+				output.error(
+					`Missing or placeholder value for ${key} in .env (or empty).`,
+				);
+				issues += 1;
+			} else {
+				output.success(`${key} is set`);
+			}
+		}
+	} else {
+		output.section('Environment variables (.env)');
+		output.warn('No .env file found. Copy .env.example to .env and fill required keys.');
+		issues += 1;
 	}
 
 	if (issues === 0) {

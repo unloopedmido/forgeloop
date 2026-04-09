@@ -4,12 +4,17 @@ import {
 	getDiscordEventNames,
 } from '../discord/events.js';
 import { loadManifest } from '../manifest.js';
-import { renderCommandFile, renderEventFile } from '../generators/templates.js';
+import {
+	renderCommandFile,
+	renderEventFile,
+	renderInteractionFile,
+} from '../generators/templates.js';
 import type { ParsedArgs } from '../types.js';
 import { getBooleanFlag, getOptionalStringFlag } from '../utils/args.js';
 import { CliError } from '../utils/errors.js';
 import { writeFiles } from '../utils/fs.js';
 import { Output, type OutputWriter } from '../utils/format.js';
+import { assertValidCustomId } from '../utils/interaction-paths.js';
 import {
 	assertHandlerProject,
 	resolveProjectDir,
@@ -134,6 +139,51 @@ async function resolveEventInput(args: ParsedArgs, output: OutputWriter) {
 	return { eventName, once };
 }
 
+async function resolveCustomIdInput(args: ParsedArgs, output: OutputWriter) {
+	const fromFlag = getOptionalStringFlag(args.flags, 'custom-id');
+	const fromPos = args.subcommands[1];
+	const interactive = canPrompt() && !fromFlag && !fromPos;
+
+	if (interactive) {
+		output.hero(
+			'Interaction handler',
+			'Provide a stable customId that matches your buttons, modals, or select menus.',
+		);
+	}
+
+	const customId = interactive
+		? assertValidCustomId(
+				await promptText(
+					output,
+					'customId',
+					undefined,
+					(value) => {
+						const trimmed = value.trim();
+						if (!trimmed) {
+							return 'customId is required.';
+						}
+
+						if (trimmed.length > 100) {
+							return 'customId must be 100 characters or fewer.';
+						}
+
+						return null;
+					},
+				),
+			)
+		: fromFlag
+			? assertValidCustomId(fromFlag)
+			: fromPos
+				? assertValidCustomId(fromPos)
+				: (() => {
+						throw new CliError(
+							'Usage: forgeloop add <modal|button|select-menu> [--custom-id <id>] [<customId>]',
+						);
+					})();
+
+	return customId;
+}
+
 export async function runAdd(
 	args: ParsedArgs,
 	output: OutputWriter = new Output(),
@@ -141,7 +191,7 @@ export async function runAdd(
 	const artifactType = args.subcommands[0];
 	if (!artifactType) {
 		throw new CliError(
-			'Usage: forgeloop add command <name> OR forgeloop add event <eventName>',
+			'Usage: forgeloop add command|event|modal|button|select-menu …',
 		);
 	}
 
@@ -151,12 +201,6 @@ export async function runAdd(
 		manifest,
 		'This ForgeLoop project uses the "basic" shape, so commands and events stay inline in index.ts/js. Switch to "modular" or "advanced" to use handler generators.',
 	);
-
-	if (artifactType !== 'command' && artifactType !== 'event') {
-		throw new CliError(
-			`Unsupported add target "${artifactType}". Try "command" or "event".`,
-		);
-	}
 
 	if (artifactType === 'command') {
 		const command = await resolveCommandInput(args, output);
@@ -182,22 +226,48 @@ export async function runAdd(
 		return;
 	}
 
-	const event = await resolveEventInput(args, output);
-	const eventFile = renderEventFile(manifest, event.eventName, event.once);
-	await writeFiles(projectDir, [eventFile]);
-	if (
-		canPrompt() &&
-		!args.subcommands[1] &&
-		!getBooleanFlag(args.flags, 'once') &&
-		!getBooleanFlag(args.flags, 'on')
-	) {
-		output.callout('Event summary', [
-			`Event: ${event.eventName}`,
-			`Binding: ${event.once ? 'client.once' : 'client.on'}`,
-		]);
+	if (artifactType === 'event') {
+		const event = await resolveEventInput(args, output);
+		const eventFile = renderEventFile(manifest, event.eventName, event.once);
+		await writeFiles(projectDir, [eventFile]);
+		if (
+			canPrompt() &&
+			!args.subcommands[1] &&
+			!getBooleanFlag(args.flags, 'once') &&
+			!getBooleanFlag(args.flags, 'on')
+		) {
+			output.callout('Event summary', [
+				`Event: ${event.eventName}`,
+				`Binding: ${event.once ? 'client.once' : 'client.on'}`,
+			]);
+		}
+		output.success(
+			`Added event "${event.eventName}" to ${path.join(projectDir, eventFile.path)}`,
+		);
+		return;
 	}
-	output.success(
-		`Added event "${event.eventName}" to ${path.join(projectDir, eventFile.path)}`,
+
+	if (
+		artifactType === 'modal' ||
+		artifactType === 'button' ||
+		artifactType === 'select-menu'
+	) {
+		const customId = await resolveCustomIdInput(args, output);
+		const kind =
+			artifactType === 'modal'
+				? 'modal'
+				: artifactType === 'button'
+					? 'button'
+					: 'select-menu';
+		const file = renderInteractionFile(manifest, kind, customId);
+		await writeFiles(projectDir, [file]);
+		output.success(
+			`Added ${artifactType} handler for customId "${customId}" at ${path.join(projectDir, file.path)}`,
+		);
+		return;
+	}
+
+	throw new CliError(
+		`Unsupported add target "${artifactType}". Try "command", "event", "modal", "button", or "select-menu".`,
 	);
-	return;
 }

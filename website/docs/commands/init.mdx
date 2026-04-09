@@ -17,7 +17,6 @@ forgeloop init
 
 - **With project name + `--yes` or non-TTY:** non-interactive; missing enum flags use **defaults** (TypeScript, **modular**, npm, no database, **eslint-prettier**).
 - **Interactive:** run `forgeloop init` or `forgeloop init` without `--yes` in a TTY — you get prompts for name (if missing), language, preset, package manager, database, ORM, tooling, git, docker, CI, and post-scaffold install.
-- **Dry preview:** pass `--dry-run` to preview generated files without writing to disk.
 
 <Admonition type="warning" title="Non-interactive requires a name">
   Without a TTY or with <code>--yes</code>, <strong>init</strong> requires a <strong>project name</strong> as the first argument after <code>init</code>. Otherwise the CLI exits with a message like{' '}
@@ -70,7 +69,7 @@ Answer a few questions and ForgeLoop will shape the starter around your bot.
     },
     {
       flag: '--package-manager',
-      type: 'npm | pnpm | yarn | bun',
+      type: 'npm | pnpm | yarn',
       defaultValue: 'npm',
       description: 'Lockfile/scripts style in generated package.json.',
     },
@@ -113,11 +112,6 @@ Answer a few questions and ForgeLoop will shape the starter around your bot.
       description: 'Run package manager install after writing files (5 min timeout).',
     },
     {
-      flag: '--dry-run',
-      type: 'boolean',
-      description: 'Preview generated files without writing them.',
-    },
-    {
       flag: '--yes',
       type: 'boolean',
       description: 'Skip interactive prompts when combined with TTY; always non-interactive path when used with full args.',
@@ -129,11 +123,9 @@ Answer a few questions and ForgeLoop will shape the starter around your bot.
 
 Prints a banner, **Project profile** lines, optional git/install progress, **Next steps** (cd, install, `.env`, optional `db:push`, `dev`).
 
-With `--dry-run`, the CLI shows planned files and exits without creating directories or writing files.
-
 ## Failure modes
 
 - Unsupported enum value → lists supported values.
-- `npm|pnpm|yarn|bun install` failure → non-zero exit with CLI error message.
+- `npm|pnpm|yarn install` failure → non-zero exit with CLI error message.
 - **`--orm none` with `--database` not `none`** → init option validation error.
 - **`--database none` with `--orm prisma`** → init option validation error.

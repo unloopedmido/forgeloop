@@ -1,12 +1,12 @@
 ---
 sidebar_position: 4
 title: Check project health
-description: Run forgeloop doctor to verify expected files exist for your manifest.
+description: Run forgeloop doctor to verify expected files and env vars for your manifest.
 ---
 
 import { CliExample } from '@site/src/components/docs/CliExample';
 
-`forgeloop doctor` walks the **manifest** and checks that expected paths exist: config file, `src`, `src/config`, handler folders when applicable, tooling configs, Prisma files when database is enabled, Docker/CI artifacts when those flags are on, and `.gitignore` when Git was enabled at init.
+`forgeloop doctor` walks the **manifest** and checks that expected paths exist: config file, `src`, `src/config`, handler folders when applicable, tooling configs, Prisma files when database is enabled, Docker/CI artifacts when those flags are on, and `.gitignore` when Git was enabled at init. It also checks `.env` for required values (`DISCORD_TOKEN`, `CLIENT_ID`, `GUILD_ID`, and `DATABASE_URL` when database is enabled).
 
 ## Example
 

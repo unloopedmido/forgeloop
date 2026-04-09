@@ -1,6 +1,6 @@
 import type { PackageManager } from '../types.js';
 
-type PackageManagerCommand = PackageManager | 'bun';
+type PackageManagerCommand = PackageManager;
 
 const WINDOWS_SHELL_PACKAGE_MANAGERS = new Set<PackageManager>([
 	'npm',
@@ -12,7 +12,6 @@ const PACKAGE_MANAGER_FIELDS: Record<PackageManager, string> = {
 	npm: 'npm@10',
 	pnpm: 'pnpm@10.22.0',
 	yarn: 'yarn@1.22.22',
-	bun: 'bun@1.2.21',
 };
 
 export function resolvePackageManagerCommand(
@@ -21,7 +20,6 @@ export function resolvePackageManagerCommand(
 ) {
 	if (
 		platform === 'win32' &&
-		packageManager !== 'bun' &&
 		WINDOWS_SHELL_PACKAGE_MANAGERS.has(packageManager)
 	) {
 		return `${packageManager}.cmd`;
@@ -36,7 +34,6 @@ export function shouldUseShellForPackageManager(
 ) {
 	return (
 		platform === 'win32' &&
-		packageManager !== 'bun' &&
 		WINDOWS_SHELL_PACKAGE_MANAGERS.has(packageManager)
 	);
 }
@@ -52,9 +49,6 @@ export function packageManagerScriptCommand(
 	if (packageManager === 'yarn') {
 		return `yarn ${scriptName}`;
 	}
-	if (packageManager === 'bun') {
-		return `bun run ${scriptName}`;
-	}
 
 	return `${packageManager} run ${scriptName}`;
 }
@@ -69,9 +63,6 @@ export function packageManagerCliCommand(
 
 	if (packageManager === 'yarn') {
 		return `yarn forgeloop ${command}`;
-	}
-	if (packageManager === 'bun') {
-		return `bunx forgeloop ${command}`;
 	}
 
 	return `npx forgeloop ${command}`;
