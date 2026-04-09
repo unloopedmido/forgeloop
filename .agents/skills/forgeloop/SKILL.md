@@ -51,6 +51,29 @@ Activate this skill when the user asks for any of the following:
    - `DISCORD_TOKEN`, `CLIENT_ID`
    - `GUILD_ID` when guild target is used
 
+## Decision Tree (Always Follow)
+
+1. Is this a new bot request?
+   - Yes -> use scaffold flow.
+   - No -> continue with existing-project flow.
+2. For existing projects, run `forgeloop info` first.
+3. Is preset `basic`?
+   - Yes -> do not use `add`/`remove`/`commands`; explain limitation and offer migration/new project options.
+   - No -> use ForgeLoop command workflows.
+4. Is user asking for structural changes (new handlers, remove handlers, command sync)?
+   - Yes -> use ForgeLoop commands first.
+   - No -> manual edits are fine when no ForgeLoop command applies.
+5. Is remote Discord state affected (`commands deploy` or `remove ... --sync`)?
+   - Yes -> confirm target (`--guild`/`--global`) and required env before running.
+
+## Safety Guardrails
+
+- Never default to global deploy when target is ambiguous; ask or use explicit user intent.
+- Never run `remove ... --sync` unless user asks to mirror deletions remotely.
+- Always use `--dir` when the target project path is not guaranteed by current working directory.
+- Run `forgeloop commands list` before deploy/removal sync to show local command set.
+- If docs and local runtime behavior differ, state it explicitly and prefer repository/runtime evidence.
+
 ## Recommended Workflow
 
 ### 1) Scaffold
@@ -106,7 +129,7 @@ Use `--sync` only for slash command removals that must be mirrored to Discord.
 - If generator commands fail on a basic preset, explain preset limitation and suggest modular/advanced.
 - If structure drift is suspected, run `forgeloop doctor` first, then address missing files in order.
 
-## Command-First Policy (ForgeLoop Projects)
+## Intent Mapping (Quick)
 
 When the repository is a ForgeLoop project, apply this default mapping:
 
@@ -119,16 +142,15 @@ When the repository is a ForgeLoop project, apply this default mapping:
 - "check health/issues" -> `forgeloop doctor`
 - "inspect project config/profile" -> `forgeloop info`
 
-## Command Surface (Quick Reference)
+## Response Contract
 
-- `forgeloop init`
-- `forgeloop add command|event|modal|button|select-menu`
-- `forgeloop remove command|event|modal|button|select-menu`
-- `forgeloop commands list|deploy`
-- `forgeloop doctor`
-- `forgeloop info`
-- `forgeloop docs`
+When completing a ForgeLoop task, report:
+
+1. Commands run (in order).
+2. What changed locally.
+3. Whether remote sync/deploy happened and to which target.
+4. Any blockers or follow-up needed from the user.
 
 ## Additional Resource
 
-For detailed command behavior and guardrails, read [reference.md](reference.md).
+For command surface details and extended examples, read [reference.md](reference.md).
