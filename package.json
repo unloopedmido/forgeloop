@@ -1,7 +1,7 @@
 {
 	"name": "create-forgeloop",
 	"version": "0.3.0",
-	"description": "A maintenance-first Discord bot scaffolder and CLI for discord.js with TypeScript/JavaScript starters, generators, and project health checks.",
+	"description": "A maintenance-first discord.js bot template scaffolder and CLI with generators, starter presets, and project health checks.",
 	"homepage": "https://unloopedmido.github.io/forgeloop/",
 	"repository": {
 		"type": "git",
@@ -31,11 +31,14 @@
 	"keywords": [
 		"discord",
 		"discord-bot",
+		"discord-bot-template",
+		"discord-bot-starter",
 		"discord.js",
 		"discordjs",
 		"scaffolder",
 		"scaffold",
 		"generator",
+		"nodejs-cli",
 		"starter",
 		"template",
 		"boilerplate",
@@ -44,6 +47,7 @@
 		"typescript",
 		"javascript",
 		"slash-commands",
+		"discord-slash-commands",
 		"bot-framework"
 	],
 	"license": "MIT",

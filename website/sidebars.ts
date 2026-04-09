@@ -34,7 +34,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Guides',
-      items: ['guides/database', 'guides/tooling'],
+      items: ['guides/database', 'guides/tooling', 'guides/discord-js-bot-template'],
     },
     'troubleshooting',
   ],

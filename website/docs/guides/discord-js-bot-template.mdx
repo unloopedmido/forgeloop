@@ -1,0 +1,58 @@
+---
+title: Discord.js bot template guide
+description: How to scaffold a Discord.js bot template with ForgeLoop, then grow commands and events without manual wiring.
+---
+
+# Discord.js bot template guide
+
+If you are searching for a **discord.js bot template** that stays maintainable as your bot grows, ForgeLoop gives you a practical structure plus follow-up generators.
+
+## Why this template works
+
+- **Scaffold once, extend later** with `forgeloop add command` and `forgeloop add event`.
+- **Keep project shape consistent** with `forgeloop doctor`.
+- **Choose complexity up front** with `basic`, `modular`, or `advanced` presets.
+- **Use TypeScript or JavaScript** with the same CLI workflow.
+
+## Create a new discord.js bot template
+
+```bash
+npm create forgeloop@latest my-bot -- --yes --preset modular --language ts
+```
+
+Then:
+
+```bash
+cd my-bot
+npm install
+cp .env.example .env
+npm run dev
+```
+
+## Add features after scaffolding
+
+Add a command module:
+
+```bash
+npx forgeloop add command status --description "Show bot status"
+```
+
+Add an event module:
+
+```bash
+npx forgeloop add event clientReady --once
+```
+
+Validate generated structure:
+
+```bash
+npx forgeloop doctor
+```
+
+## Recommended preset choice
+
+- **basic**: quick prototype
+- **modular**: most production bots
+- **advanced**: larger projects needing clearer runtime boundaries
+
+For full command details, see the [command reference](../commands/init.mdx).

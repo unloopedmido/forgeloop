@@ -488,6 +488,7 @@ pre.forge-terminal-pre {
   --forge-doc-muted: #64748b;
   --forge-doc-terminal-bg: #0c1118;
   --forge-doc-terminal-border: rgba(148, 163, 184, 0.2);
+  --forge-doc-terminal-fg: #e2e8f0;
   --ifm-color-primary: var(--forge-doc-primary);
   --ifm-color-primary-dark: var(--forge-doc-primary-dim);
   --ifm-color-primary-darker: #115e59;
@@ -502,6 +503,7 @@ pre.forge-terminal-pre {
 [data-theme='light'] .docs-doc-page {
   --forge-doc-terminal-bg: #f1f5f9;
   --forge-doc-terminal-border: rgba(15, 23, 42, 0.12);
+  --forge-doc-terminal-fg: #0f172a;
   --ifm-link-color: #0d9488;
 }
 
@@ -652,7 +654,11 @@ pre.forge-terminal-pre {
     monospace;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--ifm-heading-color);
+  color: var(--forge-doc-terminal-fg);
+}
+
+.forge-file-tree__pre code {
+  color: inherit;
 }
 
 .forge-file-tree__caption {

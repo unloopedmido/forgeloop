@@ -19,6 +19,7 @@ const config: Config = {
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/forgeloop/',
+  trailingSlash: true,
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
@@ -70,6 +71,11 @@ const config: Config = {
             'https://github.com/unloopedmido/forgeloop/tree/main/website/',
         },
         blog: false,
+        sitemap: {
+          changefreq: 'weekly',
+          priority: 0.5,
+          filename: 'sitemap.xml',
+        },
         theme: {
           customCss: './src/css/custom.css',
         },

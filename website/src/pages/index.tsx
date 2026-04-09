@@ -1,13 +1,23 @@
-import type { ReactNode } from 'react';
+import { lazy, Suspense, type ReactNode } from 'react';
 import Head from '@docusaurus/Head';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 
 import { HomeHero } from '../components/HomeHero';
-import { HomeProblemSolution } from '../components/HomeProblemSolution';
-import { HomeInteractiveWorkflow } from '../components/HomeInteractiveWorkflow';
-import { HomeConcreteFeatures } from '../components/HomeConcreteFeatures';
-import { HomeTrustCta } from '../components/HomeTrustCta';
+const HomeProblemSolution = lazy(() =>
+  import('../components/HomeProblemSolution').then((module) => ({ default: module.HomeProblemSolution })),
+);
+const HomeInteractiveWorkflow = lazy(() =>
+  import('../components/HomeInteractiveWorkflow').then((module) => ({
+    default: module.HomeInteractiveWorkflow,
+  })),
+);
+const HomeConcreteFeatures = lazy(() =>
+  import('../components/HomeConcreteFeatures').then((module) => ({ default: module.HomeConcreteFeatures })),
+);
+const HomeTrustCta = lazy(() =>
+  import('../components/HomeTrustCta').then((module) => ({ default: module.HomeTrustCta })),
+);
 
 export default function Home(): ReactNode {
   const { siteConfig } = useDocusaurusContext();
@@ -75,10 +85,12 @@ export default function Home(): ReactNode {
         {/* Subtle separator */}
         <div className="mx-auto h-[1px] w-full max-w-6xl bg-linear-to-r from-transparent via-[var(--fh-separator)] to-transparent" />
         
-        <HomeProblemSolution />
-        <HomeInteractiveWorkflow />
-        <HomeConcreteFeatures />
-        <HomeTrustCta />
+        <Suspense fallback={null}>
+          <HomeProblemSolution />
+          <HomeInteractiveWorkflow />
+          <HomeConcreteFeatures />
+          <HomeTrustCta />
+        </Suspense>
 
       </main>
     </Layout>
