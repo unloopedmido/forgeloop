@@ -1,6 +1,41 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Tailwind v4: no Preflight — Infima owns base styles for docs + shell */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@source '../../docs/**/*.md';
+@source '../../docs/**/*.mdx';
+@source '../../src/**/*.js';
+@source '../../src/**/*.jsx';
+@source '../../src/**/*.ts';
+@source '../../src/**/*.tsx';
+
+/*
+ * Homepage tokens (--fh-*) are defined on .forge-home, not :root.
+ * @theme inline inlines var(--fh-…) into utilities so border/text/bg resolve
+ * on the element (see https://tailwindcss.com/docs/theme#referencing-other-variables).
+ */
+@theme inline {
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-display: 'Outfit', 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --color-fh-page: var(--fh-page);
+  --color-fh-heading: var(--fh-heading);
+  --color-fh-muted: var(--fh-muted);
+  --color-fh-subtle: var(--fh-subtle);
+  --color-fh-faint: var(--fh-faint);
+  --color-fh-edge: var(--fh-edge);
+  --color-fh-edge2: var(--fh-edge2);
+  --color-fh-surface: var(--fh-surface);
+  --color-fh-panel: var(--fh-panel);
+  --color-fh-install: var(--fh-install-bg);
+  --color-fh-install-stroke: var(--fh-install-stroke);
+  --color-fh-cta-band: var(--fh-cta-band);
+  --color-fh-nested: var(--fh-nested-bg);
+  --color-fh-nested-stroke: var(--fh-nested-stroke);
+  --color-fh-gutter: var(--fh-gutter);
+}
 
 /* Shared (not mode-specific) */
 :root {

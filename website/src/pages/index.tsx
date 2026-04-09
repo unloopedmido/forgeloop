@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import Head from '@docusaurus/Head';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 
 import { HomeHero } from '../components/HomeHero';
@@ -8,11 +10,49 @@ import { HomeConcreteFeatures } from '../components/HomeConcreteFeatures';
 import { HomeTrustCta } from '../components/HomeTrustCta';
 
 export default function Home(): ReactNode {
+  const { siteConfig } = useDocusaurusContext();
+  const siteRoot = new URL(
+    siteConfig.baseUrl,
+    siteConfig.url.endsWith('/') ? siteConfig.url : `${siteConfig.url}/`,
+  ).href;
+
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'SoftwareApplication',
+        name: 'ForgeLoop',
+        applicationCategory: 'DeveloperApplication',
+        operatingSystem: 'Any',
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        description:
+          'Maintenance-first CLI scaffolding for discord.js bots with file-based routing, generators, and health checks.',
+        url: siteRoot,
+        downloadUrl: 'https://www.npmjs.com/package/create-forgeloop',
+      },
+      {
+        '@type': 'Organization',
+        name: 'ForgeLoop',
+        url: siteRoot,
+        sameAs: [
+          'https://github.com/unloopedmido/forgeloop',
+          'https://www.npmjs.com/package/create-forgeloop',
+        ],
+      },
+    ],
+  };
+
   return (
     <Layout
-      title="ForgeLoop | The Structured Framework for Discord.js"
-      description="Stop wrestling with boilerplate and monolithic files. ForgeLoop provides file-based routing, CLI generators, and structural checks so your Discord.js bot scales cleanly."
+      title="The Structured Framework for Discord.js"
+      description="Scaffold and maintain Discord.js bots without the boilerplate mess. ForgeLoop adds file-based routing, CLI generators, and structural checks so your project scales cleanly."
     >
+      <Head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+      </Head>
       <main className="forge-home relative min-h-[calc(100vh-60px)] w-full overflow-hidden bg-fh-page font-sans selection:bg-[var(--fh-selection-bg)] selection:text-[var(--fh-selection-fg)]">
         
         {/* Abstract background elements */}
@@ -24,7 +64,7 @@ export default function Home(): ReactNode {
         <HomeHero />
         
         {/* Subtle separator */}
-        <div className="mx-auto h-[1px] w-full max-w-6xl bg-gradient-to-r from-transparent via-[var(--fh-separator)] to-transparent" />
+        <div className="mx-auto h-[1px] w-full max-w-6xl bg-linear-to-r from-transparent via-[var(--fh-separator)] to-transparent" />
         
         <HomeProblemSolution />
         <HomeInteractiveWorkflow />

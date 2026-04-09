@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://unloopedmido.github.io/forgeloop/sitemap.xml

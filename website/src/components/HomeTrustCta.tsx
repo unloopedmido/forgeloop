@@ -26,7 +26,7 @@ export function HomeTrustCta() {
 
   return (
     <section className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-24 pt-12 md:pb-32 md:pt-20">
-      <div className="mb-10 h-px w-full bg-gradient-to-r from-transparent via-[var(--fh-separator)] to-transparent" />
+      <div className="mb-10 h-px w-full bg-linear-to-r from-transparent via-[var(--fh-separator)] to-transparent" />
 
       <div className="forge-home-cta-card px-8 py-10 md:px-10 md:py-12 lg:px-12 lg:py-14">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-end lg:gap-10">

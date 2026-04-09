@@ -27,14 +27,14 @@ export function HomeHero() {
           <span className="text-blue-400">Discord.js</span> bots.
         </motion.h1>
 
-        <motion.p
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mt-6 max-w-xl text-lg leading-relaxed text-fh-muted"
         >
-          Stop wrestling with boilerplate and monolithic files. ForgeLoop provides file-based routing, CLI generators, and structural checks so your bot scales cleanly.
-        </motion.p>
+          Stop wrestling with boilerplate and monolithic files. ForgeLoop provides file-based routing, CLI generators, and structural checks so your Discord.js bot scales cleanly.
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
