@@ -34,15 +34,20 @@ Activate this skill when the user asks for any of the following:
 1. Detect context first:
    - **new project**: use `init`/create flows
    - **existing ForgeLoop project**: use maintenance commands
-2. Check project shape before command/event generation:
+2. In a ForgeLoop project, prefer ForgeLoop commands over manual scaffolding/editing:
+   - use `forgeloop add` / `forgeloop remove` instead of hand-creating or deleting command/event/interaction files
+   - use `forgeloop commands list|deploy` for slash command sync workflows
+   - use `forgeloop info` and `forgeloop doctor` for inspection/health checks
+   - only do manual file edits when ForgeLoop has no command for the requested change
+3. Check project shape before command/event generation:
    - `basic` preset does not support handler generators (`add`, `remove`, `commands`)
    - `modular` and `advanced` support them
-3. Prefer non-destructive local validation before remote sync:
+4. Prefer non-destructive local validation before remote sync:
    - `forgeloop commands list` before `forgeloop commands deploy`
-4. For deploy target selection:
+5. For deploy target selection:
    - explicit `--guild` or `--global` wins
    - no flag defaults to guild in development and global in production
-5. For Discord deploy or sync, ensure env values exist:
+6. For Discord deploy or sync, ensure env values exist:
    - `DISCORD_TOKEN`, `CLIENT_ID`
    - `GUILD_ID` when guild target is used
 
@@ -100,6 +105,19 @@ Use `--sync` only for slash command removals that must be mirrored to Discord.
 - If deploy fails, validate `.env` values and target flag consistency.
 - If generator commands fail on a basic preset, explain preset limitation and suggest modular/advanced.
 - If structure drift is suspected, run `forgeloop doctor` first, then address missing files in order.
+
+## Command-First Policy (ForgeLoop Projects)
+
+When the repository is a ForgeLoop project, apply this default mapping:
+
+- "add/create command" -> `forgeloop add command ...`
+- "add/create event" -> `forgeloop add event ...`
+- "add/create button|modal|select menu handler" -> `forgeloop add button|modal|select-menu ...`
+- "remove command/event/interaction handler" -> `forgeloop remove ...`
+- "what commands exist?" -> `forgeloop commands list`
+- "sync/deploy slash commands" -> `forgeloop commands deploy ...`
+- "check health/issues" -> `forgeloop doctor`
+- "inspect project config/profile" -> `forgeloop info`
 
 ## Command Surface (Quick Reference)
 

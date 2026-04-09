@@ -19,6 +19,17 @@ ForgeLoop has two usage modes:
 
 Agents should choose mode based on user intent first, then repository state.
 
+## Command-First Enforcement
+
+If the target repository is a ForgeLoop project, agents should treat ForgeLoop CLI as the primary interface for structural bot changes.
+
+- Prefer generator/removal commands over hand-authored boilerplate files.
+- Prefer `forgeloop commands list` and `forgeloop commands deploy` over custom deploy scripts for slash command sync.
+- Prefer `forgeloop doctor` and `forgeloop info` before ad-hoc diagnosis.
+- Fall back to manual code edits only when:
+  - ForgeLoop has no command for the requested operation, or
+  - the user explicitly asks for manual changes.
+
 ## Command Intent Map
 
 ### `init`
@@ -99,11 +110,24 @@ Before recommending `add`, `remove`, or `commands`, check that the project is no
 
 1. Confirm the target project path (`--dir` when ambiguous).
 2. Run `forgeloop info` to understand shape/features.
-3. If modifying structure, run the requested generator/removal action.
+3. If modifying structure, run the requested ForgeLoop generator/removal action first.
 4. If slash commands are involved:
    - run `commands list` for local confirmation
    - deploy only when user asks to sync remotely
 5. Run `doctor` when troubleshooting or before handoff.
+
+## Intent-To-Command Mapping
+
+Use this mapping unless user explicitly requests a different workflow:
+
+- Add slash command -> `forgeloop add command <name> [--description ...]`
+- Add event handler -> `forgeloop add event <eventName> [--once|--on]`
+- Add interaction handler -> `forgeloop add modal|button|select-menu ...`
+- Remove generated artifact -> `forgeloop remove ...`
+- Validate local command registration set -> `forgeloop commands list`
+- Deploy slash commands -> `forgeloop commands deploy [--guild|--global]`
+- Check project health -> `forgeloop doctor`
+- Summarize project profile -> `forgeloop info`
 
 ## Common Failure Patterns And Response
 
