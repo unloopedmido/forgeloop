@@ -15,11 +15,6 @@ export default defineConfig({
 		hookTimeout: 60_000,
 		disableConsoleIntercept: true,
 		pool: 'forks',
-		poolOptions: {
-			forks: {
-				singleFork: false,
-			},
-		},
 		coverage: {
 			provider: 'v8',
 			reporter: ['text', 'json-summary'],
