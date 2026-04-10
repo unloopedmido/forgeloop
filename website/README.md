@@ -2,12 +2,12 @@
 
 This directory is the documentation and marketing site for ForgeLoop.
 
-From the **repository root**, use:
+From the **repository root** (after `pnpm install` in the monorepo):
 
 ```bash
-npm run docs:dev    # local dev server
-npm run docs:build  # production build → website/build
-npm run docs:serve  # preview the build
+pnpm run docs:dev    # local dev server
+pnpm run docs:build  # production build → website/build
+pnpm run docs:serve  # preview the build
 ```
 
 See the main [README.md](../README.md) for the project and published docs URL.

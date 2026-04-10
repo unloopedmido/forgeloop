@@ -1,6 +1,6 @@
 ---
 sidebar_position: 3
-title: Sync slash commands to Discord
+title: Sync application commands to Discord
 description: How ForgeLoop syncs application commands on startup and when to use forgeloop commands deploy.
 ---
 
@@ -11,7 +11,7 @@ Generated **modular** and **advanced** bots call **`syncCommands`** during start
 | `NODE_ENV` | Target | Required env |
 |------------|--------|----------------|
 | **`production`** | **Global** application commands | `DISCORD_TOKEN`, `CLIENT_ID` |
-| **Anything else** (e.g. development) | **Guild** commands | `DISCORD_TOKEN`, `CLIENT_ID`, **`GUILD_ID`** |
+| **Anything else** (e.g. development) | **Guild** application commands | `DISCORD_TOKEN`, `CLIENT_ID`, **`GUILD_ID`** |
 
 Logs indicate whether commands were synced globally or to a guild.
 

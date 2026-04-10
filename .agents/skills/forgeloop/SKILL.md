@@ -1,156 +1,64 @@
 ---
 name: forgeloop
-description: Use ForgeLoop correctly for Discord bot scaffolding and maintenance workflows. Use when users ask to create, modify, inspect, or troubleshoot ForgeLoop projects, including init/add/remove/commands/doctor/info flows.
+description: Use ForgeLoop correctly for Discord bot scaffolding and maintenance workflows. Use when users ask to create, modify, inspect, or troubleshoot ForgeLoop projects, including init/add/remove/commands/doctor/info/docs flows.
 ---
 
 # ForgeLoop Skill
 
-Use this skill when the task involves creating or maintaining a Discord bot project with `create-forgeloop` / `forgeloop`.
+Use this skill when the task involves creating or maintaining a Discord bot project with `create-forgeloop` or `forgeloop`.
 
-## What ForgeLoop Is
+## Core Workflow
 
-- ForgeLoop is a maintenance-first Discord bot scaffolder for `discord.js`.
-- It is both:
-  - a project initializer (`init` / `npm create forgeloop`)
-  - an ongoing maintenance CLI (`add`, `remove`, `commands`, `doctor`, `info`, `docs`)
+1. Determine whether the user wants a new project or changes to an existing ForgeLoop project.
+2. For existing projects, run `forgeloop info` first to confirm preset and resolved project context.
+3. If the project uses the `basic` preset, do not use `add`, `remove`, or `commands`; explain the limitation and either edit manually or suggest a new modular or advanced project.
+4. In modular or advanced projects, prefer ForgeLoop commands over manual scaffolding for commands, context menus, events, and interaction handlers.
+5. Before remote command sync, run `forgeloop commands list` to validate the local command set.
+6. Before `commands deploy` or `remove command --sync`, confirm target scope and required env values.
 
-## Activation Triggers
+## Operating Rules
 
-Activate this skill when the user asks for any of the following:
-
-- scaffold a Discord bot quickly with opinionated structure
-- add/remove slash commands, events, or interaction handlers
-- deploy or list slash commands
-- check a project health/status (`doctor`, `info`)
-- troubleshoot ForgeLoop or command deployment behavior
-
-## Documentation Source
-
-- Primary docs website: `https://unloopedmido.github.io/forgeloop/`
-- If command behavior is unclear or changed, fetch docs pages from the website before guessing.
-
-## Core Operating Rules
-
-1. Detect context first:
-   - **new project**: use `init`/create flows
-   - **existing ForgeLoop project**: use maintenance commands
-2. In a ForgeLoop project, prefer ForgeLoop commands over manual scaffolding/editing:
-   - use `forgeloop add` / `forgeloop remove` instead of hand-creating or deleting command/event/interaction files
-   - use `forgeloop commands list|deploy` for slash command sync workflows
-   - use `forgeloop info` and `forgeloop doctor` for inspection/health checks
-   - only do manual file edits when ForgeLoop has no command for the requested change
-3. Check project shape before command/event generation:
-   - `basic` preset does not support handler generators (`add`, `remove`, `commands`)
-   - `modular` and `advanced` support them
-4. Prefer non-destructive local validation before remote sync:
-   - `forgeloop commands list` before `forgeloop commands deploy`
-5. For deploy target selection:
-   - explicit `--guild` or `--global` wins
-   - no flag defaults to guild in development and global in production
-6. For Discord deploy or sync, ensure env values exist:
-   - `DISCORD_TOKEN`, `CLIENT_ID`
-   - `GUILD_ID` when guild target is used
-
-## Decision Tree (Always Follow)
-
-1. Is this a new bot request?
-   - Yes -> use scaffold flow.
-   - No -> continue with existing-project flow.
-2. For existing projects, run `forgeloop info` first.
-3. Is preset `basic`?
-   - Yes -> do not use `add`/`remove`/`commands`; explain limitation and offer migration/new project options.
-   - No -> use ForgeLoop command workflows.
-4. Is user asking for structural changes (new handlers, remove handlers, command sync)?
-   - Yes -> use ForgeLoop commands first.
-   - No -> manual edits are fine when no ForgeLoop command applies.
-5. Is remote Discord state affected (`commands deploy` or `remove ... --sync`)?
-   - Yes -> confirm target (`--guild`/`--global`) and required env before running.
+- Treat ForgeLoop as both a scaffolder and a maintenance CLI. Use scaffold flows for new bots and maintenance commands for generated projects.
+- Use `--dir` or `-d` whenever the project root is not guaranteed by the current working directory.
+- If ForgeLoop reports that no project was found, verify one of these root config files exists: `forgeloop.config.mjs`, `forgeloop.config.js`, `forgeloop.config.cjs`, or legacy `forgeloop.json`.
+- Module config files must export the manifest object as `default`, `config`, or `manifest`.
+- `commands deploy` and `remove command --sync` affect Discord state. Treat those as explicit remote actions, not routine local edits.
 
 ## Safety Guardrails
 
-- Never default to global deploy when target is ambiguous; ask or use explicit user intent.
-- Never run `remove ... --sync` unless user asks to mirror deletions remotely.
-- Always use `--dir` when the target project path is not guaranteed by current working directory.
-- Run `forgeloop commands list` before deploy/removal sync to show local command set.
-- If docs and local runtime behavior differ, state it explicitly and prefer repository/runtime evidence.
+- Never assume `--global` when the deploy target is ambiguous.
+- Never run `remove ... --sync` unless the user asked to mirror the deletion remotely.
+- Always verify `DISCORD_TOKEN` and `CLIENT_ID` before deploy or sync, plus `GUILD_ID` for guild-targeted sync.
+- For `init`, enforce the database and ORM pairing rules: `none` with `none`, otherwise `sqlite` or `postgresql` with `prisma`.
+- If docs and runtime behavior disagree, say so explicitly and prefer repository or runtime evidence.
 
-## Recommended Workflow
+## Activity Guide
 
-### 1) Scaffold
+Read only the references needed for the task:
 
-Use one of:
+- New project scaffolding, create-style entrypoints, and `init` options: [references/scaffold.md](references/scaffold.md)
+- Existing project command workflows for `add`, `remove`, `commands`, `doctor`, `info`, and `docs`: [references/commands.md](references/commands.md)
+- Common failures, preset constraints, and deploy triage: [references/troubleshooting.md](references/troubleshooting.md)
 
-```bash
-npm create forgeloop@latest my-bot
-npx create-forgeloop@latest my-bot
-```
+## Quick Intent Mapping
 
-For explicit setup:
-
-```bash
-npx create-forgeloop@latest my-bot --language ts --preset modular
-```
-
-### 2) Inspect
-
-```bash
-forgeloop info --dir ./my-bot
-forgeloop doctor --dir ./my-bot
-```
-
-### 3) Grow
-
-```bash
-forgeloop add command status --description "Show bot status" --dir ./my-bot
-forgeloop add event interactionCreate --on --dir ./my-bot
-forgeloop add button --custom-id ping_btn --dir ./my-bot
-```
-
-### 4) Validate + Deploy
-
-```bash
-forgeloop commands list --dir ./my-bot
-forgeloop commands deploy --guild --dir ./my-bot
-```
-
-### 5) Remove Safely
-
-```bash
-forgeloop remove command status --dir ./my-bot
-forgeloop remove command status --sync --guild --dir ./my-bot
-```
-
-Use `--sync` only for slash command removals that must be mirrored to Discord.
-
-## Troubleshooting Heuristics
-
-- If slash command loading fails with module/dependency errors, verify dependencies are installed in the target project.
-- If deploy fails, validate `.env` values and target flag consistency.
-- If generator commands fail on a basic preset, explain preset limitation and suggest modular/advanced.
-- If structure drift is suspected, run `forgeloop doctor` first, then address missing files in order.
-
-## Intent Mapping (Quick)
-
-When the repository is a ForgeLoop project, apply this default mapping:
-
-- "add/create command" -> `forgeloop add command ...`
-- "add/create event" -> `forgeloop add event ...`
-- "add/create button|modal|select menu handler" -> `forgeloop add button|modal|select-menu ...`
-- "remove command/event/interaction handler" -> `forgeloop remove ...`
-- "what commands exist?" -> `forgeloop commands list`
-- "sync/deploy slash commands" -> `forgeloop commands deploy ...`
-- "check health/issues" -> `forgeloop doctor`
-- "inspect project config/profile" -> `forgeloop info`
+- "create a bot" or "scaffold a bot" -> start with [references/scaffold.md](references/scaffold.md)
+- "add a slash command" -> `forgeloop add command ...`
+- "add a context menu command" -> `forgeloop add context-menu ...`
+- "add an event" -> `forgeloop add event ...`
+- "add a button, modal, or select menu handler" -> `forgeloop add button|modal|select-menu ...`
+- "remove generated artifacts" -> `forgeloop remove ...`
+- "what commands exist locally?" -> `forgeloop commands list`
+- "deploy or sync commands" -> `forgeloop commands deploy ...`
+- "check project health" -> `forgeloop doctor`
+- "inspect project manifest" -> `forgeloop info`
+- "open the docs site" -> `forgeloop docs`
 
 ## Response Contract
 
 When completing a ForgeLoop task, report:
 
-1. Commands run (in order).
+1. Commands run, in order.
 2. What changed locally.
-3. Whether remote sync/deploy happened and to which target.
-4. Any blockers or follow-up needed from the user.
-
-## Additional Resource
-
-For command surface details and extended examples, read [reference.md](reference.md).
+3. Whether Discord remote sync or deploy happened, and to which target.
+4. Any blockers or follow-up the user still needs to handle.

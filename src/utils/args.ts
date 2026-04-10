@@ -5,14 +5,18 @@ import type { ParsedArgs } from '../types.js';
 const BOOLEAN_FLAG_KEYS = new Set([
 	'ci',
 	'docker',
+	'fix',
 	'git',
 	'global',
 	'guild',
 	'help',
 	'install',
+	'json',
 	'on',
 	'once',
+	'strict',
 	'sync',
+	'verbose',
 	'version',
 	'yes',
 ]);

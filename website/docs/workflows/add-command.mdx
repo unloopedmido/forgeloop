@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
-title: Add a slash command
-description: Generate a new slash command module in src/commands for modular or advanced ForgeLoop projects.
+title: Add a command
+description: Generate a slash command or context menu module in src/commands for modular or advanced ForgeLoop projects.
 ---
 
 import { CliExample } from '@site/src/components/docs/CliExample';
@@ -13,7 +13,7 @@ Only **modular** and **advanced** projects have `src/commands`. The **basic** pr
 
 > This ForgeLoop project uses the "basic" shape, so commands and events stay inline in index.ts/js. Switch to "modular" or "advanced" to use handler generators.
 
-## Add a command by name
+## Add a slash command by name
 
 From the project root:
 
@@ -21,16 +21,32 @@ From the project root:
 
 The generator writes `src/commands/status.ts` (or `.js`) with a `SlashCommandBuilder` named **`status`** and a stub `execute` implementation.
 
+## Add a context menu command
+
+Context menus live beside slash commands in the same folder:
+
+<ForgeloopInvokeTabs command="$" forgeloopArgs="add context-menu inspect-user --type user" />
+
+This writes `src/commands/inspect-user.ts` (or `.js`) with a `ContextMenuCommandBuilder`.
+
+## Higher-level command stubs
+
+For slash commands, you can ask ForgeLoop to scaffold richer starter shapes:
+
+- `--with-subcommands` adds a nested `demo` group and example subcommand.
+- `--autocomplete` adds an `autocomplete(...)` export and option wiring.
+- Use both together when you want a ready-to-edit nested autocomplete example.
+
 ## Interactive mode
 
-With a TTY and no name on the command line, the CLI prompts for name and description:
+With a TTY and no name on the command line, the CLI prompts for the command shape and relevant fields:
 
 <CliExample
   title="Interactive flow (illustrative)"
   command="npx forgeloop add command"
   output={`ForgeLoop • discord bot forge
 Command generator
-Shape a slash command with a clean prompt flow instead of raw file creation.
+Shape a command with a clean prompt flow instead of raw file creation.
 
 ? Command name
 > status
@@ -49,5 +65,6 @@ Command summary
 
 - **Development:** restart the bot or rely on your workflow so `syncCommands` runs again, or use [`commands deploy`](../commands/commands.mdx).
 - **Command name rules:** letters, numbers, hyphens, underscores — normalized to lowercase.
+- **Context menu target:** use `--type user` or `--type message`.
 
 Full flags and edge cases: [`forgeloop add`](../commands/add.mdx).

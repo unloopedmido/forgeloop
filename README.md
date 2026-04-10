@@ -93,7 +93,7 @@ ForgeLoop is not just a starter.
 
 Inside supported ForgeLoop projects, you can keep using it to grow the bot over time:
 
-* add a new **slash command**
+* add new **application commands** and interaction handlers
 * add a new **event**
 * inspect the current project setup
 * run a **doctor** check to catch structural issues
@@ -119,16 +119,28 @@ Create a TypeScript modular bot:
 npx create-forgeloop@latest my-bot --language ts --preset modular
 ```
 
-Add a slash command to an existing supported project:
+Add a command to an existing supported project:
 
 ```bash
 pnpm forgeloop add command status --description "Show current bot status"
+```
+
+Add a context menu command:
+
+```bash
+pnpm forgeloop add context-menu inspect-user --type user
 ```
 
 Add an event handler:
 
 ```bash
 pnpm forgeloop add event clientReady --once
+```
+
+Run grouped diagnostics with CI-friendly output:
+
+```bash
+pnpm forgeloop doctor --strict --checks config,structure,env,deps,discord
 ```
 
 Run a structural health check:
@@ -163,22 +175,23 @@ Full docs, setup details, and command reference:
 
 - **GitHub Pages:** [https://unloopedmido.github.io/forgeloop/](https://unloopedmido.github.io/forgeloop/) — enable **Settings → Pages → Build and deployment: GitHub Actions** on the repo the first time you publish.
 
-Local docs development:
+Clone the repo, install with **pnpm** (see `packageManager` in root `package.json`), then from the repository root:
 
 ```bash
-npm run docs:dev
+pnpm install
+pnpm run docs:dev
 ```
 
 Build docs locally:
 
 ```bash
-npm run docs:build
+pnpm run docs:build
 ```
 
 Preview the built site:
 
 ```bash
-npm run docs:serve
+pnpm run docs:serve
 ```
 
 ---

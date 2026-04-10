@@ -1,13 +1,15 @@
-import type { ForgeLoopManifest } from '../types.js';
+import type { ForgeLoopManifest, InteractionTemplateSpec } from '../types.js';
 import type { FileSpec } from '../utils/fs.js';
 import { buildProjectFiles } from './project-files.js';
 import {
 	isClientReadyEvent,
 	renderButtonTemplate,
 	renderCommandTemplate,
+	renderContextMenuCommandTemplate,
 	renderEventTemplate,
 	renderModalTemplate,
 	renderSelectMenuTemplate,
+	type CommandTemplateOptions,
 } from './runtime.js';
 import {
 	interactionFilePath,
@@ -26,6 +28,7 @@ export function renderCommandFile(
 	manifest: ForgeLoopManifest,
 	commandName: string,
 	description?: string,
+	templateOptions?: CommandTemplateOptions,
 ): FileSpec {
 	if (!manifest.paths.commandsDir) {
 		throw new Error('Command files require a handler-based project shape.');
@@ -33,7 +36,31 @@ export function renderCommandFile(
 
 	return {
 		path: `${manifest.paths.commandsDir}/${commandName}.${fileExtension(manifest.language)}`,
-		content: renderCommandTemplate(manifest.language, commandName, description),
+		content: renderCommandTemplate(
+			manifest.language,
+			commandName,
+			description,
+			templateOptions,
+		),
+	};
+}
+
+export function renderContextMenuCommandFile(
+	manifest: ForgeLoopManifest,
+	commandName: string,
+	target: 'user' | 'message',
+): FileSpec {
+	if (!manifest.paths.commandsDir) {
+		throw new Error('Command files require a handler-based project shape.');
+	}
+
+	return {
+		path: `${manifest.paths.commandsDir}/${commandName}.${fileExtension(manifest.language)}`,
+		content: renderContextMenuCommandTemplate(
+			manifest.language,
+			commandName,
+			target,
+		),
 	};
 }
 
@@ -55,7 +82,7 @@ export function renderEventFile(
 export function renderInteractionFile(
 	manifest: ForgeLoopManifest,
 	kind: 'modal' | 'button' | 'select-menu',
-	customId: string,
+	spec: InteractionTemplateSpec,
 ): FileSpec {
 	if (!resolveInteractionsRoot(manifest)) {
 		throw new Error('Interaction files require a handler-based project shape.');
@@ -64,13 +91,14 @@ export function renderInteractionFile(
 	const language = manifest.language;
 	const content =
 		kind === 'modal'
-			? renderModalTemplate(language, customId)
+			? renderModalTemplate(language, spec)
 			: kind === 'button'
-				? renderButtonTemplate(language, customId)
-				: renderSelectMenuTemplate(language, customId);
+				? renderButtonTemplate(language, spec)
+				: renderSelectMenuTemplate(language, spec);
 
+	const pathKey = spec.match === 'regexp' ? spec.pattern : spec.value;
 	return {
-		path: interactionFilePath(manifest, kind, customId, language),
+		path: interactionFilePath(manifest, kind, pathKey, language),
 		content,
 	};
 }

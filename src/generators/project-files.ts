@@ -22,7 +22,9 @@ import {
 import {
 	hasHandlers,
 	renderEntryFile,
+	renderHandlerSupportFiles,
 	renderInitialHandlerFiles,
+	renderInteractionSupportFiles,
 	renderStarterRuntimeFiles,
 } from './runtime.js';
 import { RenderProjectFilesOptions, fileExtension } from './shared.js';
@@ -234,6 +236,8 @@ export function buildProjectFiles(
 	}
 
 	files.push(...renderInitialHandlerFiles(manifest));
+	files.push(...renderInteractionSupportFiles(manifest));
+	files.push(...renderHandlerSupportFiles(manifest));
 
 	const tsConfigContent = tsconfig(manifest);
 	if (tsConfigContent) {

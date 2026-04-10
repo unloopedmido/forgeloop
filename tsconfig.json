@@ -30,6 +30,6 @@
 		"forceConsistentCasingInFileNames": true,
 		"skipLibCheck": true,
 		"useDefineForClassFields": true,
-		"types": ["node", "bun-types"]
+		"types": ["node"]
 	}
 }

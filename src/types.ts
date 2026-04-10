@@ -1,6 +1,7 @@
 import type {
 	SUPPORTED_DATABASES,
 	SUPPORTED_LANGUAGES,
+	SUPPORTED_LOGGERS,
 	SUPPORTED_ORMS,
 	SUPPORTED_PACKAGE_MANAGERS,
 	SUPPORTED_PRESETS,
@@ -18,6 +19,12 @@ export type DatabaseSelection = (typeof SUPPORTED_DATABASES)[number];
 export type Orm = Exclude<(typeof SUPPORTED_ORMS)[number], 'none'>;
 export type OrmSelection = (typeof SUPPORTED_ORMS)[number];
 export type Tooling = (typeof SUPPORTED_TOOLING)[number];
+export type ProjectLogging = (typeof SUPPORTED_LOGGERS)[number];
+
+/** How generated modal/button/select handler modules match `interaction.customId`. */
+export type InteractionTemplateSpec =
+	| { match: 'exact'; value: string }
+	| { match: 'regexp'; pattern: string; flags: string };
 
 export interface ForgeLoopManifest {
 	manifestVersion: number;
@@ -33,6 +40,8 @@ export interface ForgeLoopManifest {
 		ci: boolean;
 		git: boolean;
 		tooling: Tooling;
+		/** Handler presets: how `src/lib/logger.ts` formats runtime logs. */
+		logging?: ProjectLogging;
 		database: null | {
 			orm: Orm;
 			provider: DatabaseProvider;
@@ -71,4 +80,6 @@ export interface InitOptions {
 	docker: boolean;
 	ci: boolean;
 	install: boolean;
+	/** Used for modular/advanced scaffolds (`manifest.features.logging`). */
+	logging?: ProjectLogging;
 }

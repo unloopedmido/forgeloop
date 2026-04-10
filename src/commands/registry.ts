@@ -20,7 +20,7 @@ export const CORE_COMMAND_SPECS: readonly CommandSpec[] = [
 				'forgeloop init [<project-name>] [--dir <path>] [--language ts|js]',
 				'  [--preset basic|modular|advanced] [--package-manager npm|pnpm|yarn]',
 				'  [--database none|sqlite|postgresql] [--orm none|prisma] [--tooling eslint-prettier|biome|none]',
-				'  [--git] [--docker] [--ci] [--install] [--yes]',
+				'  [--logging console|json] [--git] [--docker] [--ci] [--install] [--yes]',
 			],
 			details: [
 				'Scaffolds a new bot. Without a project name, runs the interactive wizard (TTY).',
@@ -34,22 +34,23 @@ export const CORE_COMMAND_SPECS: readonly CommandSpec[] = [
 		help: {
 			title: 'forgeloop add',
 			usage: [
-				'forgeloop add command <name> [--description <text>] [--dir <path>]',
+				'forgeloop add command <name> [--description <text>] [--with-subcommands] [--autocomplete] [--dir <path>]',
+				'forgeloop add context-menu <name> [--type user|message] [--dir <path>]',
 				'forgeloop add event <eventName> [--once|--on] [--dir <path>]',
-				'forgeloop add modal [--custom-id <id>] [<customId>] [--dir <path>]',
-				'forgeloop add button [--custom-id <id>] [<customId>] [--dir <path>]',
-				'forgeloop add select-menu [--custom-id <id>] [<customId>] [--dir <path>]',
+				'forgeloop add modal [--custom-id <id> | --regexp <pattern> [--regexp-flags <flags>] | <customId>] [--dir <path>]',
+				'forgeloop add button [--custom-id <id> | --regexp <pattern> [--regexp-flags <flags>] | <customId>] [--dir <path>]',
+				'forgeloop add select-menu [--custom-id <id> | --regexp <pattern> [--regexp-flags <flags>] | <customId>] [--dir <path>]',
 			],
 			details: [
-				'Adds a slash command, Discord.js event handler, or interaction handler (modal, button, string select menu).',
-				'Modal, button, and select-menu require a customId (flag or positional).',
+				'Adds slash or context-menu commands (with optional subcommands/autocomplete stubs), Discord.js events, or component handlers (modal, button, string select).',
+				'Modal, button, and select-menu: exact `customId`, `--regexp`, or hand-written `parseCustomId` / `matchCustomId` modules.',
 				'Requires modular or advanced preset.',
 			],
 		},
 	},
 	{
 		name: 'commands',
-		summary: 'List or deploy slash commands',
+			summary: 'List or deploy application (slash and context menu) commands',
 		help: {
 			title: 'forgeloop commands',
 			usage: [
@@ -57,8 +58,8 @@ export const CORE_COMMAND_SPECS: readonly CommandSpec[] = [
 				'forgeloop commands deploy [--guild|--global] [--dir <path>]',
 			],
 			details: [
-				'`list` prints slash command names from `src/commands` without calling Discord.',
-				'`deploy` uploads commands to Discord (PUT application commands).',
+				'`list` prints command names from `src/commands` without calling Discord.',
+				'`deploy` uploads application commands to Discord (PUT).',
 				'Use --guild for a test guild (needs GUILD_ID), or --global for global commands.',
 				'Without these flags: development defaults to guild; production defaults to global.',
 				'Requires DISCORD_TOKEN and CLIENT_ID (and GUILD_ID for guild sync).',
@@ -88,9 +89,17 @@ export const CORE_COMMAND_SPECS: readonly CommandSpec[] = [
 		summary: 'Check project health',
 		help: {
 			title: 'forgeloop doctor',
-			usage: ['forgeloop doctor [--dir <path>]'],
+			usage: [
+				'forgeloop doctor [--dir <path>] [--verbose] [--json] [--strict] [--fix]',
+				'  [--checks <groups>]',
+			],
 			details: [
-				'Checks that expected config and feature files exist for this ForgeLoop project.',
+				'Runs grouped diagnostics: config, structure, .env, package.json / node_modules, and (for modular/advanced) slash command module load checks.',
+				'`--json` prints a machine-readable report to stdout.',
+				'`--strict` fails on warnings as well as errors (useful in CI).',
+				'`--fix` creates `.env` from `.env.example` when `.env` is missing.',
+				'`--checks` is a comma-separated subset of: config, structure, env, deps, discord, network, tooling.',
+				'Default groups omit `network` and `tooling` (opt-in via `--checks network,tooling`).',
 			],
 		},
 	},

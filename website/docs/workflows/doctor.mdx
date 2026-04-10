@@ -1,32 +1,87 @@
 ---
 sidebar_position: 4
 title: Check project health
-description: Run forgeloop doctor to verify expected files and env vars for your manifest.
+description: Use forgeloop doctor for structured diagnostics, optional JSON reports, and CI-friendly checks.
 ---
 
 import { CliExample } from '@site/src/components/docs/CliExample';
 
-`forgeloop doctor` walks the **manifest** and checks that expected paths exist: config file, `src`, `src/config`, handler folders when applicable, tooling configs, Prisma files when database is enabled, Docker/CI artifacts when those flags are on, and `.gitignore` when Git was enabled at init. It also checks `.env` for required values (`DISCORD_TOKEN`, `CLIENT_ID`, `GUILD_ID`, and `DATABASE_URL` when database is enabled).
+`forgeloop doctor` validates that your project matches what ForgeLoop expects: config consistency, generated files, environment variables, dependencies, and (for modular/advanced bots) whether application command modules load the same way as `forgeloop commands list`.
 
-## Example
+## When to run it
+
+- After cloning or copying a bot repo (before first `npm install`).
+- After deleting files or changing `manifest.paths` by hand.
+- Before opening a support issue (attach `--json` output).
+- In CI with `--strict` if you want warnings (for example missing `node_modules`) to fail the build.
+
+## Example (human output)
 
 <CliExample
-  title="Healthy project"
+  title="Healthy project (excerpt)"
   command="npx forgeloop doctor"
   output={`┌──────────────────────────────────────────────┐
 │ ForgeLoop doctor                             │
 └──────────────────────────────────────────────┘
   Inspecting …/my-bot
 
-✓ Found forgeloop.config.mjs
-✓ Found src
-✓ Found src/config
-✓ Found src/commands
-✓ Found src/events
-…
+Project
+• Name               my-bot
+• Preset             modular
+• Language           ts
+• Package manager    npm
+• Config             forgeloop.config.mjs
+
+Summary
+• Duration           …ms
+• Errors             0
+• Warnings           0
+
 ✓ Project looks healthy.`}
 />
 
-Missing paths print **`x Missing …`** and the process exits with code **1**.
+Findings are grouped (Config, Structure, Environment, Dependencies, Discord command loading, …). Each problem includes suggested fixes.
+
+## Bootstrap `.env`
+
+If you have `.env.example` but no `.env`:
+
+```bash
+forgeloop doctor --fix
+```
+
+This copies `.env.example` to `.env`; you still need to fill in real secrets.
+
+## CI patterns
+
+**Strict mode** (fail on warnings too):
+
+```bash
+npx forgeloop doctor --dir . --strict
+```
+
+**Machine-readable report**:
+
+```bash
+npx forgeloop doctor --dir . --json > doctor-report.json
+```
+
+**Subset of checks** (faster or narrower gates):
+
+```bash
+npx forgeloop doctor --dir . --checks config,structure,env
+```
+
+**Optional network/tooling checks**:
+
+```bash
+npx forgeloop doctor --dir . --checks network,tooling
+```
+
+To run the defaults plus those optional groups, pass the full list:
+
+```bash
+npx forgeloop doctor --dir . --checks config,structure,env,deps,discord,network,tooling
+```
 
 See also: [Command reference: doctor](../commands/doctor.mdx).

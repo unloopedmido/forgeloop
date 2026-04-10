@@ -40,6 +40,13 @@ export function renderHelp(output: OutputWriter = new Output()) {
 	output.plain('  --install');
 	output.plain('  --yes   (alias: -y; non-interactive / skip prompts)');
 	output.plain('  --dir <path>   (alias: -d <path>)');
+	output.section('Doctor');
+	output.plain(
+		'  forgeloop doctor [--verbose] [--json] [--strict] [--fix] [--checks <groups>]',
+	);
+	output.plain(
+		'  See `forgeloop doctor --help` for check groups and exit behavior.',
+	);
 }
 
 export async function renderVersion(output: OutputWriter = new Output()) {

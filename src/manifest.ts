@@ -2,11 +2,13 @@ import { stat } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
+	DEFAULTS,
 	LEGACY_MANIFEST_FILE,
 	MANIFEST_VERSION,
 	SUPPORTED_DATABASES,
 	SUPPORTED_CONFIG_FILES,
 	SUPPORTED_LANGUAGES,
+	SUPPORTED_LOGGERS,
 	SUPPORTED_ORMS,
 	SUPPORTED_PACKAGE_MANAGERS,
 	SUPPORTED_PRESETS,
@@ -18,6 +20,7 @@ import type {
 	ForgeLoopConfig,
 	InitOptions,
 	Orm,
+	ProjectLogging,
 } from './types.js';
 import { CliError } from './utils/errors.js';
 import { pathExists, readJsonFile } from './utils/fs.js';
@@ -88,6 +91,10 @@ function assertEnum<T extends readonly string[]>(
 	return value as T[number];
 }
 
+export function resolveProjectLogging(manifest: ForgeLoopManifest): ProjectLogging {
+	return manifest.features.logging ?? DEFAULTS.logging;
+}
+
 export function createManifest(options: InitOptions): ForgeLoopManifest {
 	const usesHandlers = options.preset !== 'basic';
 	const usesCore = options.preset === 'advanced';
@@ -105,6 +112,9 @@ export function createManifest(options: InitOptions): ForgeLoopManifest {
 			ci: options.ci,
 			git: options.git,
 			tooling: options.tooling,
+			logging: usesHandlers
+				? (options.logging ?? DEFAULTS.logging)
+				: undefined,
 			database: toDatabaseConfig(options.database, options.orm),
 		},
 		paths: {
@@ -228,6 +238,14 @@ export function validateManifest(manifest: ForgeLoopManifest) {
 		SUPPORTED_TOOLING,
 		'manifest.features.tooling',
 	);
+
+	if (features.logging !== undefined && features.logging !== null) {
+		assertEnum(
+			features.logging,
+			SUPPORTED_LOGGERS,
+			'manifest.features.logging',
+		);
+	}
 
 	if (features.database !== null) {
 		const database = assertRecord(

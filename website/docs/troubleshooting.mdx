@@ -50,13 +50,13 @@ The CLI error text states this explicitly.
 - **Guild** sync (development default, or `--guild`) requires **`GUILD_ID`** in `.env` or the environment.
 - **Global** sync happens when **`NODE_ENV=production`** by default, or explicitly with `--global`.
 
-See [commands](./commands/commands.mdx) and [Sync slash commands](./workflows/sync-commands.mdx).
+See [commands](./commands/commands.mdx) and [Sync application commands](./workflows/sync-commands.mdx).
 
-## Commands list/deploy: TypeScript import errors
+## Commands list/deploy: command module import errors
 
 `commands list` and `commands deploy` import command modules from `src/commands`. Run from a machine with **dependencies installed** (`node_modules` present). Missing packages surface as:
 
-> Failed to load slash command modules: …
+> Failed to load application command modules: …
 
 ## No ForgeLoop config found
 
@@ -68,9 +68,14 @@ The CLI expects **`forgeloop.config.mjs`**, **`.js`**, **`.cjs`**, or legacy **`
 - **`framework` ≠ discord.js** or **`runtime` ≠ node** → rejected by validation.
 - Invalid or missing exports in `.mjs` config → load error with the underlying Node message.
 
-## Doctor reports missing files
+## Doctor reports problems
 
-Either restore the file or align your **manifest** with reality (e.g. disable a feature you removed manually). `doctor` is strict about paths implied by the manifest and required `.env` values.
+`forgeloop doctor` runs **grouped checks** (config, structure, environment, dependencies, Discord command loading for modular/advanced, and optional network/tooling). Each finding includes suggested fixes.
+
+- **Missing scaffold files** — restore them or align the **manifest** with what is on disk (e.g. disable a feature you removed manually).
+- **`.env` / secrets** — use `--fix` to copy `.env.example` → `.env` when missing, then fill real values.
+- **Errors vs warnings** — only **errors** fail the run by default; use **`--strict`** in CI to fail on warnings too.
+- **JSON for support** — run `forgeloop doctor --json` and attach the report (redact secrets).
 
 ---
 

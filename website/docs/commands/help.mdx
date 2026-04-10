@@ -4,7 +4,7 @@ title: forgeloop help
 description: Print ForgeLoop usage, commands, and init feature flags.
 ---
 
-Running `forgeloop`, `forgeloop help`, or `forgeloop --help` prints the same summary as implemented in the CLI: hero text, command lines, init wizard note, and feature flags (`--database`, `--orm`, `--tooling`, `--git`, `--docker`, `--ci`, `--install`, `--yes`).
+Running `forgeloop`, `forgeloop help`, or `forgeloop --help` prints the same summary as implemented in the CLI: hero text, command lines, init wizard note, and feature flags (`--database`, `--orm`, `--tooling`, `--logging`, `--git`, `--docker`, `--ci`, `--install`, `--yes`).
 
 Global aliases:
 
@@ -28,10 +28,10 @@ Command-specific help:
 | Command | Purpose |
 |---------|---------|
 | `init` | Scaffold a project |
-| `add ...` | Generate command/event/interaction files |
-| `commands list` / `commands deploy` | Inspect or push slash commands |
-| `remove ...` | Delete generated files (optional command sync) |
-| `doctor` | File + env checks |
+| `add ...` | Generate slash commands, context menus, events, and interaction files |
+| `commands list` / `commands deploy` | Inspect or push application commands |
+| `remove ...` | Delete generated files (optional application-command sync) |
+| `doctor` | Grouped diagnostics (files, env, deps, command loading); `--json`, `--strict`, `--fix` |
 | `info` | Manifest summary |
 | `docs` | Open the docs site |
 | `version` | Print CLI package version |

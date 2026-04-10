@@ -108,7 +108,7 @@ export function databaseFiles(manifest: ForgeLoopManifest): FileSpec[] {
   });`;
 	const loggerImport =
 		manifest.preset === 'advanced'
-			? "import { logScope } from '../logging/logger.js';\n"
+			? "import { logScope } from '../../lib/logger.js';\n"
 			: '';
 	const loggerCall =
 		manifest.preset === 'advanced'

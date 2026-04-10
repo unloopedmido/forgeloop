@@ -44,6 +44,9 @@ export async function runInit(
 			: `${options.database} via ${options.orm}`,
 	);
 	output.item('Tooling', options.tooling);
+	if (options.preset !== 'basic' && options.logging) {
+		output.item('Logging', options.logging);
+	}
 	output.item('Git', options.git ? 'enabled' : 'disabled');
 	output.item('Docker', options.docker ? 'enabled' : 'disabled');
 	output.item('CI', options.ci ? 'enabled' : 'disabled');

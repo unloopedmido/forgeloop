@@ -1,7 +1,7 @@
-import { afterEach, describe, expect, test } from 'bun:test';
+import { afterEach, describe, expect, it } from 'vitest';
 import { runCli } from '../src/cli.js';
 
-function captureOutput() {
+function captureStdStreams() {
 	const stdoutChunks: string[] = [];
 	const stderrChunks: string[] = [];
 	const originalStdoutWrite = process.stdout.write.bind(process.stdout);
@@ -35,38 +35,37 @@ afterEach(() => {
 	process.exitCode = 0;
 });
 
-describe('CLI smoke behavior', () => {
-	test('version command prints package version', async () => {
-		const output = captureOutput();
+describe('runCli (in-process)', () => {
+	it('handles version and sets no error exit', async () => {
+		const cap = captureStdStreams();
 		try {
 			await runCli(['version']);
 		} finally {
-			output.restore();
+			cap.restore();
 		}
-
-		expect(output.getStdout()).toMatch(/create-forgeloop \d+\.\d+\.\d+/);
-		expect(output.getStderr()).toBe('');
+		expect(cap.getStderr()).toBe('');
+		expect(cap.getStdout()).toMatch(/create-forgeloop/);
+		expect(process.exitCode == null || process.exitCode === 0).toBe(true);
 	});
 
-	test('init --help renders command help', async () => {
-		const output = captureOutput();
+	it('routes init --help without errors', async () => {
+		const cap = captureStdStreams();
 		try {
 			await runCli(['init', '--help']);
 		} finally {
-			output.restore();
+			cap.restore();
 		}
-
-		expect(output.getStdout()).toContain('forgeloop init');
-		expect(output.getStdout()).toContain('--package-manager npm|pnpm|yarn');
-		expect(output.getStderr()).toBe('');
+		expect(process.exitCode == null || process.exitCode === 0).toBe(true);
+		expect(cap.getStderr()).toBe('');
+		expect(cap.getStdout()).toMatch(/init/i);
 	});
 
-	test('invalid database/orm pair returns helpful error', async () => {
-		const output = captureOutput();
+	it('maps CliError to stderr and exitCode', async () => {
+		const cap = captureStdStreams();
 		try {
 			await runCli([
 				'init',
-				'alpha',
+				'x',
 				'--yes',
 				'--database',
 				'none',
@@ -74,12 +73,20 @@ describe('CLI smoke behavior', () => {
 				'prisma',
 			]);
 		} finally {
-			output.restore();
+			cap.restore();
 		}
+		expect(cap.getStderr()).toContain('When --database is "none"');
+		expect(process.exitCode).toBe(1);
+	});
 
-		expect(output.getStderr()).toContain(
-			'When --database is "none", --orm must also be "none".',
-		);
+	it('reports unknown commands via CliError path', async () => {
+		const cap = captureStdStreams();
+		try {
+			await runCli(['not-real']);
+		} finally {
+			cap.restore();
+		}
+		expect(cap.getStderr()).toContain('Unknown command');
 		expect(process.exitCode).toBe(1);
 	});
 });

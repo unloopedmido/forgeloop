@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: forgeloop add
-description: Add command, event, modal, button, or select-menu handlers for modular and advanced projects.
+description: Add slash commands, context menus, events, and interaction handlers for modular and advanced projects.
 ---
 
 import { FlagTable } from '@site/src/components/docs/FlagTable';
@@ -9,11 +9,12 @@ import { FlagTable } from '@site/src/components/docs/FlagTable';
 ## Usage
 
 ```bash
-forgeloop add command <name> [--description "..."]
+forgeloop add command <name> [--description "..."] [--with-subcommands] [--autocomplete]
+forgeloop add context-menu <name> [--type user|message]
 forgeloop add event <eventName> [--once] [--on]
-forgeloop add modal [--custom-id <id>] [<customId>]
-forgeloop add button [--custom-id <id>] [<customId>]
-forgeloop add select-menu [--custom-id <id>] [<customId>]
+forgeloop add modal [--custom-id <id> | --regexp <pattern> [--regexp-flags <flags>] | <customId>]
+forgeloop add button [--custom-id <id> | --regexp <pattern> [--regexp-flags <flags>] | <customId>]
+forgeloop add select-menu [--custom-id <id> | --regexp <pattern> [--regexp-flags <flags>] | <customId>]
 ```
 
 **Basic** preset projects **cannot** use `add` — handlers are inline. Error message:
@@ -22,20 +23,31 @@ forgeloop add select-menu [--custom-id <id>] [<customId>]
 
 Wrong subcommand:
 
-> Unsupported add target "…". Try "command", "event", "modal", "button", or "select-menu".
+> Unsupported add target "…". Try "command", "context-menu", "event", "modal", "button", or "select-menu".
 
 Missing name (non-interactive):
 
-`Usage: forgeloop add command <name> [--description "..."]`
+`Usage: forgeloop add command <name> [--description <text>] [--with-subcommands] [--autocomplete] [--dir <path>]`
+
+`Usage: forgeloop add context-menu <name> [--type user|message]`
 
 `Usage: forgeloop add event <eventName> [--once]`
 
-`Usage: forgeloop add <modal|button|select-menu> [--custom-id <id>] [<customId>]`
+`Usage: forgeloop add <modal|button|select-menu> [--custom-id <id> | --regexp <pattern> [--regexp-flags <flags>] | <customId>]`
 
 ## Command generator
 
 - **Name:** letters, numbers, hyphens, underscores — stored **lowercase**.
 - **Description:** optional; default stub text in the `SlashCommandBuilder` if empty.
+- **`--with-subcommands`:** scaffold a nested `demo` group with an example subcommand.
+- **`--autocomplete`:** scaffold an `autocomplete(...)` export and matching option.
+- **Both flags together:** generate a nested subcommand example with autocomplete wiring.
+
+## Context menu generator
+
+- **Target:** `--type user` or `--type message` (interactive mode prompts if omitted).
+- **Output:** writes a `ContextMenuCommandBuilder` module alongside slash commands in `src/commands`.
+- **Naming:** accepts letters, numbers, hyphens, and underscores; the visible command name is preserved as entered.
 
 ## Event generator
 
@@ -45,11 +57,19 @@ Missing name (non-interactive):
 ## Interaction generators
 
 - **Targets:** `modal`, `button`, `select-menu`.
-- **`customId`:** required (positional or `--custom-id`), max length 100.
-- Files are generated under `src/interactions`:
-  - `modals/<slug>.ts|js`
-  - `buttons/<slug>.ts|js`
-  - `selectMenus/<slug>.ts|js`
+- **CLI matching:** choose **one** of: full **`customId`** (positional or `--custom-id`) or **`--regexp`** (optional **`--regexp-flags`**, default `u`). Custom IDs stay within Discord’s **100 characters**. The interactive wizard offers exact or RegExp.
+- **Hand-written modules** (no CLI): export **`execute`** plus **exactly one** of:
+  - **`customId`** — full string match
+  - **`customIdRegExp`** — `RegExp`; the **entire** `customId` must match (`exec` result equals the full string; use `^ … $`)
+  - **`parseCustomId(id)`** — return non-`null`/`undefined` to route; that value is passed as the **second argument** to `execute`
+  - **`matchCustomId(id)`** — return true to route (no second argument); do **not** combine with `parseCustomId`
+- **Flex route order:** among RegExp / parse / match handlers, higher **`interactionRoutePriority`** runs first; ties use load order.
+- **Routing:** `src/interactions/router.ts` loads handlers at startup: exact `customId` map, then flex routes (sorted by priority).
+- **Ephemeral state:** optional `src/lib/interaction-sessions.ts` (in-memory TTL). Single-process only; use Redis for multi-shard production.
+- Files under `src/interactions`:
+  - `router.ts|js`
+  - `modals/`, `buttons/`, `selectMenus/` — `<slug>.ts|js`
+  - `buttons/example-regex.*`, `example-parse.*` — samples (safe to delete)
 
 ## Flags
 
@@ -67,6 +87,21 @@ Missing name (non-interactive):
       description: 'Only for add command — slash command description.',
     },
     {
+      flag: '--with-subcommands',
+      type: 'boolean',
+      description: 'Only for add command — scaffold a sample subcommand group and handler logic.',
+    },
+    {
+      flag: '--autocomplete',
+      type: 'boolean',
+      description: 'Only for add command — scaffold a sample autocomplete export and option.',
+    },
+    {
+      flag: '--type',
+      type: 'user | message',
+      description: 'Only for add context-menu — choose the Discord application command target.',
+    },
+    {
       flag: '--once',
       type: 'boolean',
       description: 'Only for add event — register with client.once.',
@@ -79,7 +114,20 @@ Missing name (non-interactive):
     {
       flag: '--custom-id',
       type: 'string',
-      description: 'Only for modal/button/select-menu — custom interaction ID.',
+      description:
+        'Only for modal/button/select-menu — full customId (mutually exclusive with --regexp).',
+    },
+    {
+      flag: '--regexp',
+      type: 'string',
+      description:
+        'Only for modal/button/select-menu — RegExp pattern; full customId must match (mutually exclusive with --custom-id / positional).',
+    },
+    {
+      flag: '--regexp-flags',
+      type: 'string',
+      description:
+        'With --regexp only — RegExp flags (default u). Allowed: g, i, m, s, u, y.',
     },
   ]}
 />
@@ -87,6 +135,7 @@ Missing name (non-interactive):
 ## Files written
 
 - Command: `src/commands/<name>.ts` or `.js` (from manifest paths).
+- Context menu command: `src/commands/<name>.ts` or `.js`.
 - Event: `src/events/<eventName>.ts` or `.js`.
 - Modal: `src/interactions/modals/<slug>.ts` or `.js`.
 - Button: `src/interactions/buttons/<slug>.ts` or `.js`.

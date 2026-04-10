@@ -7,6 +7,8 @@ on:
     paths:
       - 'website/**'
       - '.github/workflows/docs-pages.yml'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
   workflow_dispatch:
 
 permissions:
@@ -25,18 +27,22 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
-          bun-version: 1.3.11
+          version: 10
 
-      - name: Install website dependencies
-        run: bun install --frozen-lockfile
-        working-directory: website
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Build website
-        run: bun run build
-        working-directory: website
+        run: pnpm --filter website run build
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3

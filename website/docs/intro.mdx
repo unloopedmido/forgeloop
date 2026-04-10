@@ -4,16 +4,16 @@ title: Introduction
 description: ForgeLoop scaffolds and maintains discord.js bots with a small CLI and generated project manifest.
 ---
 
-ForgeLoop is a **maintenance-first** scaffolder for [discord.js](https://discord.js.org/) bots. It generates a working TypeScript or JavaScript project, keeps a **project manifest** on disk (`forgeloop.config.mjs`), and ships commands to add/remove handlers, validate project health, inspect commands, and deploy slash command definitions to Discord.
+ForgeLoop is a **maintenance-first** scaffolder for [discord.js](https://discord.js.org/) bots. It generates a working TypeScript or JavaScript project, keeps a **project manifest** on disk (`forgeloop.config.mjs`), and ships commands to add/remove handlers, validate project health, inspect commands, and deploy application command definitions to Discord.
 
 ## What you get
 
-- **Interactive or scripted `init`** — pick language, preset, package manager, optional Prisma database, lint/format stack, Git, Docker, and GitHub Actions CI.
+- **Interactive or scripted `init`** — pick language, preset, package manager, optional Prisma database, lint/format stack, logging mode, Git, Docker, and GitHub Actions CI.
 - **Three presets** — `basic` (inline bot), `modular` (handler folders + sync on startup), `advanced` (core runtime modules under `src/core`).
-- **Generators** — `add` supports commands, events, modals, buttons, and select menus for modular/advanced projects.
+- **Generators** — `add` supports slash commands, context menus, events, modals, buttons, and select menus for modular/advanced projects.
 - **Removal** — `remove` deletes generated command/event/interaction handlers.
-- **Health checks** — `doctor` verifies expected files and required `.env` values.
-- **Slash command tooling** — `commands list` inspects local payload names and `commands deploy` syncs with Discord.
+- **Health checks** — `doctor` runs grouped diagnostics (files, env, dependencies, command load checks) with optional `--json` and `--strict`.
+- **Application command tooling** — `commands list` inspects local payload names and `commands deploy` syncs with Discord.
 
 ## Two ways to run the same CLI
 

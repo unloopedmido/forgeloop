@@ -6,6 +6,8 @@ node_modules/
 .pnp.js
 /package-lock.json
 /yarn.lock
+bun.lock
+bun.lockb
 
 # TESTING
 /coverage
@@ -61,3 +63,6 @@ Thumbs.db
 
 # CODEX
 .codex
+
+# Bot Tests
+testbots/

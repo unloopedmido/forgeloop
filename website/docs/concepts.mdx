@@ -6,7 +6,7 @@ description: ForgeLoop manifest, config file locations, presets, and when add/co
 
 ## Project manifest
 
-Every scaffolded project includes a **ForgeLoop manifest**: project name, `preset`, `language`, `packageManager`, enabled features (database, tooling, git, docker, CI), and **paths** (`src`, optional `commands` / `events` / `interactions` / `core` directories). The manifest is written to disk as **`forgeloop.config.mjs`** (preferred) and is also what `forgeloop info` and `forgeloop doctor` read.
+Every scaffolded project includes a **ForgeLoop manifest**: project name, `preset`, `language`, `packageManager`, enabled features (database, tooling, logging, git, docker, CI), and **paths** (`src`, optional `commands` / `events` / `interactions` / `core` directories). The manifest is written to disk as **`forgeloop.config.mjs`** (preferred) and is also what `forgeloop info` and `forgeloop doctor` read.
 
 ### Config file discovery
 
@@ -17,7 +17,7 @@ The CLI looks for, in order:
 3. `forgeloop.config.cjs`
 4. Legacy **`forgeloop.json`**
 
-The generated `.mjs` file tries to import `defineConfig` from `create-forgeloop/config` after install; before `npm install`, the config still exports a plain object so Node can load it.
+The generated `.mjs` file tries to import `defineConfig` from `create-forgeloop/config` after dependencies are installed; before install, the config still exports a plain object so Node can load it.
 
 ### Manifest version
 
@@ -35,14 +35,27 @@ The CLI validates **`manifestVersion: 1`**. Mismatches produce an unsupported ve
 
 `package.json` includes a **`packageManager`** field (e.g. `npm@10`, `pnpm@10.22.0`) so tooling can infer the intended client. Scripts use the same manager you selected at init (`dev`, `start`, `db:push`, etc.).
 
+## Logging mode
+
+For **modular** and **advanced** presets, ForgeLoop also stores a `logging` mode:
+
+- `console` for human-readable `[scope]` logs
+- `json` for one-JSON-object-per-line structured logs
+
+Basic preset projects do not use the generated handler/runtime logger modules.
+
 ## Command sync vs `commands deploy`
 
 - **Modular / advanced** starters include **`syncCommands`**, which runs when the bot starts: **guild** sync when `NODE_ENV` is not `production` (uses `GUILD_ID`), **global** sync when `NODE_ENV === 'production'`.
-- **`forgeloop commands deploy`** pushes the current slash command definitions from disk **without** starting the bot. Target rules: use **`--guild`** to force guild sync, **`--global`** to force global sync; otherwise **production -> global**, **non-production -> guild**. See [commands](./commands/commands.mdx).
+- **`forgeloop commands deploy`** pushes the current application command definitions from disk **without** starting the bot. Target rules: use **`--guild`** to force guild sync, **`--global`** to force global sync; otherwise **production -> global**, **non-production -> guild**. See [commands](./commands/commands.mdx).
 
 ## Working directory
 
 Commands that operate on an existing project accept **`--dir path`**. If omitted, the current working directory is used.
+
+## Component interactions (modular / advanced)
+
+Modal, button, and string-select handlers live under **`src/interactions/`**. The generated **`router.ts`** dispatches `interactionCreate`: slash and context-menu commands use `client.commands`; components use **exact** `customId`, then **flex** handlers — **`customIdRegExp`** (full-string match), **`parseCustomId`** (parsed value passed to `execute`), or **`matchCustomId`** (boolean) — ordered by **`interactionRoutePriority`** then file load order. Prefer `^ … $` for regexes. For large or sensitive payloads, use a short token in the ID plus **`interaction-sessions`** or Redis for multi-shard bots.
 
 ---
 

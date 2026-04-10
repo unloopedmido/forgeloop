@@ -1,7 +1,7 @@
 ---
 sidebar_position: 4
 title: forgeloop doctor
-description: Verify files expected by the ForgeLoop manifest exist on disk.
+description: Run grouped diagnostics for ForgeLoop projects with optional JSON output and CI-friendly exit codes.
 ---
 
 import { FlagTable } from '@site/src/components/docs/FlagTable';
@@ -9,28 +9,40 @@ import { FlagTable } from '@site/src/components/docs/FlagTable';
 ## Usage
 
 ```bash
-forgeloop doctor [--dir ./project]
+forgeloop doctor [--dir ./project] [--verbose] [--json] [--strict] [--fix] [--checks <groups>]
 ```
 
-Loads the ForgeLoop config from `--dir` (default: current directory), then checks paths derived from the manifest:
+Doctor loads your ForgeLoop config from `--dir` (default: current working directory), then runs **check groups** and prints findings with **errors**, **warnings**, and optional **info** lines.
 
-- Config file path that was loaded
-- `srcDir`, `configDir`
-- `commandsDir` / `eventsDir` when preset uses handlers
-- `coreDir` for **advanced**
-- `.gitignore` when `features.git`
-- `eslint.config.js` + `.prettierrc.json` when tooling is **eslint-prettier**
-- `biome.json` when tooling is **biome**
-- Prisma paths when database enabled: `prisma.config.ts`, `prisma/schema.prisma`, and client file under `src/core/...` (advanced) or `src/lib/...` (modular)
-- `Dockerfile` when Docker enabled
-- `.github/workflows/ci.yml` when CI enabled
-- `.env` presence and required values:
-  - always: `DISCORD_TOKEN`, `CLIENT_ID`, `GUILD_ID`
-  - database projects: `DATABASE_URL`
+Default groups are `config`, `structure`, `env`, `deps`, and `discord`. `network` and `tooling` are opt-in.
 
-Each missing path or missing env value increments issues and sets exit code **1**. If no issues → **`✓ Project looks healthy.`**
+### Check groups
 
-## Flags
+| Group | What it covers |
+| --- | --- |
+| `config` | Legacy vs modern config drift, handler path consistency |
+| `structure` | Files expected for your manifest (aligned with the scaffold generator) |
+| `env` | `.env` presence and required variables; placeholder / format hints |
+| `deps` | `package.json` dependencies, `node_modules`, `discord.js` load probe, `tsx` for TypeScript |
+| `discord` | *(modular/advanced only)* Command modules on disk and whether they load like `forgeloop commands list` |
+| `network` | *(opt-in)* Reachability of Discord’s API (`/gateway`) |
+| `tooling` | *(opt-in)* `lint` script when ESLint/Prettier or Biome is enabled |
+
+**Default run** includes: `config`, `structure`, `env`, `deps`, `discord`.  
+Add optional groups explicitly:
+
+```bash
+forgeloop doctor --checks config,structure,env,deps,discord,network,tooling
+```
+
+### Exit codes
+
+- **0** — No errors. Warnings do **not** fail the run unless `--strict` is set.
+- **1** — One or more **errors**, or one or more **warnings** when `--strict` is set.
+
+Parse errors or missing ForgeLoop config still throw a `CliError` (same as other commands).
+
+### Flags
 
 <FlagTable
   rows={[
@@ -40,8 +52,55 @@ Each missing path or missing env value increments issues and sets exit code **1*
       defaultValue: 'cwd',
       description: 'Project root to inspect.',
     },
+    {
+      flag: '--verbose',
+      type: 'boolean',
+      defaultValue: 'false',
+      description: 'Print per-group “no findings” lines and issue evidence keys.',
+    },
+    {
+      flag: '--json',
+      type: 'boolean',
+      defaultValue: 'false',
+      description: 'Emit a JSON report to stdout (human banner/sections are skipped).',
+    },
+    {
+      flag: '--strict',
+      type: 'boolean',
+      defaultValue: 'false',
+      description: 'Treat warnings as failures (useful in CI).',
+    },
+    {
+      flag: '--fix',
+      type: 'boolean',
+      defaultValue: 'false',
+      description: 'If `.env` is missing and `.env.example` exists, copy it to `.env` before checks.',
+    },
+    {
+      flag: '--checks',
+      type: 'string',
+      defaultValue: '(default groups)',
+      description: 'Comma-separated list of groups to run (see table above).',
+    },
   ]}
 />
+
+## JSON output
+
+`--json` prints a single object with:
+
+- `project` — directory, name, preset, language, package manager, active config filename
+- `timestamp`, `durationMs`
+- `summary` — `{ errors, warnings, infos }`
+- `issues[]` — `code`, `severity`, `group`, `title`, `message`, `fixes`, optional `evidence`
+
+Use it in CI:
+
+```bash
+forgeloop doctor --json --strict > doctor-report.json
+```
+
+If you also pass `--fix` and `.env` is created from `.env.example`, ForgeLoop prints that notice to `stderr` while keeping JSON on `stdout`.
 
 ## Related
 

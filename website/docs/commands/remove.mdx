@@ -1,7 +1,7 @@
 ---
 sidebar_position: 4
 title: forgeloop remove
-description: Remove generated handler files and optionally sync slash commands.
+description: Remove generated handler files and optionally sync application commands.
 ---
 
 import { FlagTable } from '@site/src/components/docs/FlagTable';
@@ -26,7 +26,7 @@ forgeloop remove select-menu [--custom-id <id>] [<customId>] [--dir ./project]
 
 For `command` only:
 
-- `--sync` triggers a Discord slash-command deploy after deletion.
+- `--sync` triggers an application-command deploy after deletion.
 - `--guild` / `--global` apply to that sync target.
 
 For non-command targets:
@@ -51,7 +51,7 @@ For non-command targets:
     {
       flag: '--sync',
       type: 'boolean',
-      description: 'After removing a command, redeploy slash commands.',
+      description: 'After removing a command, redeploy application commands.',
     },
     {
       flag: '--guild',

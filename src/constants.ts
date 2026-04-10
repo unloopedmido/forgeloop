@@ -19,6 +19,7 @@ export const SUPPORTED_PACKAGE_MANAGERS = [
 export const SUPPORTED_DATABASES = ['none', 'sqlite', 'postgresql'] as const;
 export const SUPPORTED_ORMS = ['none', 'prisma'] as const;
 export const SUPPORTED_TOOLING = ['eslint-prettier', 'biome', 'none'] as const;
+export const SUPPORTED_LOGGERS = ['console', 'json'] as const;
 
 export const DEFAULTS = {
 	language: 'ts',
@@ -27,4 +28,5 @@ export const DEFAULTS = {
 	database: 'none',
 	orm: 'none',
 	tooling: 'eslint-prettier',
+	logging: 'console',
 } as const;

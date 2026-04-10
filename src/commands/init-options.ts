@@ -3,6 +3,7 @@ import {
 	DEFAULTS,
 	SUPPORTED_DATABASES,
 	SUPPORTED_LANGUAGES,
+	SUPPORTED_LOGGERS,
 	SUPPORTED_ORMS,
 	SUPPORTED_PACKAGE_MANAGERS,
 	SUPPORTED_PRESETS,
@@ -12,7 +13,6 @@ import type { InitOptions, ParsedArgs } from '../types.js';
 import {
 	getBooleanFlag,
 	getOptionalStringFlag,
-	getStringFlag,
 } from '../utils/args.js';
 import { CliError } from '../utils/errors.js';
 import type { OutputWriter } from '../utils/format.js';
@@ -71,6 +71,7 @@ export async function resolveInitOptions(
 	let docker = getBooleanFlag(args.flags, 'docker');
 	let ci = getBooleanFlag(args.flags, 'ci');
 	let install = getBooleanFlag(args.flags, 'install');
+	let logging = getOptionalStringFlag(args.flags, 'logging');
 
 	if (interactive) {
 		output.hero(
@@ -216,6 +217,31 @@ export async function resolveInitOptions(
 				false,
 			);
 		}
+
+		const presetSoFar = parseSelection(
+			preset ?? DEFAULTS.preset,
+			SUPPORTED_PRESETS,
+			'preset',
+		);
+		if (presetSoFar !== 'basic' && !logging) {
+			logging = await promptSelect(
+				output,
+				'How should handler/runtime logs be formatted?',
+				[
+					{
+						label: 'console',
+						value: 'console',
+						hint: 'Human-readable [scope] lines',
+					},
+					{
+						label: 'json',
+						value: 'json',
+						hint: 'One JSON object per line (structured logs)',
+					},
+				],
+				DEFAULTS.logging,
+			);
+		}
 	}
 
 	const resolvedLanguage = parseSelection(
@@ -259,11 +285,30 @@ export async function resolveInitOptions(
 		'tooling',
 	);
 
+	const resolvedLogging =
+		resolvedPreset === 'basic'
+			? undefined
+			: parseSelection(
+					logging ?? DEFAULTS.logging,
+					SUPPORTED_LOGGERS,
+					'logging',
+				);
+
+	const dirFlag = getOptionalStringFlag(args.flags, 'dir');
+	let targetDir: string;
+	if (!dirFlag) {
+		targetDir = path.resolve(resolvedProjectName);
+	} else {
+		const resolvedDir = path.resolve(dirFlag);
+		targetDir =
+			path.basename(resolvedDir) === resolvedProjectName
+				? resolvedDir
+				: path.resolve(dirFlag, resolvedProjectName);
+	}
+
 	return {
 		projectName: resolvedProjectName,
-		targetDir: path.resolve(
-			getStringFlag(args.flags, 'dir') ?? resolvedProjectName,
-		),
+		targetDir,
 		language: resolvedLanguage,
 		preset: resolvedPreset,
 		packageManager: resolvedPackageManager,
@@ -274,5 +319,6 @@ export async function resolveInitOptions(
 		docker,
 		ci,
 		install,
+		logging: resolvedLogging,
 	};
 }

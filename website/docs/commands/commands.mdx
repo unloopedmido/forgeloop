@@ -1,7 +1,7 @@
 ---
 sidebar_position: 3
 title: forgeloop commands
-description: List local slash commands or deploy them to Discord.
+description: List local application commands or deploy them to Discord.
 ---
 
 import { FlagTable } from '@site/src/components/docs/FlagTable';
@@ -26,12 +26,12 @@ Invalid subcommand:
 ## `list`
 
 - Loads command modules from your project `src/commands`.
-- Prints the local slash command names.
+- Prints the local application command names (slash commands and context menus).
 - If none are found, prints a warning.
 
 ## `deploy`
 
-- Builds command payload from local modules and sends a PUT request to Discord.
+- Builds application command payload from local modules and sends a PUT request to Discord.
 - `--guild` forces guild-scoped deploy (requires `GUILD_ID`).
 - `--global` forces global deploy.
 - If neither is set: `production -> global`, otherwise `guild`.
