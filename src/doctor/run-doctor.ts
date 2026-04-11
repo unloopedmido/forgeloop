@@ -102,7 +102,7 @@ async function buildDoctorContext(
 ): Promise<DoctorContext> {
 	const { manifest, location } = await loadManifestWithLocation(projectDir);
 	const packageJsonPath = path.join(projectDir, 'package.json');
-	let packageJson: Record<string, unknown> | null = null;
+	let packageJson: Record<string, unknown> | null;
 	try {
 		packageJson = JSON.parse(
 			await readFile(packageJsonPath, 'utf8'),
