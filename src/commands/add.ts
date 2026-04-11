@@ -5,20 +5,26 @@ import {
 } from '../discord/events.js';
 import { loadManifest } from '../manifest.js';
 import {
-	renderCommandFile,
-	renderContextMenuCommandFile,
-	renderEventFile,
-	renderInteractionFile,
-} from '../generators/templates.js';
+	isClientReadyEvent,
+	renderButtonTemplate,
+	renderCommandTemplate,
+	renderContextMenuCommandTemplate,
+	renderEventTemplate,
+	renderModalTemplate,
+	renderSelectMenuTemplate,
+} from '../generators/runtime.js';
+import { fileExtension } from '../generators/shared.js';
 import type { InteractionTemplateSpec, ParsedArgs } from '../types.js';
 import { getBooleanFlag, getOptionalStringFlag } from '../utils/args.js';
 import { CliError } from '../utils/errors.js';
+import type { FileSpec } from '../utils/fs.js';
 import { writeFiles } from '../utils/fs.js';
 import { Output, type OutputWriter } from '../utils/format.js';
 import {
 	assertValidCustomId,
 	assertValidRegExpFlags,
 	assertValidRegExpPattern,
+	interactionFilePath,
 } from '../utils/interaction-paths.js';
 import {
 	assertHandlerProject,
@@ -30,25 +36,70 @@ import {
 	promptSelect,
 	promptText,
 } from '../utils/prompts.js';
+import { normalizeCommandName, normalizeEventName } from './names.js';
 
-function normalizeCommandName(name: string) {
-	if (!/^[a-z0-9-_]+$/i.test(name)) {
-		throw new CliError(
-			`Invalid command name "${name}". Use letters, numbers, hyphens, or underscores.`,
-		);
-	}
-
-	return name.toLowerCase();
+function commandFile(
+	manifest: Awaited<ReturnType<typeof loadManifest>>,
+	name: string,
+	description?: string,
+	templateOptions?: {
+		subcommands?: boolean;
+		autocomplete?: boolean;
+	},
+): FileSpec {
+	return {
+		path: `${manifest.paths.commandsDir!}/${name}.${fileExtension(manifest.language)}`,
+		content: renderCommandTemplate(
+			manifest.language,
+			name,
+			description,
+			templateOptions,
+		),
+	};
 }
 
-function normalizeEventName(name: string) {
-	if (!/^[a-zA-Z0-9]+$/.test(name)) {
-		throw new CliError(
-			`Invalid event name "${name}". Use the exact Discord.js event name, for example "messageCreate".`,
-		);
-	}
+function contextMenuFile(
+	manifest: Awaited<ReturnType<typeof loadManifest>>,
+	name: string,
+	target: 'user' | 'message',
+): FileSpec {
+	return {
+		path: `${manifest.paths.commandsDir!}/${name}.${fileExtension(manifest.language)}`,
+		content: renderContextMenuCommandTemplate(
+			manifest.language,
+			name,
+			target,
+		),
+	};
+}
 
-	return name;
+function eventFile(
+	manifest: Awaited<ReturnType<typeof loadManifest>>,
+	eventName: string,
+	once = isClientReadyEvent(eventName),
+): FileSpec {
+	return {
+		path: `${manifest.paths.eventsDir!}/${eventName}.${fileExtension(manifest.language)}`,
+		content: renderEventTemplate(manifest.language, eventName, once),
+	};
+}
+
+function interactionFile(
+	manifest: Awaited<ReturnType<typeof loadManifest>>,
+	kind: 'modal' | 'button' | 'select-menu',
+	spec: InteractionTemplateSpec,
+): FileSpec {
+	const content =
+		kind === 'modal'
+			? renderModalTemplate(manifest.language, spec)
+			: kind === 'button'
+				? renderButtonTemplate(manifest.language, spec)
+				: renderSelectMenuTemplate(manifest.language, spec);
+	const pathKey = spec.match === 'regexp' ? spec.pattern : spec.value;
+	return {
+		path: interactionFilePath(manifest, kind, pathKey, manifest.language),
+		content,
+	};
 }
 
 async function resolveCommandInput(args: ParsedArgs, output: OutputWriter) {
@@ -348,7 +399,7 @@ export async function runAdd(
 
 	if (artifactType === 'command') {
 		const command = await resolveCommandInput(args, output);
-		const commandFile = renderCommandFile(
+		const file = commandFile(
 			manifest,
 			command.name,
 			command.description,
@@ -357,7 +408,7 @@ export async function runAdd(
 				autocomplete: command.withAutocomplete,
 			},
 		);
-		await writeFiles(projectDir, [commandFile]);
+		await writeFiles(projectDir, [file]);
 		if (
 			canPrompt() &&
 			!args.subcommands[1] &&
@@ -369,14 +420,14 @@ export async function runAdd(
 			]);
 		}
 		output.success(
-			`Added command "${command.name}" to ${path.join(projectDir, commandFile.path)}`,
+			`Added command "${command.name}" to ${path.join(projectDir, file.path)}`,
 		);
 		return;
 	}
 
 	if (artifactType === 'context-menu') {
 		const ctx = await resolveContextMenuInput(args, output);
-		const file = renderContextMenuCommandFile(manifest, ctx.name, ctx.target);
+		const file = contextMenuFile(manifest, ctx.name, ctx.target);
 		await writeFiles(projectDir, [file]);
 		output.success(
 			`Added ${ctx.target} context menu command "${ctx.name}" to ${path.join(projectDir, file.path)}`,
@@ -386,8 +437,8 @@ export async function runAdd(
 
 	if (artifactType === 'event') {
 		const event = await resolveEventInput(args, output);
-		const eventFile = renderEventFile(manifest, event.eventName, event.once);
-		await writeFiles(projectDir, [eventFile]);
+		const file = eventFile(manifest, event.eventName, event.once);
+		await writeFiles(projectDir, [file]);
 		if (
 			canPrompt() &&
 			!args.subcommands[1] &&
@@ -400,7 +451,7 @@ export async function runAdd(
 			]);
 		}
 		output.success(
-			`Added event "${event.eventName}" to ${path.join(projectDir, eventFile.path)}`,
+			`Added event "${event.eventName}" to ${path.join(projectDir, file.path)}`,
 		);
 		return;
 	}
@@ -417,7 +468,7 @@ export async function runAdd(
 				: artifactType === 'button'
 					? 'button'
 					: 'select-menu';
-		const file = renderInteractionFile(manifest, kind, spec);
+		const file = interactionFile(manifest, kind, spec);
 		await writeFiles(projectDir, [file]);
 		const idLabel =
 			spec.match === 'regexp'

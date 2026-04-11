@@ -77,15 +77,7 @@ This project includes \`${CONFIG_FILE}\` and is expected to be maintained with F
 }
 
 function projectConfig(manifest: ForgeLoopManifest) {
-	return `let defineConfig = (config) => config;
-
-try {
-  ({ defineConfig } = await import('create-forgeloop/config'));
-} catch {
-  // Keep the generated config usable before dependencies are installed.
-}
-
-export default defineConfig(${JSON.stringify(manifest, null, 2)});
+	return `export default ${JSON.stringify(manifest, null, 2)};
 `;
 }
 

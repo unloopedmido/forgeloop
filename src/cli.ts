@@ -6,11 +6,11 @@ import {
 import { runAdd } from './commands/add.js';
 import { runCommands } from './commands/commands.js';
 import { runDocs } from './commands/docs.js';
-import { runDoctor } from './commands/doctor.js';
 import { runInfo } from './commands/info.js';
 import { runRemove } from './commands/remove.js';
 import { runInit } from './commands/init.js';
 import { CORE_COMMAND_NAMES } from './commands/registry.js';
+import { runDoctor } from './doctor/run-doctor.js';
 import { expandShortFlags, getBooleanFlag, parseArgs } from './utils/args.js';
 import { CliError } from './utils/errors.js';
 import { Output } from './utils/format.js';

@@ -140,10 +140,6 @@ async function runDeps(ctx: DoctorContext): Promise<DoctorIssue[]> {
 }
 
 export const depsCheck: DoctorCheck = {
-	id: 'deps',
-	title: 'package.json and installed dependencies',
 	group: 'deps',
-	defaultEnabled: true,
-	cost: 'moderate',
 	run: runDeps,
 };

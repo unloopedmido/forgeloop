@@ -1,17 +1,7 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { runCli } from '../../src/cli.js';
 import { normalizeCreateArgv } from '../../src/utils/create-entry.js';
 import { CliError } from '../../src/utils/errors.js';
 import { Output } from '../../src/utils/format.js';
-
-const repoRoot = path.resolve(
-	path.dirname(fileURLToPath(import.meta.url)),
-	'../..',
-);
-
-export const FORGELOOP_BIN = path.join(repoRoot, 'bin/forgeloop.js');
-export const CREATE_FORGELOOP_BIN = path.join(repoRoot, 'bin/create-forgeloop.js');
 
 export type RunCliOptions = {
 	cwd?: string;

@@ -79,10 +79,6 @@ async function runDiscordWorkflow(ctx: DoctorContext): Promise<DoctorIssue[]> {
 }
 
 export const discordWorkflowCheck: DoctorCheck = {
-	id: 'discord-workflow',
-	title: 'Slash / application command modules',
 	group: 'discord',
-	defaultEnabled: true,
-	cost: 'moderate',
 	run: runDiscordWorkflow,
 };

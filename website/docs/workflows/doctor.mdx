@@ -11,7 +11,7 @@ import { CliExample } from '@site/src/components/docs/CliExample';
 ## When to run it
 
 - After cloning or copying a bot repo (before first `npm install`).
-- After deleting files or changing `manifest.paths` by hand.
+- After deleting generated files by hand.
 - Before opening a support issue (attach `--json` output).
 - In CI with `--strict` if you want warnings (for example missing `node_modules`) to fail the build.
 
@@ -84,4 +84,4 @@ To run the defaults plus those optional groups, pass the full list:
 npx forgeloop doctor --dir . --checks config,structure,env,deps,discord,network,tooling
 ```
 
-See also: [Command reference: doctor](../commands/doctor.mdx).
+See also: [`forgeloop doctor`](../commands/doctor.mdx).

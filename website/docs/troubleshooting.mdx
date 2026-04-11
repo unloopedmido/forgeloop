@@ -60,12 +60,10 @@ See [commands](./commands/commands.mdx) and [Sync application commands](./workfl
 
 ## No ForgeLoop config found
 
-The CLI expects **`forgeloop.config.mjs`**, **`.js`**, **`.cjs`**, or legacy **`forgeloop.json`** in the project root (or the directory given by **`--dir`**).
+The CLI expects **`forgeloop.config.mjs`** in the project root (or the directory given by **`--dir`**).
 
 ## Manifest load errors
 
-- Wrong **`manifestVersion`** → unsupported version message.
-- **`framework` ≠ discord.js** or **`runtime` ≠ node** → rejected by validation.
 - Invalid or missing exports in `.mjs` config → load error with the underlying Node message.
 
 ## Doctor reports problems

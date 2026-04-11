@@ -58,10 +58,6 @@ describe('create entry argv', () => {
 			'ping',
 		]);
 	});
-
-	it('suggests init for likely typos', () => {
-		expect(() => normalizeCreateArgv(['int'])).toThrow(/Did you mean "init"/);
-	});
 });
 
 describe('project dir resolution', () => {

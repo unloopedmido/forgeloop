@@ -1,6 +1,6 @@
 {
 	"name": "create-forgeloop",
-	"version": "0.4.0",
+	"version": "0.4.3",
 	"description": "A maintenance-first discord.js bot template scaffolder and CLI with generators, starter presets, and project health checks.",
 	"homepage": "https://unloopedmido.github.io/forgeloop/",
 	"repository": {
@@ -58,7 +58,7 @@
 	},
 	"scripts": {
 		"build": "tsc -p tsconfig.build.json",
-		"dev": "tsx watch src/index.ts",
+		"dev": "tsx src/index.ts",
 		"docs:dev": "pnpm --filter website run start",
 		"docs:build": "pnpm --filter website run build",
 		"docs:serve": "pnpm --filter website run serve",

@@ -43,10 +43,6 @@ async function runNetwork(ctx: DoctorContext): Promise<DoctorIssue[]> {
 }
 
 export const networkCheck: DoctorCheck = {
-	id: 'network',
-	title: 'Discord API reachability',
 	group: 'network',
-	defaultEnabled: false,
-	cost: 'moderate',
 	run: runNetwork,
 };

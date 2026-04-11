@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { readFile, writeFile } from 'node:fs/promises';
 import { describe, expect, it, vi } from 'vitest';
 import { runForgeloop } from './harness/cli.js';
 import {
@@ -100,6 +101,40 @@ describe('commands (spawned)', () => {
 					'js',
 				);
 				await installDiscordJsStub(root);
+
+				const { exitCode, stdout, stderr } = await runForgeloop(
+					['commands', 'list', '--dir', root],
+					{ cwd: root },
+				);
+				expect(exitCode).toBe(0);
+				expect(stderr).toBe('');
+				expect(stdout).toMatch(/ping/i);
+			} finally {
+				await removeDir(parent);
+			}
+		},
+		180_000,
+	);
+
+	it(
+		'lists commands even when imported modules log to stdout',
+		async () => {
+			const parent = await makeTempProjectParent();
+			try {
+				const root = await scaffold(
+					parent,
+					'fl-cmd-stdout-noise',
+					'modular',
+					'js',
+				);
+				await installDiscordJsStub(root);
+				const pingPath = path.join(root, 'src', 'commands', 'ping.js');
+				const pingSource = await readFile(pingPath, 'utf8');
+				await writeFile(
+					pingPath,
+					`console.log('top-level import noise');\n${pingSource}`,
+					'utf8',
+				);
 
 				const { exitCode, stdout, stderr } = await runForgeloop(
 					['commands', 'list', '--dir', root],

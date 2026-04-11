@@ -6,22 +6,13 @@ description: ForgeLoop manifest, config file locations, presets, and when add/co
 
 ## Project manifest
 
-Every scaffolded project includes a **ForgeLoop manifest**: project name, `preset`, `language`, `packageManager`, enabled features (database, tooling, logging, git, docker, CI), and **paths** (`src`, optional `commands` / `events` / `interactions` / `core` directories). The manifest is written to disk as **`forgeloop.config.mjs`** (preferred) and is also what `forgeloop info` and `forgeloop doctor` read.
+Every scaffolded project includes a **ForgeLoop manifest**: project name, `preset`, `language`, `packageManager`, enabled features (database, tooling, logging, git, docker, CI), and the generated path layout. The manifest is written to disk as **`forgeloop.config.mjs`** and is what `forgeloop info` and `forgeloop doctor` read.
 
-### Config file discovery
+### Config file
 
-The CLI looks for, in order:
+ForgeLoop reads exactly one config file: **`forgeloop.config.mjs`**.
 
-1. `forgeloop.config.mjs`
-2. `forgeloop.config.js`
-3. `forgeloop.config.cjs`
-4. Legacy **`forgeloop.json`**
-
-The generated `.mjs` file tries to import `defineConfig` from `create-forgeloop/config` after dependencies are installed; before install, the config still exports a plain object so Node can load it.
-
-### Manifest version
-
-The CLI validates **`manifestVersion: 1`**. Mismatches produce an unsupported version error.
+The generated file is a plain default export, so it stays readable and loadable without any package-level helper.
 
 ## Presets
 

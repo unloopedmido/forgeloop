@@ -27,11 +27,8 @@ export type InteractionTemplateSpec =
 	| { match: 'regexp'; pattern: string; flags: string };
 
 export interface ForgeLoopManifest {
-	manifestVersion: number;
 	projectName: string;
 	createdAt: string;
-	runtime: 'node';
-	framework: 'discord.js';
 	language: Language;
 	preset: Preset;
 	packageManager: PackageManager;

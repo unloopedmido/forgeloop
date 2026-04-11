@@ -3,18 +3,47 @@ import { DOCS_SITE_URL } from '../constants.js';
 import type { ParsedArgs } from '../types.js';
 import { Output, type OutputWriter } from '../utils/format.js';
 
-function openUrl(url: string) {
+function trySpawn(command: string, args: string[]): Promise<boolean> {
+	return new Promise((resolve) => {
+		const child = spawn(command, args, {
+			detached: true,
+			stdio: 'ignore',
+			shell: false,
+		});
+
+		child.once('error', () => resolve(false));
+		child.once('spawn', () => {
+			child.unref();
+			resolve(true);
+		});
+	});
+}
+
+async function openUrl(url: string): Promise<boolean> {
 	const platform = process.platform;
-	const child =
-		platform === 'darwin'
-			? spawn('open', [url], { detached: true, stdio: 'ignore' })
-			: platform === 'win32'
-				? spawn('cmd', ['/c', 'start', '', url], {
-						detached: true,
-						stdio: 'ignore',
-					})
-				: spawn('xdg-open', [url], { detached: true, stdio: 'ignore' });
-	child.unref();
+
+	if (platform === 'darwin') return trySpawn('open', [url]);
+	if (platform === 'win32')
+		return trySpawn('cmd.exe', ['/c', 'start', '', url]);
+
+	if (process.env.WSL_DISTRO_NAME || process.env.WSL_INTEROP) {
+		if (await trySpawn('wslview', [url])) return true;
+		if (await trySpawn('cmd.exe', ['/c', 'start', '', url])) return true;
+		if (
+			await trySpawn('powershell.exe', [
+				'-NoProfile',
+				'-Command',
+				'Start-Process',
+				url,
+			])
+		)
+			return true;
+	}
+
+	if (await trySpawn('xdg-open', [url])) return true;
+	if (await trySpawn('gio', ['open', url])) return true;
+
+	return false;
 }
 
 export async function runDocs(
@@ -22,5 +51,9 @@ export async function runDocs(
 	output: OutputWriter = new Output(),
 ) {
 	output.info(`Opening documentation: ${DOCS_SITE_URL}`);
-	openUrl(DOCS_SITE_URL);
+	if (!(await openUrl(DOCS_SITE_URL))) {
+		output.warn(
+			`Could not launch a browser. Open manually: ${DOCS_SITE_URL}`,
+		);
+	}
 }

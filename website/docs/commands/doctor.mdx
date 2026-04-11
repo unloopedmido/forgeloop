@@ -20,7 +20,7 @@ Default groups are `config`, `structure`, `env`, `deps`, and `discord`. `network
 
 | Group | What it covers |
 | --- | --- |
-| `config` | Legacy vs modern config drift, handler path consistency |
+| `config` | Handler path consistency for the selected preset |
 | `structure` | Files expected for your manifest (aligned with the scaffold generator) |
 | `env` | `.env` presence and required variables; placeholder / format hints |
 | `deps` | `package.json` dependencies, `node_modules`, `discord.js` load probe, `tsx` for TypeScript |
@@ -106,6 +106,6 @@ If you also pass `--fix` and `.env` is created from `.env.example`, ForgeLoop pr
 
 No ForgeLoop config in directory:
 
-> No ForgeLoop project config found in …. Expected one of forgeloop.config.mjs, forgeloop.config.js, forgeloop.config.cjs or forgeloop.json.
+> No ForgeLoop project config found in …. Expected forgeloop.config.mjs.
 
 See [Workflow: doctor](../workflows/doctor.mdx).

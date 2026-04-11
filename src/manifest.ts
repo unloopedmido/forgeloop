@@ -2,11 +2,9 @@ import { stat } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
+	CONFIG_FILE,
 	DEFAULTS,
-	LEGACY_MANIFEST_FILE,
-	MANIFEST_VERSION,
 	SUPPORTED_DATABASES,
-	SUPPORTED_CONFIG_FILES,
 	SUPPORTED_LANGUAGES,
 	SUPPORTED_LOGGERS,
 	SUPPORTED_ORMS,
@@ -16,14 +14,19 @@ import {
 } from './constants.js';
 import type {
 	DatabaseProvider,
-	ForgeLoopManifest,
 	ForgeLoopConfig,
+	ForgeLoopManifest,
 	InitOptions,
 	Orm,
 	ProjectLogging,
 } from './types.js';
 import { CliError } from './utils/errors.js';
-import { pathExists, readJsonFile } from './utils/fs.js';
+import { pathExists } from './utils/fs.js';
+
+export interface ManifestLocation {
+	path: string;
+	relativePath: string;
+}
 
 function toDatabaseConfig(
 	database: InitOptions['database'],
@@ -99,11 +102,8 @@ export function createManifest(options: InitOptions): ForgeLoopManifest {
 	const usesHandlers = options.preset !== 'basic';
 	const usesCore = options.preset === 'advanced';
 	return {
-		manifestVersion: MANIFEST_VERSION,
 		projectName: options.projectName,
 		createdAt: new Date().toISOString(),
-		runtime: 'node',
-		framework: 'discord.js',
 		language: options.language,
 		preset: options.preset,
 		packageManager: options.packageManager,
@@ -129,28 +129,16 @@ export function createManifest(options: InitOptions): ForgeLoopManifest {
 }
 
 export async function resolveManifestLocation(projectDir: string) {
-	for (const fileName of SUPPORTED_CONFIG_FILES) {
-		const manifestPath = path.join(projectDir, fileName);
-		if (await pathExists(manifestPath)) {
-			return {
-				path: manifestPath,
-				relativePath: fileName,
-				format: 'module' as const,
-			};
-		}
-	}
-
-	const legacyManifestPath = path.join(projectDir, LEGACY_MANIFEST_FILE);
-	if (await pathExists(legacyManifestPath)) {
+	const manifestPath = path.join(projectDir, CONFIG_FILE);
+	if (await pathExists(manifestPath)) {
 		return {
-			path: legacyManifestPath,
-			relativePath: LEGACY_MANIFEST_FILE,
-			format: 'json' as const,
+			path: manifestPath,
+			relativePath: CONFIG_FILE,
 		};
 	}
 
 	throw new CliError(
-		`No ForgeLoop project config found in ${projectDir}. Expected one of ${SUPPORTED_CONFIG_FILES.join(', ')} or ${LEGACY_MANIFEST_FILE}.`,
+		`No ForgeLoop project config found in ${projectDir}. Expected ${CONFIG_FILE}.`,
 	);
 }
 
@@ -158,12 +146,8 @@ async function loadModuleManifest(manifestPath: string) {
 	const manifestUrl = pathToFileURL(manifestPath);
 	const metadata = await stat(manifestPath);
 	manifestUrl.searchParams.set('t', String(metadata.mtimeMs));
-	let module: {
-		default?: unknown;
-		config?: unknown;
-		manifest?: unknown;
-	};
 
+	let module: { default?: unknown };
 	try {
 		module = (await import(manifestUrl.href)) as typeof module;
 	} catch (error) {
@@ -173,23 +157,19 @@ async function loadModuleManifest(manifestPath: string) {
 			`Failed to load ForgeLoop config at ${manifestPath}: ${message}`,
 		);
 	}
-	const manifest = module.default ?? module.config ?? module.manifest;
 
-	if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) {
+	if (!module.default || typeof module.default !== 'object' || Array.isArray(module.default)) {
 		throw new CliError(
-			`Invalid ForgeLoop config in ${manifestPath}. Export an object as "default", "config", or "manifest".`,
+			`Invalid ForgeLoop config in ${manifestPath}. Export the config object as the default export.`,
 		);
 	}
 
-	return manifest as ForgeLoopConfig;
+	return module.default as ForgeLoopConfig;
 }
 
 export async function loadManifestWithLocation(projectDir: string) {
 	const location = await resolveManifestLocation(projectDir);
-	const manifest =
-		location.format === 'json'
-			? await readJsonFile<ForgeLoopManifest>(location.path)
-			: await loadModuleManifest(location.path);
+	const manifest = await loadModuleManifest(location.path);
 	validateManifest(manifest);
 	return { manifest, location };
 }
@@ -201,19 +181,6 @@ export async function loadManifest(projectDir: string) {
 
 export function validateManifest(manifest: ForgeLoopManifest) {
 	const manifestRecord = assertRecord(manifest, 'manifest');
-	if (manifest.manifestVersion !== MANIFEST_VERSION) {
-		throw new CliError(
-			`Unsupported manifest version ${manifest.manifestVersion}. Expected ${MANIFEST_VERSION}.`,
-		);
-	}
-
-	if (manifest.runtime !== 'node') {
-		throw new CliError(`Unsupported runtime "${manifest.runtime}".`);
-	}
-
-	if (manifest.framework !== 'discord.js') {
-		throw new CliError(`Unsupported framework "${manifest.framework}".`);
-	}
 
 	assertString(manifestRecord.projectName, 'manifest.projectName');
 	assertString(manifestRecord.createdAt, 'manifest.createdAt');
@@ -244,6 +211,12 @@ export function validateManifest(manifest: ForgeLoopManifest) {
 			features.logging,
 			SUPPORTED_LOGGERS,
 			'manifest.features.logging',
+		);
+	}
+
+	if (manifest.preset === 'basic' && features.logging !== undefined) {
+		throw new CliError(
+			'Invalid manifest.features.logging. Basic projects do not use logging mode.',
 		);
 	}
 

@@ -14,7 +14,6 @@ export async function runInfo(
 	output.item('Project', manifest.projectName);
 	output.item('Language', manifest.language);
 	output.item('Preset', manifest.preset);
-	output.item('Framework', manifest.framework);
 	output.item('Package manager', manifest.packageManager);
 	output.item('Docker', manifest.features.docker ? 'enabled' : 'disabled');
 	output.item('CI', manifest.features.ci ? 'enabled' : 'disabled');

@@ -3,7 +3,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { runForgeloop } from './harness/cli.js';
 import { makeTempProjectParent, removeDir } from './harness/project.js';
-import type { DoctorJsonReport } from '../src/doctor/render-json.js';
+import type { DoctorJsonReport } from '../src/doctor/run-doctor.js';
 
 async function scaffoldModular(parent: string, name: string) {
 	const { exitCode, stderr } = await runForgeloop(
@@ -105,41 +105,23 @@ describe('doctor (spawned)', () => {
 		}
 	});
 
-	it('--strict can fail when warnings exist (legacy manifest)', async () => {
+	it('--strict can fail when warnings exist', async () => {
 		const parent = await makeTempProjectParent();
 		try {
-			const name = 'fl-doctor-legacy';
+			const name = 'fl-doctor-strict-warning';
 			const root = await scaffoldModular(parent, name);
 			await writeFile(
-				path.join(root, 'forgeloop.json'),
-				JSON.stringify(
-					{
-						manifestVersion: 1,
-						runtime: 'node',
-						framework: 'discord.js',
-						projectName: name,
-						createdAt: new Date().toISOString(),
-						language: 'ts',
-						preset: 'modular',
-						packageManager: 'npm',
-						paths: {
-							commandsDir: 'src/commands',
-							eventsDir: 'src/events',
-						},
-						features: {
-							docker: false,
-							ci: false,
-							database: null,
-						},
-					},
-					null,
-					2,
-				),
+				path.join(root, '.env'),
+				[
+					'DISCORD_TOKEN=real-token',
+					'CLIENT_ID=not-a-snowflake',
+					'GUILD_ID=123456789012345678',
+				].join('\n'),
 				'utf8',
 			);
 
 			const { exitCode } = await runForgeloop(
-				['doctor', '--dir', root, '--strict'],
+				['doctor', '--dir', root, '--strict', '--checks', 'env'],
 				{ cwd: root },
 			);
 

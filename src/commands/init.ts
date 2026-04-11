@@ -1,5 +1,5 @@
 import { createManifest } from '../manifest.js';
-import { renderProjectFiles } from '../generators/templates.js';
+import { buildProjectFiles } from '../generators/project-files.js';
 import type { ParsedArgs } from '../types.js';
 import { ensureDirectory, writeFiles } from '../utils/fs.js';
 import { Output, type OutputWriter } from '../utils/format.js';
@@ -19,7 +19,7 @@ export async function runInit(
 	const options = await resolveInitOptions(args, output);
 	const manifest = createManifest(options);
 	const cliPackage = await resolveCurrentCliPackage();
-	const files = renderProjectFiles(manifest, {
+	const files = buildProjectFiles(manifest, {
 		cliPackageName: cliPackage.name,
 		// Always use latest to avoid pinning to unreleased local versions.
 		cliPackageVersion: 'latest',

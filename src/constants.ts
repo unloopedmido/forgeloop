@@ -1,13 +1,6 @@
 export const CLI_NAME = 'forgeloop';
 export const DOCS_SITE_URL = 'https://unloopedmido.github.io/forgeloop/';
 export const CONFIG_FILE = 'forgeloop.config.mjs';
-export const SUPPORTED_CONFIG_FILES = [
-	CONFIG_FILE,
-	'forgeloop.config.js',
-	'forgeloop.config.cjs',
-] as const;
-export const LEGACY_MANIFEST_FILE = 'forgeloop.json';
-export const MANIFEST_VERSION = 1;
 
 export const SUPPORTED_LANGUAGES = ['ts', 'js'] as const;
 export const SUPPORTED_PRESETS = ['basic', 'modular', 'advanced'] as const;

@@ -6,14 +6,12 @@ export interface CommandHelpSpec {
 
 export interface CommandSpec {
 	name: string;
-	summary: string;
 	help: CommandHelpSpec;
 }
 
 export const CORE_COMMAND_SPECS: readonly CommandSpec[] = [
 	{
 		name: 'init',
-		summary: 'Scaffold a new bot project',
 		help: {
 			title: 'forgeloop init',
 			usage: [
@@ -30,7 +28,6 @@ export const CORE_COMMAND_SPECS: readonly CommandSpec[] = [
 	},
 	{
 		name: 'add',
-		summary: 'Generate handlers, commands, and interaction components',
 		help: {
 			title: 'forgeloop add',
 			usage: [
@@ -50,7 +47,6 @@ export const CORE_COMMAND_SPECS: readonly CommandSpec[] = [
 	},
 	{
 		name: 'commands',
-			summary: 'List or deploy application (slash and context menu) commands',
 		help: {
 			title: 'forgeloop commands',
 			usage: [
@@ -68,7 +64,6 @@ export const CORE_COMMAND_SPECS: readonly CommandSpec[] = [
 	},
 	{
 		name: 'remove',
-		summary: 'Remove a generated handler file',
 		help: {
 			title: 'forgeloop remove',
 			usage: [
@@ -86,7 +81,6 @@ export const CORE_COMMAND_SPECS: readonly CommandSpec[] = [
 	},
 	{
 		name: 'doctor',
-		summary: 'Check project health',
 		help: {
 			title: 'forgeloop doctor',
 			usage: [
@@ -105,7 +99,6 @@ export const CORE_COMMAND_SPECS: readonly CommandSpec[] = [
 	},
 	{
 		name: 'info',
-		summary: 'Print project manifest summary',
 		help: {
 			title: 'forgeloop info',
 			usage: ['forgeloop info [--dir <path>]'],
@@ -114,7 +107,6 @@ export const CORE_COMMAND_SPECS: readonly CommandSpec[] = [
 	},
 	{
 		name: 'docs',
-		summary: 'Open the ForgeLoop documentation site',
 		help: {
 			title: 'forgeloop docs',
 			usage: ['forgeloop docs'],

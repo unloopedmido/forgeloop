@@ -41,10 +41,6 @@ async function runTooling(ctx: DoctorContext): Promise<DoctorIssue[]> {
 }
 
 export const toolingCheck: DoctorCheck = {
-	id: 'tooling',
-	title: 'Tooling scripts',
 	group: 'tooling',
-	defaultEnabled: false,
-	cost: 'fast',
 	run: runTooling,
 };

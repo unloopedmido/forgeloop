@@ -6,7 +6,7 @@ description: forgeloop info prints the resolved ForgeLoop manifest summary for t
 
 import { CliExample } from '@site/src/components/docs/CliExample';
 
-`forgeloop info` loads `forgeloop.config.*` (or legacy JSON) and prints a short summary: project name, language, preset, framework (`discord.js`), package manager, Docker/CI flags, and database (provider + ORM or none).
+`forgeloop info` loads `forgeloop.config.mjs` and prints a short summary: project name, language, preset, package manager, Docker/CI flags, and database (provider + ORM or none).
 
 <CliExample
   title="Example (illustrative)"
@@ -19,7 +19,6 @@ import { CliExample } from '@site/src/components/docs/CliExample';
   • Project          my-bot
   • Language         ts
   • Preset           modular
-  • Framework        discord.js
   • Package manager  npm
   • Docker           disabled
   • CI               disabled

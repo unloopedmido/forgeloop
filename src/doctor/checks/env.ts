@@ -141,10 +141,6 @@ async function runEnv(ctx: DoctorContext): Promise<DoctorIssue[]> {
 }
 
 export const envCheck: DoctorCheck = {
-	id: 'env',
-	title: 'Environment variables',
 	group: 'env',
-	defaultEnabled: true,
-	cost: 'fast',
 	run: runEnv,
 };

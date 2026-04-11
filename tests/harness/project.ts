@@ -1,12 +1,6 @@
-import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const repoRoot = path.resolve(
-	path.dirname(fileURLToPath(import.meta.url)),
-	'../..',
-);
 
 export async function makeTempProjectParent() {
 	return mkdtemp(path.join(os.tmpdir(), 'forgeloop-vitest-'));
@@ -14,14 +8,6 @@ export async function makeTempProjectParent() {
 
 export async function removeDir(dir: string) {
 	await rm(dir, { recursive: true, force: true });
-}
-
-export async function linkRepoNodeModules(projectRoot: string) {
-	await symlink(
-		path.join(repoRoot, 'node_modules'),
-		path.join(projectRoot, 'node_modules'),
-		'dir',
-	);
 }
 
 export async function installDiscordJsStub(projectRoot: string) {

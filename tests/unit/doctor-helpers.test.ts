@@ -2,11 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
 	parseDoctorGroupsFlag,
 	defaultDoctorGroupSet,
-} from '../../src/doctor/resolve-groups.js';
-import {
 	summarizeIssues,
 	shouldFail,
-} from '../../src/doctor/runner.js';
+} from '../../src/doctor/run-doctor.js';
 import type { DoctorIssue } from '../../src/doctor/types.js';
 import { CliError } from '../../src/utils/errors.js';
 

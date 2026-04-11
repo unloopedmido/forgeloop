@@ -1,6 +1,5 @@
 import { spawn } from 'node:child_process';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
-import os from 'node:os';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { ForgeLoopManifest, ParsedArgs } from '../types.js';
 import { getBooleanFlag } from '../utils/args.js';
@@ -9,6 +8,12 @@ import { pathExists } from '../utils/fs.js';
 
 const DISCORD_API_BASE_URL = 'https://discord.com/api/v10';
 export const DISCORD_API_TIMEOUT_MS = 20_000;
+
+type ProjectNodeResult = {
+	exitCode: number | null;
+	stderr: string;
+	payloadFd: string;
+};
 
 export function assertDeployTargetFlags(args: ParsedArgs) {
 	const explicitGlobal = getBooleanFlag(args.flags, 'global');
@@ -152,19 +157,58 @@ export function installHint(packageManager: ForgeLoopManifest['packageManager'])
 	}
 }
 
-async function withTempProbeFiles<T>(
-	prefix: string,
-	run: (paths: { resultPath: string; errorPath: string }) => Promise<T>,
-): Promise<T> {
-	const tempDir = await mkdtemp(path.join(os.tmpdir(), prefix));
-	const resultPath = path.join(tempDir, 'result.txt');
-	const errorPath = path.join(tempDir, 'error.txt');
+async function runProjectNodeScript(
+	projectDir: string,
+	language: ForgeLoopManifest['language'],
+	script: string,
+): Promise<ProjectNodeResult> {
+	const args =
+		language === 'ts'
+			? ['--import', 'tsx', '--input-type=module', '--eval', script]
+			: ['--input-type=module', '--eval', script];
 
-	try {
-		return await run({ resultPath, errorPath });
-	} finally {
-		await rm(tempDir, { recursive: true, force: true }).catch(() => {});
-	}
+	return new Promise<ProjectNodeResult>((resolve, reject) => {
+		const child = spawn('node', args, {
+			cwd: projectDir,
+			stdio: ['ignore', 'ignore', 'pipe', 'pipe'],
+			shell: false,
+		});
+
+		const stderrChunks: Buffer[] = [];
+		const payloadChunks: Buffer[] = [];
+		const payloadStream = child.stdio[3];
+
+		child.stderr?.on('data', (chunk: Buffer) => stderrChunks.push(chunk));
+		if (payloadStream) {
+			payloadStream.on('data', (chunk: Buffer | string) => {
+				payloadChunks.push(
+					Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, 'utf8'),
+				);
+			});
+		}
+		child.on('error', reject);
+		child.on('close', (exitCode) => {
+			resolve({
+				exitCode,
+				stderr: Buffer.concat(stderrChunks).toString('utf8'),
+				payloadFd: Buffer.concat(payloadChunks).toString('utf8'),
+			});
+		});
+	});
+}
+
+function formatProjectScriptFailure(
+	stderr: string,
+	projectDir: string,
+	packageManager: ForgeLoopManifest['packageManager'],
+) {
+	const trimmed = stderr.trim();
+	const hint =
+		/\bERR_MODULE_NOT_FOUND\b/u.test(trimmed) ||
+		/Cannot find module/u.test(trimmed)
+			? `\n\nHint: ensure dependencies are installed in ${projectDir} (\`${installHint(packageManager)}\`).`
+			: '';
+	return `${trimmed || 'Unknown module loading error.'}${hint}`;
 }
 
 /**
@@ -182,51 +226,21 @@ export async function probeDiscordJsImportable(
 		};
 	}
 
-	return withTempProbeFiles(
-		'forgeloop-discord-probe-',
-		async ({ resultPath, errorPath }) => {
-			const probe = `import { writeFile } from 'node:fs/promises';
-
-try {
-  await import('discord.js');
-  await writeFile(${JSON.stringify(resultPath)}, 'ok', 'utf8');
-} catch (error) {
-  const text = error instanceof Error ? (error.stack ?? error.message) : String(error);
-  await writeFile(${JSON.stringify(errorPath)}, text, 'utf8');
-  process.exitCode = 1;
-}`;
-
-			const exitCode = await new Promise<number | null>((resolve, reject) => {
-				const child = spawn(
-					'node',
-					['--input-type=module', '--eval', probe],
-					{
-						cwd: projectDir,
-						stdio: 'ignore',
-						shell: false,
-					},
-				);
-				child.on('close', (code) => resolve(code));
-				child.on('error', reject);
-			});
-
-			if (exitCode === 0) {
-				return { ok: true } as const;
-			}
-
-			const errorText = await readFile(errorPath, 'utf8').catch(() => '');
-			return {
-				ok: false as const,
-				message: `discord.js could not be loaded from ${projectDir}. Command modules import this package.\n${errorText.trim() || 'Unknown module loading error.'}\n\nTry \`${installHint(packageManager)}\` in that directory, or delete node_modules and reinstall if the install looks corrupted.`,
-			};
-		},
+	const result = await runProjectNodeScript(
+		projectDir,
+		'js',
+		"await import('discord.js');",
 	);
+	if (result.exitCode === 0) {
+		return { ok: true };
+	}
+
+	return {
+		ok: false,
+		message: `discord.js could not be loaded from ${projectDir}. Command modules import this package.\n${formatProjectScriptFailure(result.stderr, projectDir, packageManager)}`,
+	};
 }
 
-/**
- * Command modules import `discord.js`; verify Node can resolve it from the project
- * (same resolution rules as loading `src/commands/*.js`).
- */
 async function assertDiscordJsImportable(
 	projectDir: string,
 	packageManager: ForgeLoopManifest['packageManager'],
@@ -235,20 +249,6 @@ async function assertDiscordJsImportable(
 	if (!probe.ok) {
 		throw new CliError(probe.message);
 	}
-}
-
-function formatPayloadCollectionFailure(
-	errorOutput: string,
-	projectDir: string,
-	packageManager: ForgeLoopManifest['packageManager'],
-) {
-	const trimmed = errorOutput.trim();
-	const hint =
-		/\bERR_MODULE_NOT_FOUND\b/u.test(trimmed) ||
-		/Cannot find module/u.test(trimmed)
-			? `\n\nHint: ensure dependencies are installed in ${projectDir} (\`${installHint(packageManager)}\`). If the error persists, delete node_modules and reinstall.`
-			: '';
-	return `Failed to load application command modules: ${trimmed || 'unknown error'}${hint}`;
 }
 
 export async function collectCommandPayload(
@@ -268,75 +268,47 @@ export async function collectCommandPayload(
 
 	const commandsDir = path.join(projectDir, manifest.paths.commandsDir!);
 	const sourceExtension = manifest.language === 'ts' ? 'ts' : 'js';
-	return withTempProbeFiles(
-		'forgeloop-command-payload-',
-		async ({ resultPath, errorPath }) => {
-			const script = `import { readdir, writeFile } from 'node:fs/promises';
+	const script = `import { writeFileSync } from 'node:fs';
+import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-try {
-  const commandsDir = ${JSON.stringify(commandsDir)};
-  const entries = await readdir(commandsDir, { withFileTypes: true });
-  const payload = [];
+const commandsDir = ${JSON.stringify(commandsDir)};
+const entries = await readdir(commandsDir, { withFileTypes: true });
+const payload = [];
 
-  for (const entry of entries) {
-    if (!entry.isFile() || !entry.name.endsWith('.${sourceExtension}')) {
-      continue;
-    }
-
-    const modulePath = pathToFileURL(path.join(commandsDir, entry.name)).href;
-    const commandModule = await import(modulePath);
-    payload.push(commandModule.data.toJSON());
+for (const entry of entries) {
+  if (!entry.isFile() || !entry.name.endsWith('.${sourceExtension}')) {
+    continue;
   }
 
-  await writeFile(${JSON.stringify(resultPath)}, JSON.stringify(payload), 'utf8');
-} catch (error) {
-  const text = error instanceof Error ? (error.stack ?? error.message) : String(error);
-  await writeFile(${JSON.stringify(errorPath)}, text, 'utf8');
-  process.exitCode = 1;
-}`;
+  const modulePath = pathToFileURL(path.join(commandsDir, entry.name)).href;
+  const commandModule = await import(modulePath);
+  payload.push(commandModule.data.toJSON());
+}
 
-			const args =
-				manifest.language === 'ts'
-					? ['--import', 'tsx', '--input-type=module', '--eval', script]
-					: ['--input-type=module', '--eval', script];
+writeFileSync(3, JSON.stringify(payload));`;
 
-			const exitCode = await new Promise<number | null>((resolve, reject) => {
-				const child = spawn('node', args, {
-					cwd: projectDir,
-					stdio: 'ignore',
-					shell: false,
-				});
-
-				child.on('close', (code) => resolve(code));
-				child.on('error', (error) => reject(error));
-			});
-
-			if (exitCode !== 0) {
-				const errorOutput = await readFile(errorPath, 'utf8').catch(() => '');
-				throw new CliError(
-					formatPayloadCollectionFailure(
-						errorOutput,
-						projectDir,
-						manifest.packageManager,
-					),
-				);
-			}
-
-			const stdout = await readFile(resultPath, 'utf8').catch(() => '');
-
-			try {
-				return JSON.parse(stdout.trim()) as Array<Record<string, unknown>>;
-			} catch (error) {
-				const message =
-					error instanceof Error ? error.message : 'Unknown JSON parse error.';
-				throw new CliError(
-					`Command payload collection returned invalid JSON: ${message}`,
-				);
-			}
-		},
+	const result = await runProjectNodeScript(
+		projectDir,
+		manifest.language,
+		script,
 	);
+	if (result.exitCode !== 0) {
+		throw new CliError(
+			`Failed to load application command modules: ${formatProjectScriptFailure(result.stderr, projectDir, manifest.packageManager)}`,
+		);
+	}
+
+	try {
+		return JSON.parse(result.payloadFd.trim()) as Array<Record<string, unknown>>;
+	} catch (error) {
+		const message =
+			error instanceof Error ? error.message : 'Unknown JSON parse error.';
+		throw new CliError(
+			`Command payload collection returned invalid JSON: ${message}`,
+		);
+	}
 }
 
 export async function deploySlashCommandsToDiscord(
