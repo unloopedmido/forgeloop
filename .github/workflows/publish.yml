@@ -68,6 +68,10 @@ jobs:
         if: steps.meta.outputs.publish == 'true'
         run: pnpm install --frozen-lockfile
 
+      - name: Update npm CLI for trusted publishing
+        if: steps.meta.outputs.publish == 'true'
+        run: npm install --global npm@latest
+
       - name: Push version tag         
         if: steps.meta.outputs.publish == 'true'
         run: |
@@ -78,4 +82,4 @@ jobs:
 
       - name: Publish to npm
         if: steps.meta.outputs.publish == 'true'
-        run: pnpm publish --access public --no-git-checks
+        run: npm publish --access public
