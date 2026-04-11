@@ -60,17 +60,13 @@ jobs:
         if: steps.meta.outputs.publish == 'true'
         uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
         if: steps.meta.outputs.publish == 'true'
         run: pnpm install --frozen-lockfile
-
-      - name: Update npm CLI for trusted publishing
-        if: steps.meta.outputs.publish == 'true'
-        run: npm install --global npm@latest
 
       - name: Push version tag         
         if: steps.meta.outputs.publish == 'true'
@@ -79,6 +75,12 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag "${{ steps.meta.outputs.tag }}"
           git push origin "refs/tags/${{ steps.meta.outputs.tag }}"
+
+      - name: Print runtime versions
+        if: steps.meta.outputs.publish == 'true'
+        run: |
+          node --version
+          npm --version
 
       - name: Publish to npm
         if: steps.meta.outputs.publish == 'true'
