@@ -39,7 +39,11 @@ describe('init flow (spawned)', () => {
 			expect(pkg.name).toBe(name);
 			expect(pkg.dependencies).toBeDefined();
 
-			await readFile(path.join(root, 'forgeloop.config.mjs'), 'utf8');
+			const manifestSource = await readFile(
+				path.join(root, 'forgeloop.config.mjs'),
+				'utf8',
+			);
+			expect(manifestSource).not.toContain('"logging"');
 			await readFile(path.join(root, 'src', 'commands', 'ping.ts'), 'utf8');
 		} finally {
 			await removeDir(parent);

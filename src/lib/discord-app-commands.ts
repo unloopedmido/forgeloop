@@ -107,6 +107,45 @@ export async function putDiscordCommands(
 	);
 }
 
+export async function getDiscordCommands(route: string, token: string) {
+	let response: Response;
+	try {
+		response = await fetch(route, {
+			method: 'GET',
+			signal: AbortSignal.timeout(DISCORD_API_TIMEOUT_MS),
+			headers: {
+				Authorization: `Bot ${token}`,
+			},
+		});
+	} catch (error) {
+		const message =
+			error instanceof Error ? error.message : 'Unknown network error.';
+		throw new CliError(
+			`Discord API request failed before response (${DISCORD_API_TIMEOUT_MS / 1000}s timeout): ${message}`,
+		);
+	}
+
+	if (!response.ok) {
+		throw new CliError(
+			`Discord API request failed (${response.status} ${response.statusText}): ${await readDiscordApiError(response)}`,
+		);
+	}
+
+	const payload = (await response.json().catch((error: unknown) => {
+		const message =
+			error instanceof Error ? error.message : 'Unknown JSON parse error.';
+		throw new CliError(
+			`Discord API returned invalid JSON for command diff: ${message}`,
+		);
+	})) as unknown;
+
+	if (!Array.isArray(payload)) {
+		throw new CliError('Discord API returned an unexpected command payload.');
+	}
+
+	return payload as Array<Record<string, unknown>>;
+}
+
 export async function readProjectEnv(projectDir: string) {
 	const envPath = path.join(projectDir, '.env');
 	const envRaw = await readFile(envPath, 'utf8').catch(() => '');
@@ -309,6 +348,132 @@ writeFileSync(3, JSON.stringify(payload));`;
 			`Command payload collection returned invalid JSON: ${message}`,
 		);
 	}
+}
+
+const READONLY_COMMAND_FIELDS = new Set([
+	'id',
+	'application_id',
+	'version',
+	'guild_id',
+]);
+
+function normalizeComparableCommand(value: unknown): unknown {
+	if (Array.isArray(value)) {
+		return value.map((entry) => normalizeComparableCommand(entry));
+	}
+
+	if (!value || typeof value !== 'object') {
+		return value;
+	}
+
+	return Object.fromEntries(
+		Object.entries(value as Record<string, unknown>)
+			.filter(([key]) => !READONLY_COMMAND_FIELDS.has(key))
+			.sort(([left], [right]) => left.localeCompare(right))
+			.map(([key, entryValue]) => [key, normalizeComparableCommand(entryValue)]),
+	);
+}
+
+function pickComparableShape(reference: unknown, candidate: unknown): unknown {
+	if (Array.isArray(reference)) {
+		if (!Array.isArray(candidate)) {
+			return candidate;
+		}
+
+		return reference.map((entry, index) =>
+			pickComparableShape(entry, candidate[index]),
+		);
+	}
+
+	if (
+		reference &&
+		typeof reference === 'object' &&
+		candidate &&
+		typeof candidate === 'object' &&
+		!Array.isArray(candidate)
+	) {
+		const picked: Record<string, unknown> = {};
+		for (const key of Object.keys(reference as Record<string, unknown>)) {
+			picked[key] = pickComparableShape(
+				(reference as Record<string, unknown>)[key],
+				(candidate as Record<string, unknown>)[key],
+			);
+		}
+		return picked;
+	}
+
+	return candidate;
+}
+
+function commandPayloadMatches(
+	localEntry: Record<string, unknown>,
+	remoteEntry: Record<string, unknown>,
+) {
+	const localComparable = normalizeComparableCommand(localEntry);
+	const remoteComparable = pickComparableShape(
+		localComparable,
+		normalizeComparableCommand(remoteEntry),
+	);
+	return JSON.stringify(localComparable) === JSON.stringify(remoteComparable);
+}
+
+function payloadCommandName(entry: Record<string, unknown>) {
+	const name = entry.name;
+	return typeof name === 'string' ? name : '(unnamed)';
+}
+
+export interface CommandDiffResult {
+	localOnly: string[];
+	remoteOnly: string[];
+	changed: string[];
+	unchanged: string[];
+}
+
+export function diffCommandPayload(
+	localPayload: Array<Record<string, unknown>>,
+	remotePayload: Array<Record<string, unknown>>,
+): CommandDiffResult {
+	const localByName = new Map(
+		localPayload.map((entry) => [payloadCommandName(entry), entry] as const),
+	);
+	const remoteByName = new Map(
+		remotePayload.map((entry) => [payloadCommandName(entry), entry] as const),
+	);
+
+	const localOnly: string[] = [];
+	const remoteOnly: string[] = [];
+	const changed: string[] = [];
+	const unchanged: string[] = [];
+
+	for (const [name, localEntry] of localByName) {
+		const remoteEntry = remoteByName.get(name);
+		if (!remoteEntry) {
+			localOnly.push(name);
+			continue;
+		}
+
+		if (commandPayloadMatches(localEntry, remoteEntry)) {
+			unchanged.push(name);
+		} else {
+			changed.push(name);
+		}
+	}
+
+	for (const name of remoteByName.keys()) {
+		if (!localByName.has(name)) {
+			remoteOnly.push(name);
+		}
+	}
+
+	const sortNames = (values: string[]) =>
+		values.sort((left, right) => left.localeCompare(right));
+
+	return {
+		localOnly: sortNames(localOnly),
+		remoteOnly: sortNames(remoteOnly),
+		changed: sortNames(changed),
+		unchanged: sortNames(unchanged),
+	};
 }
 
 export async function deploySlashCommandsToDiscord(

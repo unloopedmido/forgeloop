@@ -11,6 +11,7 @@ export async function runInfo(
 	const manifest = await loadManifest(projectDir);
 
 	output.banner('ForgeLoop info', projectDir);
+	output.section('Project');
 	output.item('Project', manifest.projectName);
 	output.item('Language', manifest.language);
 	output.item('Preset', manifest.preset);

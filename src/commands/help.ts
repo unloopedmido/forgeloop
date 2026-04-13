@@ -11,15 +11,14 @@ export function renderHelp(output: OutputWriter = new Output()) {
 		'Build and grow Discord bots without hand-wiring the boilerplate.',
 		'Interactive project setup, managed generators, and safer maintenance flows.',
 	);
-	output.section('Commands');
+	output.section('Core Commands');
 	for (const spec of CORE_COMMAND_SPECS) {
-		for (const usageLine of spec.help.usage) {
-			output.plain(`  ${usageLine}`);
-		}
+		output.item(`${CLI_NAME} ${spec.name}`, spec.help.summary);
 	}
-	output.plain(`  ${CLI_NAME} version`);
+	output.item(`${CLI_NAME} version`, 'Print the CLI version.');
 	output.section('Global');
 	output.plain(`  ${CLI_NAME} help`);
+	output.plain(`  ${CLI_NAME} <command> --help`);
 	output.plain(`  ${CLI_NAME} --help   (alias: -h)`);
 	output.plain(`  ${CLI_NAME} --version   (alias: -V)`);
 	output.section('Init wizard');
@@ -45,7 +44,7 @@ export function renderHelp(output: OutputWriter = new Output()) {
 		'  forgeloop doctor [--verbose] [--json] [--strict] [--fix] [--checks <groups>]',
 	);
 	output.plain(
-		'  See `forgeloop doctor --help` for check groups and exit behavior.',
+		'  `--fix` restores missing scaffold-managed files and fills simple config/package gaps.',
 	);
 }
 
@@ -64,12 +63,13 @@ export function renderCommandHelp(
 		return;
 	}
 
-	output.section(spec.help.title);
+	output.banner(spec.help.title, spec.help.summary);
+	output.section('Usage');
 	for (const usageLine of spec.help.usage) {
 		output.plain(`  ${usageLine}`);
 	}
-	output.plain('');
+	output.section('Details');
 	for (const detailLine of spec.help.details) {
-		output.plain(`  ${detailLine}`);
+		output.plain(`  - ${detailLine}`);
 	}
 }

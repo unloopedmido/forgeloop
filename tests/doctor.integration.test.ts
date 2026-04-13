@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { runForgeloop } from './harness/cli.js';
@@ -100,6 +100,87 @@ describe('doctor (spawned)', () => {
 			expect(stderr).toContain('.env');
 			const envText = await readFile(path.join(root, '.env'), 'utf8');
 			expect(envText.length).toBeGreaterThan(0);
+		} finally {
+			await removeDir(parent);
+		}
+	});
+
+	it('--fix restores missing scaffold files and package entries', async () => {
+		const parent = await makeTempProjectParent();
+		try {
+			const name = 'fl-doctor-restore';
+			const root = await scaffoldModular(parent, name);
+			const commandPath = path.join(root, 'src', 'commands', 'ping.ts');
+			const packageJsonPath = path.join(root, 'package.json');
+			const packageJson = JSON.parse(
+				await readFile(packageJsonPath, 'utf8'),
+			) as {
+				scripts?: Record<string, string>;
+				dependencies?: Record<string, string>;
+			};
+			delete packageJson.scripts?.start;
+			delete packageJson.dependencies?.dotenv;
+			await writeFile(
+				packageJsonPath,
+				`${JSON.stringify(packageJson, null, 2)}\n`,
+				'utf8',
+			);
+			await rm(commandPath);
+
+			const { exitCode, stderr } = await runForgeloop(
+				[
+					'doctor',
+					'--dir',
+					root,
+					'--fix',
+					'--json',
+					'--checks',
+					'structure,deps',
+				],
+				{ cwd: root },
+			);
+
+			expect(exitCode).toBe(0);
+			expect(stderr).toContain('Created missing `src/commands/ping.ts`');
+			expect(stderr).toContain('Added missing scripts: start.');
+			expect(stderr).toContain('Added missing dependencies: dotenv.');
+			expect(await readFile(commandPath, 'utf8')).toContain('ping');
+			const repairedPackageJson = JSON.parse(
+				await readFile(packageJsonPath, 'utf8'),
+			) as {
+				scripts?: Record<string, string>;
+				dependencies?: Record<string, string>;
+			};
+			expect(repairedPackageJson.scripts?.start).toBeTruthy();
+			expect(repairedPackageJson.dependencies?.dotenv).toBeTruthy();
+		} finally {
+			await removeDir(parent);
+		}
+	});
+
+	it('--fix repairs config files that only export a named config binding', async () => {
+		const parent = await makeTempProjectParent();
+		try {
+			const name = 'fl-doctor-config-fix';
+			const root = await scaffoldModular(parent, name);
+			const configPath = path.join(root, 'forgeloop.config.mjs');
+			const original = await readFile(configPath, 'utf8');
+			await writeFile(
+				configPath,
+				original.replace('export default', 'export const config ='),
+				'utf8',
+			);
+
+			const { exitCode, stderr } = await runForgeloop(
+				['doctor', '--dir', root, '--fix', '--json', '--checks', 'config'],
+				{ cwd: root },
+			);
+
+			expect(exitCode).toBe(0);
+			expect(stderr).toContain('export default `config`');
+			expect(await readFile(configPath, 'utf8')).toContain(
+				'export default config;',
+			);
 		} finally {
 			await removeDir(parent);
 		}

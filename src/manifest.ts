@@ -112,9 +112,6 @@ export function createManifest(options: InitOptions): ForgeLoopManifest {
 			ci: options.ci,
 			git: options.git,
 			tooling: options.tooling,
-			logging: usesHandlers
-				? (options.logging ?? DEFAULTS.logging)
-				: undefined,
 			database: toDatabaseConfig(options.database, options.orm),
 		},
 		paths: {
@@ -147,7 +144,7 @@ async function loadModuleManifest(manifestPath: string) {
 	const metadata = await stat(manifestPath);
 	manifestUrl.searchParams.set('t', String(metadata.mtimeMs));
 
-	let module: { default?: unknown };
+	let module: { default?: unknown; config?: unknown; manifest?: unknown };
 	try {
 		module = (await import(manifestUrl.href)) as typeof module;
 	} catch (error) {
@@ -158,13 +155,14 @@ async function loadModuleManifest(manifestPath: string) {
 		);
 	}
 
-	if (!module.default || typeof module.default !== 'object' || Array.isArray(module.default)) {
+	const resolved = module.default ?? module.config ?? module.manifest;
+	if (!resolved || typeof resolved !== 'object' || Array.isArray(resolved)) {
 		throw new CliError(
-			`Invalid ForgeLoop config in ${manifestPath}. Export the config object as the default export.`,
+			`Invalid ForgeLoop config in ${manifestPath}. Export the config object as \`default\`, \`config\`, or \`manifest\`.`,
 		);
 	}
 
-	return module.default as ForgeLoopConfig;
+	return resolved as ForgeLoopConfig;
 }
 
 export async function loadManifestWithLocation(projectDir: string) {

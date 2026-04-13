@@ -105,7 +105,7 @@ export async function promptSelect<T extends string>(
 
 	outputWriter.prompt(label);
 	options.forEach((option, index) => {
-		const marker = option.value === defaultValue ? 'default' : '       ';
+		const marker = option.value === defaultValue ? 'default' : undefined;
 		outputWriter.choice(index + 1, option.label, option.hint, marker);
 	});
 

@@ -77,6 +77,4 @@ export interface InitOptions {
 	docker: boolean;
 	ci: boolean;
 	install: boolean;
-	/** Used for modular/advanced scaffolds (`manifest.features.logging`). */
-	logging?: ProjectLogging;
 }

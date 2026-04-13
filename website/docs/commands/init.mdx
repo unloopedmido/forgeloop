@@ -15,8 +15,8 @@ forgeloop init <project-name> [flags]
 forgeloop init
 ```
 
-- **With project name + `--yes` or non-TTY:** non-interactive; missing enum flags use **defaults** (TypeScript, **modular**, npm, no database, **eslint-prettier**, `console` logging for handler presets).
-- **Interactive:** run `forgeloop init` or `forgeloop init` without `--yes` in a TTY — you get prompts for name (if missing), language, preset, package manager, database, ORM, tooling, logging, git, docker, CI, and post-scaffold install.
+- **With project name + `--yes` or non-TTY:** non-interactive; missing enum flags use **defaults** (TypeScript, **modular**, npm, no database, **eslint-prettier**).
+- **Interactive:** run `forgeloop init` or `forgeloop init` without `--yes` in a TTY — you get prompts for name (if missing), language, preset, package manager, database, ORM, tooling, git, docker, CI, and post-scaffold install.
 
 <Admonition type="warning" title="Non-interactive requires a name">
   Without a TTY or with <code>--yes</code>, <strong>init</strong> requires a <strong>project name</strong> as the first argument after <code>init</code>. Otherwise the CLI exits with a message like{' '}
@@ -90,12 +90,6 @@ Answer a few questions and ForgeLoop will shape the starter around your bot.
       type: 'eslint-prettier | biome | none',
       defaultValue: 'eslint-prettier',
       description: 'Lint/format setup.',
-    },
-    {
-      flag: '--logging',
-      type: 'console | json',
-      defaultValue: 'console (modular / advanced only)',
-      description: 'Handler/runtime log format for modular and advanced presets.',
     },
     {
       flag: '--git',

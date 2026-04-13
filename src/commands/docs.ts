@@ -50,7 +50,8 @@ export async function runDocs(
 	_args: ParsedArgs,
 	output: OutputWriter = new Output(),
 ) {
-	output.info(`Opening documentation: ${DOCS_SITE_URL}`);
+	output.banner('ForgeLoop docs', 'Opening the documentation site in your browser.');
+	output.item('URL', DOCS_SITE_URL);
 	if (!(await openUrl(DOCS_SITE_URL))) {
 		output.warn(
 			`Could not launch a browser. Open manually: ${DOCS_SITE_URL}`,

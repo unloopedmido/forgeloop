@@ -22,6 +22,7 @@ describe('CLI routing (spawned)', () => {
 		const text = stripAnsi(stdout);
 		expect(text).toMatch(/forgeloop/i);
 		expect(text).toMatch(/init/);
+		expect(text).not.toMatch(/--logging/);
 	});
 
 	it('renders command help for init --help', async () => {

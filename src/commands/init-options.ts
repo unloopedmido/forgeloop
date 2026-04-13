@@ -3,7 +3,6 @@ import {
 	DEFAULTS,
 	SUPPORTED_DATABASES,
 	SUPPORTED_LANGUAGES,
-	SUPPORTED_LOGGERS,
 	SUPPORTED_ORMS,
 	SUPPORTED_PACKAGE_MANAGERS,
 	SUPPORTED_PRESETS,
@@ -71,7 +70,6 @@ export async function resolveInitOptions(
 	let docker = getBooleanFlag(args.flags, 'docker');
 	let ci = getBooleanFlag(args.flags, 'ci');
 	let install = getBooleanFlag(args.flags, 'install');
-	let logging = getOptionalStringFlag(args.flags, 'logging');
 
 	if (interactive) {
 		output.hero(
@@ -218,29 +216,30 @@ export async function resolveInitOptions(
 			);
 		}
 
-		const presetSoFar = parseSelection(
-			preset ?? DEFAULTS.preset,
-			SUPPORTED_PRESETS,
-			'preset',
+		output.callout('Review', [
+			`Project: ${resolvedProjectName}`,
+			`Language: ${language ?? DEFAULTS.language}`,
+			`Preset: ${preset ?? DEFAULTS.preset}`,
+			`Package manager: ${packageManager ?? DEFAULTS.packageManager}`,
+			`Database: ${database ?? DEFAULTS.database}`,
+			`ORM: ${
+				(database ?? DEFAULTS.database) === 'none'
+					? 'none'
+					: (orm ?? 'prisma')
+			}`,
+			`Tooling: ${tooling ?? DEFAULTS.tooling}`,
+			`Git: ${git ? 'yes' : 'no'}`,
+			`Docker: ${docker ? 'yes' : 'no'}`,
+			`CI: ${ci ? 'yes' : 'no'}`,
+			`Install deps: ${install ? 'yes' : 'no'}`,
+		]);
+		const proceed = await promptConfirm(
+			output,
+			'Create project with these settings?',
+			true,
 		);
-		if (presetSoFar !== 'basic' && !logging) {
-			logging = await promptSelect(
-				output,
-				'How should handler/runtime logs be formatted?',
-				[
-					{
-						label: 'console',
-						value: 'console',
-						hint: 'Human-readable [scope] lines',
-					},
-					{
-						label: 'json',
-						value: 'json',
-						hint: 'One JSON object per line (structured logs)',
-					},
-				],
-				DEFAULTS.logging,
-			);
+		if (!proceed) {
+			throw new CliError('Init cancelled.');
 		}
 	}
 
@@ -285,15 +284,6 @@ export async function resolveInitOptions(
 		'tooling',
 	);
 
-	const resolvedLogging =
-		resolvedPreset === 'basic'
-			? undefined
-			: parseSelection(
-					logging ?? DEFAULTS.logging,
-					SUPPORTED_LOGGERS,
-					'logging',
-				);
-
 	const dirFlag = getOptionalStringFlag(args.flags, 'dir');
 	let targetDir: string;
 	if (!dirFlag) {
@@ -319,6 +309,5 @@ export async function resolveInitOptions(
 		docker,
 		ci,
 		install,
-		logging: resolvedLogging,
 	};
 }

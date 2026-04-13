@@ -74,7 +74,7 @@ Parse errors or missing ForgeLoop config still throw a `CliError` (same as other
       flag: '--fix',
       type: 'boolean',
       defaultValue: 'false',
-      description: 'If `.env` is missing and `.env.example` exists, copy it to `.env` before checks.',
+      description: 'Repair simple config exports, restore missing scaffold-managed files, merge missing package.json fields/scripts/deps, and create `.env` from `.env.example` when needed.',
     },
     {
       flag: '--checks',
@@ -100,7 +100,7 @@ Use it in CI:
 forgeloop doctor --json --strict > doctor-report.json
 ```
 
-If you also pass `--fix` and `.env` is created from `.env.example`, ForgeLoop prints that notice to `stderr` while keeping JSON on `stdout`.
+If you also pass `--fix`, ForgeLoop prints fix notices to `stderr` while keeping JSON on `stdout`.
 
 ## Related
 

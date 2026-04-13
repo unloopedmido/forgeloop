@@ -1,9 +1,11 @@
 import path from 'node:path';
-import { copyFile, readFile } from 'node:fs/promises';
+import { copyFile, readFile, writeFile } from 'node:fs/promises';
+import { CONFIG_FILE } from '../constants.js';
+import { buildProjectFiles } from '../generators/project-files.js';
 import type { ParsedArgs } from '../types.js';
 import { getBooleanFlag, getOptionalStringFlag } from '../utils/args.js';
 import { Output, type OutputWriter } from '../utils/format.js';
-import { pathExists } from '../utils/fs.js';
+import { ensureDirectory, pathExists } from '../utils/fs.js';
 import { resolveProjectDir } from '../utils/project.js';
 import { loadManifestWithLocation } from '../manifest.js';
 import { CliError } from '../utils/errors.js';
@@ -121,15 +123,159 @@ async function buildDoctorContext(
 }
 
 async function applyDoctorFix(projectDir: string) {
+	const configPath = path.join(projectDir, CONFIG_FILE);
+	if (!(await pathExists(configPath))) {
+		return [];
+	}
+
+	const configSource = await readFile(configPath, 'utf8').catch(() => null);
+	if (!configSource || /\bexport\s+default\b/u.test(configSource)) {
+		return [];
+	}
+
+	for (const binding of ['config', 'manifest'] as const) {
+		const pattern = new RegExp(`export\\s+const\\s+${binding}\\s*=`, 'u');
+		if (!pattern.test(configSource)) {
+			continue;
+		}
+
+		await writeFile(
+			configPath,
+			`${configSource.trimEnd()}\n\nexport default ${binding};\n`,
+			'utf8',
+		);
+		return [`Repaired ${CONFIG_FILE} to export default \`${binding}\`.`];
+	}
+
+	return [];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function mergeMissingStringEntries(
+	current: Record<string, unknown>,
+	generated: Record<string, unknown>,
+) {
+	const added: string[] = [];
+	for (const [key, value] of Object.entries(generated)) {
+		if (current[key] !== undefined || typeof value !== 'string') {
+			continue;
+		}
+		current[key] = value;
+		added.push(key);
+	}
+	return added;
+}
+
+async function createMissingEnv(projectDir: string) {
 	const envPath = path.join(projectDir, '.env');
 	const examplePath = path.join(projectDir, '.env.example');
 
 	if ((await pathExists(envPath)) || !(await pathExists(examplePath))) {
-		return false;
+		return [];
 	}
 
 	await copyFile(examplePath, envPath);
-	return true;
+	return ['Created `.env` from `.env.example`.'];
+}
+
+async function createMissingScaffoldFiles(ctx: DoctorContext) {
+	const generatedFiles = buildProjectFiles(ctx.manifest);
+	const actions: string[] = [];
+
+	for (const file of generatedFiles) {
+		if (file.path === 'package.json') {
+			continue;
+		}
+
+		const absolutePath = path.join(ctx.projectDir, file.path);
+		if (await pathExists(absolutePath)) {
+			continue;
+		}
+
+		await ensureDirectory(path.dirname(absolutePath));
+		await writeFile(absolutePath, file.content, 'utf8');
+		actions.push(`Created missing \`${file.path}\`.`);
+	}
+
+	return actions;
+}
+
+async function mergeMissingPackageJson(ctx: DoctorContext) {
+	const packageJsonPath = path.join(ctx.projectDir, 'package.json');
+	const generatedPackageJsonFile = buildProjectFiles(ctx.manifest).find(
+		(file) => file.path === 'package.json',
+	);
+	if (!generatedPackageJsonFile) {
+		return [];
+	}
+
+	if (!(await pathExists(packageJsonPath))) {
+		await writeFile(packageJsonPath, generatedPackageJsonFile.content, 'utf8');
+		return ['Created missing `package.json`.'];
+	}
+
+	if (!ctx.packageJson || !isRecord(ctx.packageJson)) {
+		return [];
+	}
+
+	const generatedPackageJson = JSON.parse(
+		generatedPackageJsonFile.content,
+	) as Record<string, unknown>;
+	const currentPackageJson = { ...ctx.packageJson };
+	let changed = false;
+	const actions: string[] = [];
+
+	for (const field of ['scripts', 'dependencies', 'devDependencies'] as const) {
+		const generatedValue = generatedPackageJson[field];
+		if (!isRecord(generatedValue)) {
+			continue;
+		}
+
+		const currentValue = isRecord(currentPackageJson[field])
+			? { ...(currentPackageJson[field] as Record<string, unknown>) }
+			: {};
+		const added = mergeMissingStringEntries(currentValue, generatedValue);
+		if (added.length === 0) {
+			continue;
+		}
+
+		currentPackageJson[field] = currentValue;
+		changed = true;
+		actions.push(`Added missing ${field}: ${added.join(', ')}.`);
+	}
+
+	for (const field of ['type', 'private', 'packageManager'] as const) {
+		if (
+			currentPackageJson[field] === undefined &&
+			generatedPackageJson[field] !== undefined
+		) {
+			currentPackageJson[field] = generatedPackageJson[field];
+			changed = true;
+			actions.push(`Added missing package.json field \`${field}\`.`);
+		}
+	}
+
+	if (!changed) {
+		return [];
+	}
+
+	await writeFile(
+		packageJsonPath,
+		`${JSON.stringify(currentPackageJson, null, 2)}\n`,
+		'utf8',
+	);
+	return actions;
+}
+
+async function applyDoctorScaffoldFixes(ctx: DoctorContext) {
+	return [
+		...(await createMissingScaffoldFiles(ctx)),
+		...(await mergeMissingPackageJson(ctx)),
+		...(await createMissingEnv(ctx.projectDir)),
+	];
 }
 
 function groupLabel(group: DoctorIssue['group']) {
@@ -312,23 +458,36 @@ export async function runDoctor(
 	const checksFlag = getOptionalStringFlag(args.flags, 'checks');
 	const groups =
 		parseDoctorGroupsFlag(checksFlag) ?? defaultDoctorGroupSet();
+	let fixMessages: string[] = [];
 
 	if (fix) {
-		const created = await applyDoctorFix(projectDir);
-		if (created) {
-			if (json) {
-				console.error('forgeloop doctor: Created .env from .env.example');
-			} else {
-				output.info('Created .env from .env.example (fill in secrets).');
-			}
-		}
+		fixMessages = [...fixMessages, ...(await applyDoctorFix(projectDir))];
 	}
 
 	const started = Date.now();
-	const ctx = await buildDoctorContext(projectDir, verbose);
+	let ctx = await buildDoctorContext(projectDir, verbose);
+	if (fix) {
+		fixMessages = [
+			...fixMessages,
+			...(await applyDoctorScaffoldFixes(ctx)),
+		];
+		if (fixMessages.length > 0) {
+			ctx = await buildDoctorContext(projectDir, verbose);
+		}
+	}
 	const issues = await runDoctorChecks(ctx, groups);
 	const summary = summarizeIssues(issues);
 	const durationMs = Date.now() - started;
+
+	if (fixMessages.length > 0) {
+		for (const message of fixMessages) {
+			if (json) {
+				console.error(`forgeloop doctor: ${message}`);
+			} else {
+				output.info(message);
+			}
+		}
+	}
 
 	if (json) {
 		process.stdout.write(

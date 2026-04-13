@@ -10,6 +10,7 @@ import {
 import {
 	applicationCommandsRoute,
 	assertDeployTargetFlags,
+	diffCommandPayload,
 	putDiscordCommands,
 	resolveSyncTarget,
 } from '../src/lib/discord-app-commands.js';
@@ -214,5 +215,32 @@ describe('Discord deploy helpers (in-process)', () => {
 			expandShortFlags(['commands', 'deploy', '--guild', '--global']),
 		) as ParsedArgs;
 		expect(() => assertDeployTargetFlags(bad)).toThrow(/only one/);
+	});
+
+	it('diffCommandPayload ignores Discord readonly fields and reports drift by name', () => {
+		expect(
+			diffCommandPayload(
+				[
+					{ name: 'ping', description: 'Ping the bot', type: 1 },
+					{ name: 'local-only', description: 'Only here', type: 1 },
+				],
+				[
+					{
+						id: '123',
+						application_id: '456',
+						version: '789',
+						name: 'ping',
+						description: 'Ping the bot',
+						type: 1,
+					},
+					{ id: '999', name: 'remote-only', description: 'Only there', type: 1 },
+				],
+			),
+		).toEqual({
+			localOnly: ['local-only'],
+			remoteOnly: ['remote-only'],
+			changed: [],
+			unchanged: ['ping'],
+		});
 	});
 });

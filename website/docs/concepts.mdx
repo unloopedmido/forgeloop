@@ -6,7 +6,7 @@ description: ForgeLoop manifest, config file locations, presets, and when add/co
 
 ## Project manifest
 
-Every scaffolded project includes a **ForgeLoop manifest**: project name, `preset`, `language`, `packageManager`, enabled features (database, tooling, logging, git, docker, CI), and the generated path layout. The manifest is written to disk as **`forgeloop.config.mjs`** and is what `forgeloop info` and `forgeloop doctor` read.
+Every scaffolded project includes a **ForgeLoop manifest**: project name, `preset`, `language`, `packageManager`, enabled features (database, tooling, git, docker, CI), and the generated path layout. The manifest is written to disk as **`forgeloop.config.mjs`** and is what `forgeloop info` and `forgeloop doctor` read.
 
 ### Config file
 
@@ -25,15 +25,6 @@ The generated file is a plain default export, so it stays readable and loadable 
 ## Package manager metadata
 
 `package.json` includes a **`packageManager`** field (e.g. `npm@10`, `pnpm@10.22.0`) so tooling can infer the intended client. Scripts use the same manager you selected at init (`dev`, `start`, `db:push`, etc.).
-
-## Logging mode
-
-For **modular** and **advanced** presets, ForgeLoop also stores a `logging` mode:
-
-- `console` for human-readable `[scope]` logs
-- `json` for one-JSON-object-per-line structured logs
-
-Basic preset projects do not use the generated handler/runtime logger modules.
 
 ## Command sync vs `commands deploy`
 

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 3
 title: forgeloop commands
-description: List local application commands or deploy them to Discord.
+description: List, diff, or deploy application commands for a ForgeLoop project.
 ---
 
 import { FlagTable } from '@site/src/components/docs/FlagTable';
@@ -10,6 +10,7 @@ import { FlagTable } from '@site/src/components/docs/FlagTable';
 
 ```bash
 forgeloop commands list [--dir ./project]
+forgeloop commands diff [--guild|--global] [--dir ./project]
 forgeloop commands deploy [--guild|--global] [--dir ./project]
 ```
 
@@ -21,7 +22,7 @@ Basic preset error:
 
 Invalid subcommand:
 
-> `Usage: forgeloop commands deploy|list [--guild|--global] [--dir <path>]`
+> `Usage: forgeloop commands deploy|list|diff [--guild|--global] [--dir <path>]`
 
 ## `list`
 
@@ -36,6 +37,13 @@ Invalid subcommand:
 - `--global` forces global deploy.
 - If neither is set: `production -> global`, otherwise `guild`.
 - Requires `.env` values: `DISCORD_TOKEN`, `CLIENT_ID`, and `GUILD_ID` for guild deploy.
+
+## `diff`
+
+- Builds the local application command payload the same way as `deploy`.
+- Fetches the current Discord command set for the selected target.
+- Reports commands that are local-only, remote-only, or changed by name.
+- Uses the same target rules and required `.env` values as `deploy`.
 
 ## Flags
 
