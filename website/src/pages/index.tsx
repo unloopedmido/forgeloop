@@ -58,6 +58,10 @@ export default function Home(): ReactNode {
       description="Scaffold and maintain Discord.js bots without the boilerplate mess. ForgeLoop adds file-based routing, CLI generators, and structural checks so your project scales cleanly."
     >
       <Head>
+        <meta
+          name="google-site-verification"
+          content="grl63lB2HzFOQv_Xq2OfDJqAbwZCpIUmr7tijM15jLU"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
