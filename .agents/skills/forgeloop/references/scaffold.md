@@ -1,67 +1,56 @@
-# ForgeLoop Scaffold Reference
+# ForgeLoop Scaffold Reference (Strict)
 
-## Table of Contents
+Use this flow only for creating new ForgeLoop projects.
 
-- Official docs and package entrypoints
-- When to use scaffold mode
-- `init` command surface
-- Database and ORM rules
-- Scaffold examples
+## Official Entry Points
 
-## Official docs and package entrypoints
-
-- Docs URL: `https://unloopedmido.github.io/forgeloop/`
-- Published npm package: `create-forgeloop`
-- Supported entry styles:
+- Docs: `https://unloopedmido.github.io/forgeloop/`
+- Package: `create-forgeloop`
+- Supported creation styles:
   - `npm create forgeloop@latest my-bot`
   - `npx create-forgeloop@latest my-bot`
   - `forgeloop init my-bot`
-- `create-forgeloop` normalizes create-style argv:
-  - empty argv becomes `init`
-  - a first token that is not a known command is treated as the project name for `init`
 
-## When to use scaffold mode
+`create-forgeloop` normalizes create-style args:
+- empty argv -> `init`
+- unknown first token -> treated as init project name
 
-Use scaffold mode when the user is creating a new ForgeLoop project rather than changing an existing generated project.
+## Command-First Scaffolding Rule
 
-ForgeLoop is a maintenance-first scaffolder for `discord.js`, so a new project should usually be created through `init` or the create-style entrypoint rather than by manually assembling files.
+For new projects, use `init` / create-style entrypoints.
+Do not manually assemble starter files when ForgeLoop scaffold covers the request.
 
-## `init` command surface
+## `init` Surface
 
-- Purpose: scaffold a new project from the selected profile
-- Key options:
-  - `--language ts|js`
-  - `--preset basic|modular|advanced`
-  - `--package-manager npm|pnpm|yarn`
-  - `--database none|sqlite|postgresql`
-  - `--orm none|prisma`
-  - `--tooling eslint-prettier|biome|none`
-  - `--logging console|json`
-  - `--git`
-  - `--docker`
-  - `--ci`
-  - `--install`
-  - `--yes` or `-y`
-  - `--dir` or `-d`
-- Behavior:
-  - With no project name and no `--yes` in a TTY, `init` uses the interactive wizard.
-  - With `--yes`, a project name is required and omitted values use defaults.
+- `--language ts|js`
+- `--preset basic|modular|advanced`
+- `--package-manager npm|pnpm|yarn`
+- `--database none|sqlite|postgresql`
+- `--orm none|prisma`
+- `--tooling eslint-prettier|biome|none`
+- `--logging console|json`
+- `--git`
+- `--docker`
+- `--ci`
+- `--install`
+- `--yes` / `-y`
+- `--dir` / `-d`
 
-## Database and ORM rules
+Behavior:
+- no project name + no `--yes` in TTY -> interactive wizard
+- `--yes` -> non-interactive defaults; requires project name
 
-- If `--database none`, then `--orm` must also be `none`.
-- If `--database` is `sqlite` or `postgresql`, then `--orm` must be `prisma`.
-- If the user asks for a database-backed project without Prisma, explain that ForgeLoop currently supports Prisma as the ORM for database-enabled projects.
+## Database/ORM Gate (Required)
 
-## Scaffold examples
+- `--database none` requires `--orm none`
+- `--database sqlite|postgresql` requires `--orm prisma`
+
+If user requests DB + non-Prisma ORM, explain unsupported pairing and continue with supported combinations only.
+
+## Starter Examples
 
 ```bash
-# Equivalent project creation styles
 npm create forgeloop@latest my-bot
-npx create-forgeloop@latest my-bot
-forgeloop init my-bot
-
-# Explicit non-interactive setup
 npx create-forgeloop@latest my-bot --language ts --preset modular
 forgeloop init my-bot --language ts --preset modular --yes
 ```
