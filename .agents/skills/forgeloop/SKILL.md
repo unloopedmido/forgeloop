@@ -1,64 +1,81 @@
 ---
 name: forgeloop
-description: Use ForgeLoop correctly for Discord bot scaffolding and maintenance workflows. Use when users ask to create, modify, inspect, or troubleshoot ForgeLoop projects, including init/add/remove/commands/doctor/info/docs flows.
+description: Command-first ForgeLoop workflow for scaffolding and maintaining Discord bots. Always route bot structure and command sync work through ForgeLoop CLI commands, not ad-hoc files or scripts.
 ---
 
 # ForgeLoop Skill
 
-Use this skill when the task involves creating or maintaining a Discord bot project with `create-forgeloop` or `forgeloop`.
+Use this skill whenever a task involves creating, modifying, validating, or syncing a ForgeLoop-based Discord bot.
 
-## Core Workflow
+## Mission
 
-1. Determine whether the user wants a new project or changes to an existing ForgeLoop project.
-2. For existing projects, run `forgeloop info` first to confirm preset and resolved project context.
-3. If the project uses the `basic` preset, do not use `add`, `remove`, or `commands`; explain the limitation and either edit manually or suggest a new modular or advanced project.
-4. In modular or advanced projects, prefer ForgeLoop commands over manual scaffolding for commands, context menus, events, and interaction handlers.
-5. Before remote command sync, run `forgeloop commands list` to validate the local command set.
-6. Before `commands deploy` or `remove command --sync`, confirm target scope and required env values.
+Keep agent work aligned to ForgeLoop's intended workflow:
+- scaffold with `init` / `create-forgeloop`
+- maintain with `add`, `remove`, `commands`, `doctor`, `info`, `docs`
+- avoid shadow tooling, ad-hoc generators, and custom sync scripts
 
-## Operating Rules
+## Non-Negotiable Rules
 
-- Treat ForgeLoop as both a scaffolder and a maintenance CLI. Use scaffold flows for new bots and maintenance commands for generated projects.
-- Use `--dir` or `-d` whenever the project root is not guaranteed by the current working directory.
-- If ForgeLoop reports that no project was found, verify one of these root config files exists: `forgeloop.config.mjs`, `forgeloop.config.js`, `forgeloop.config.cjs`, or legacy `forgeloop.json`.
-- Module config files must export the manifest object as `default`, `config`, or `manifest`.
-- `commands deploy` and `remove command --sync` affect Discord state. Treat those as explicit remote actions, not routine local edits.
+1. **Command-first enforcement**: if ForgeLoop has a command for the intent, use that command.
+2. **No manual replacement of generators**: do not hand-create command/event/handler files when `forgeloop add` or `forgeloop remove` covers it.
+3. **No custom sync/deploy scripts**: do not write bespoke scripts for command sync; use `forgeloop commands diff|deploy` and `forgeloop remove command --sync`.
+4. **Existing projects start with context**: run `forgeloop info` first.
+5. **Basic preset limitation**: for `basic`, do not use `add`, `remove`, or `commands`; explain constraint and either do a manual edit or propose modular/advanced.
+6. **Remote safety gate**: before remote mutation (`commands deploy`, `remove command --sync`), confirm target (`--guild`/`--global`) and env requirements.
+7. **Directory certainty**: use `--dir`/`-d` whenever project root is not guaranteed.
+
+## Intent Router (Mandatory)
+
+- Create new bot -> `forgeloop init` or `create-forgeloop` flow
+- Add slash command -> `forgeloop add command ...`
+- Add context menu -> `forgeloop add context-menu ...`
+- Add event -> `forgeloop add event ...`
+- Add modal/button/select-menu handler -> `forgeloop add modal|button|select-menu ...`
+- Remove generated artifact -> `forgeloop remove ...`
+- View local commands -> `forgeloop commands list`
+- Compare local vs Discord commands -> `forgeloop commands diff`
+- Sync commands to Discord -> `forgeloop commands deploy`
+- Run project diagnostics -> `forgeloop doctor`
+- Inspect manifest/preset -> `forgeloop info`
+- Open docs -> `forgeloop docs`
+
+## Required Execution Order
+
+### A) Existing project change
+1. `forgeloop info`
+2. If needed: `forgeloop doctor`
+3. Perform requested generator/removal command
+4. For sync tasks: `forgeloop commands list` then `forgeloop commands diff` then deploy/remove-sync only with explicit target
+
+### B) New project
+1. Use `init` / `create-forgeloop`
+2. Enforce database/ORM pairing (`none+none`, otherwise `sqlite|postgresql + prisma`)
+3. Only after scaffold completes, perform maintenance commands
 
 ## Safety Guardrails
 
-- Never assume `--global` when the deploy target is ambiguous.
-- Never run `remove ... --sync` unless the user asked to mirror the deletion remotely.
-- Always verify `DISCORD_TOKEN` and `CLIENT_ID` before deploy or sync, plus `GUILD_ID` for guild-targeted sync.
-- For `init`, enforce the database and ORM pairing rules: `none` with `none`, otherwise `sqlite` or `postgresql` with `prisma`.
-- If docs and runtime behavior disagree, say so explicitly and prefer repository or runtime evidence.
+- Never assume `--global` on ambiguous deploy requests.
+- Never run `remove ... --sync` unless user asked for remote mirroring.
+- Always verify `DISCORD_TOKEN` + `CLIENT_ID`; include `GUILD_ID` for guild target.
+- If docs conflict with runtime behavior, state conflict and prefer repo/runtime evidence.
 
-## Activity Guide
+## Anti-Drift Recovery
 
-Read only the references needed for the task:
+If an agent flow started creating ad-hoc files/scripts for behavior that ForgeLoop already supports:
+1. Stop that approach.
+2. Switch to mapped ForgeLoop command(s).
+3. Report the course correction clearly.
 
-- New project scaffolding, create-style entrypoints, and `init` options: [references/scaffold.md](references/scaffold.md)
-- Existing project command workflows for `add`, `remove`, `commands`, `doctor`, `info`, and `docs`: [references/commands.md](references/commands.md)
-- Common failures, preset constraints, and deploy triage: [references/troubleshooting.md](references/troubleshooting.md)
+## Reference Map
 
-## Quick Intent Mapping
-
-- "create a bot" or "scaffold a bot" -> start with [references/scaffold.md](references/scaffold.md)
-- "add a slash command" -> `forgeloop add command ...`
-- "add a context menu command" -> `forgeloop add context-menu ...`
-- "add an event" -> `forgeloop add event ...`
-- "add a button, modal, or select menu handler" -> `forgeloop add button|modal|select-menu ...`
-- "remove generated artifacts" -> `forgeloop remove ...`
-- "what commands exist locally?" -> `forgeloop commands list`
-- "deploy or sync commands" -> `forgeloop commands deploy ...`
-- "check project health" -> `forgeloop doctor`
-- "inspect project manifest" -> `forgeloop info`
-- "open the docs site" -> `forgeloop docs`
+- Scaffolding and `init`: [references/scaffold.md](references/scaffold.md)
+- Maintenance commands and sync workflows: [references/commands.md](references/commands.md)
+- Failure triage and preset constraints: [references/troubleshooting.md](references/troubleshooting.md)
 
 ## Response Contract
 
-When completing a ForgeLoop task, report:
-
-1. Commands run, in order.
-2. What changed locally.
-3. Whether Discord remote sync or deploy happened, and to which target.
-4. Any blockers or follow-up the user still needs to handle.
+Always report:
+1. Commands run (ordered)
+2. Local file changes
+3. Whether remote Discord state changed, and target scope
+4. Remaining blocker(s) or follow-up needed

@@ -1,67 +1,71 @@
-# ForgeLoop Troubleshooting Reference
+# ForgeLoop Troubleshooting and Drift Control
 
-## Table of Contents
+Use this when generation/sync behavior is failing or drifting away from ForgeLoop commands.
 
-- First triage pass
-- Common failures
-- Preset constraints
-- Remote sync checklist
+## First Triage Pass
 
-## First triage pass
-
-For existing projects, start with:
+For existing projects:
 
 ```bash
 forgeloop info -d ./my-bot
 forgeloop doctor -d ./my-bot
 ```
 
-Use `info` to confirm preset and manifest shape. Use `doctor` to surface config, structure, env, dependency, and command-loading issues before making assumptions.
+`info` confirms preset and manifest context.
+`doctor` checks config, structure, env, dependencies, and command loading.
 
-## Common failures
+## Common Failures
 
-### No ForgeLoop project found
+### "No ForgeLoop project found"
 
-- Confirm the working directory or pass `--dir`
-- Verify one of these files exists in the project root:
+- verify working directory or pass `--dir`
+- verify one root config exists:
   - `forgeloop.config.mjs`
   - `forgeloop.config.js`
   - `forgeloop.config.cjs`
   - `forgeloop.json`
-- For module configs, verify the manifest is exported as `default`, `config`, or `manifest`
+- for module configs, verify manifest is exported as `default`, `config`, or `manifest`
 
-### Command loading fails
+### `add` / `remove` / `commands` rejected
 
-- Check that project dependencies are installed
-- Re-run `forgeloop commands list` after dependencies are present
-- If needed, run `forgeloop doctor --checks deps,discord -d ./my-bot`
+Likely preset mismatch:
+- `basic` does not support maintenance command toolchain
+- use manual edits for basic, or migrate/recreate as modular/advanced
 
-### Deploy fails
+### Command load issues
 
-- Verify `DISCORD_TOKEN` and `CLIENT_ID`
-- For guild deploys, verify `GUILD_ID`
-- Confirm the intended target with `--guild` or `--global`
-- Run `forgeloop commands list` first so the local command set is clear before sync
+- ensure dependencies are installed
+- run `forgeloop commands list`
+- if needed: `forgeloop doctor --checks deps,discord -d ./my-bot`
 
-### `init` validation fails
+### Deploy or diff failure
 
-- Enforce database and ORM pairing:
-  - `--database none` requires `--orm none`
-  - `sqlite` or `postgresql` requires `--orm prisma`
+- verify `DISCORD_TOKEN` and `CLIENT_ID`
+- guild target also requires `GUILD_ID`
+- use explicit target (`--guild` or `--global`) when ambiguous
+- run `forgeloop commands list` before remote sync
 
-## Preset constraints
+### `init` validation failure
 
-- If the project is `basic`, do not use `add`, `remove`, or `commands`
-- Explain that the preset does not support generator-driven maintenance workflows
-- Either make the requested manual edit or suggest creating a modular or advanced project if the user wants ongoing CLI-based maintenance
+- enforce database/ORM pairing:
+  - `none` + `none`
+  - `sqlite|postgresql` + `prisma`
 
-## Remote sync checklist
+## Agent Drift Recovery (Core)
 
-Use this checklist before `commands deploy` or `remove command --sync`:
+If an agent starts creating ad-hoc command files or custom sync scripts:
+1. stop the ad-hoc approach
+2. map intent to ForgeLoop command(s)
+3. run command-first flow (`info` -> `add/remove/commands`)
+4. report the correction and resulting changes
 
-1. Confirm the project is modular or advanced.
-2. Confirm the target directory.
-3. Run `forgeloop commands list`.
-4. Confirm `--guild` or `--global`.
-5. Confirm required env values for that target.
-6. State clearly whether a remote Discord mutation will happen.
+## Remote Sync Checklist
+
+Before `commands deploy` or `remove command --sync`:
+1. confirm modular/advanced preset
+2. confirm target directory
+3. run `forgeloop commands list`
+4. optionally run `forgeloop commands diff` for target
+5. confirm `--guild` or `--global`
+6. confirm required env values
+7. explicitly state remote Discord mutation impact

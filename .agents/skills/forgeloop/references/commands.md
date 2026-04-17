@@ -1,129 +1,89 @@
-# ForgeLoop Command Reference
+# ForgeLoop Command-First Reference
 
-## Table of Contents
+This reference enforces maintenance through ForgeLoop CLI commands instead of manual scaffolding.
 
-- Project discovery
-- Global flags
-- `add`
-- `remove`
-- `commands`
-- `doctor`
-- `info`
-- `docs`
-- Preset-aware usage
-- Common command snippets
+## Discovery and Scope
 
-## Project discovery
+- Project discovery looks for:
+  1. `forgeloop.config.mjs`
+  2. `forgeloop.config.js`
+  3. `forgeloop.config.cjs`
+  4. `forgeloop.json`
+- Use `--dir` / `-d` if working directory is not guaranteed.
+- For existing projects, run `forgeloop info` first.
 
-ForgeLoop discovers the project by searching the target directory for these files, in order:
+## Preset Gate
 
-1. `forgeloop.config.mjs`
-2. `forgeloop.config.js`
-3. `forgeloop.config.cjs`
-4. `forgeloop.json`
+- `basic`: no `add`, `remove`, `commands` workflows.
+- `modular` and `advanced`: full maintenance toolchain available.
 
-Module configs must export the manifest object via `default`, `config`, or `manifest`.
+## Golden Paths by Intent
 
-## Global flags
+### Add artifacts
+- Slash command: `forgeloop add command <name> [--description <text>] [--with-subcommands] [--autocomplete]`
+- Context menu: `forgeloop add context-menu <name> [--type user|message]`
+- Event: `forgeloop add event <eventName> [--once|--on]`
+- Interaction handlers:
+  - `forgeloop add modal [--custom-id <id> | --regexp <pattern> [--regexp-flags <flags>] | <customId>]`
+  - `forgeloop add button ...`
+  - `forgeloop add select-menu ...`
 
-- `--dir <path>` or `-d`: target project root
-- `--help` or `-h`
-- `--version` or `-V`
-- `--yes` or `-y`: relevant for `init`
+### Remove artifacts
+- Slash command: `forgeloop remove command <name> [--sync] [--guild|--global]`
+- Event: `forgeloop remove event <eventName>`
+- Interaction handlers:
+  - `forgeloop remove modal [--custom-id <id>] [<customId>]`
+  - `forgeloop remove button [--custom-id <id>] [<customId>]`
+  - `forgeloop remove select-menu [--custom-id <id>] [<customId>]`
 
-## `add`
+### Command lifecycle
+- Local inventory: `forgeloop commands list`
+- Local vs remote comparison: `forgeloop commands diff [--guild|--global]`
+- Remote sync: `forgeloop commands deploy [--guild|--global]`
 
-- Purpose: generate artifacts in supported projects
-- Requires `modular` or `advanced`
-- Forms:
-  - `add command <name> [--description <text>] [--with-subcommands] [--autocomplete]`
-  - `add context-menu <name> [--type user|message]`
-  - `add event <eventName> [--once|--on]`
-  - `add modal|button|select-menu [--custom-id <id> | --regexp <pattern> [--regexp-flags <flags>] | <customId>]`
-- Notes:
-  - `select-menu` is the string select component handler flow
-  - component handlers can use a literal `customId`, a regexp, or project-local `parseCustomId` or `matchCustomId` modules
+### Diagnostics and project context
+- Health checks: `forgeloop doctor [--verbose] [--json] [--strict] [--fix] [--checks <groups>]`
+- Manifest summary: `forgeloop info`
+- Docs site: `forgeloop docs`
 
-## `remove`
+## Remote Mutation Protocol (Required)
 
-- Purpose: delete generated artifacts
-- Requires `modular` or `advanced`
-- Forms:
-  - `remove command <name> [--sync] [--guild|--global]`
-  - `remove event <eventName>`
-  - `remove modal [--custom-id <id>] [<customId>]`
-  - `remove button [--custom-id <id>] [<customId>]`
-  - `remove select-menu [--custom-id <id>] [<customId>]`
-- `--sync` is meaningful only with `remove command`; it reruns `forgeloop commands deploy` to mirror slash-command deletion in Discord
+Before `commands deploy` or `remove command --sync`:
+1. Confirm project is `modular` or `advanced`.
+2. Run `forgeloop commands list`.
+3. Run `forgeloop commands diff` for intended target when possible.
+4. Confirm explicit target (`--guild` or `--global`).
+5. Confirm env values:
+   - always: `DISCORD_TOKEN`, `CLIENT_ID`
+   - guild: `GUILD_ID`
+6. State clearly that Discord state will be changed.
 
-## `commands`
+## Explicitly Forbidden Substitutions
 
-- Purpose:
-  - `list`: print local application command names from `src/commands`
-  - `deploy`: upload slash and context-menu commands to Discord
-- Requires `modular` or `advanced`
-- Target selection:
-  - explicit `--guild` or `--global`
-  - otherwise non-production defaults to guild and production defaults to global
-- Required env:
-  - always: `DISCORD_TOKEN`, `CLIENT_ID`
-  - guild deploy: `GUILD_ID`
+Do **not** replace ForgeLoop maintenance commands with:
+- custom file generators for commands/events/handlers
+- custom deploy/sync scripts
+- direct ad-hoc command payload sync scripts
 
-## `doctor`
+If a mapped ForgeLoop command exists, use it.
 
-- Purpose: grouped diagnostics for config, structure, env, dependencies, and command loading
-- Flags:
-  - `--verbose`
-  - `--json`
-  - `--strict`
-  - `--fix`
-  - `--checks <groups>`
-- `--checks` accepts a comma-separated subset of `config`, `structure`, `env`, `deps`, `discord`, `network`, and `tooling`
-- Default groups omit `network` and `tooling`
-- `--fix` creates `.env` from `.env.example` when `.env` is missing
-
-## `info`
-
-- Purpose: print the resolved manifest summary for the project
-- Good first command for existing projects because it confirms preset and feature flags before more invasive actions
-
-## `docs`
-
-- Purpose: open the published docs site in the default browser
-- Docs URL: `https://unloopedmido.github.io/forgeloop/`
-
-## Preset-aware usage
-
-- `basic`
-  - no generator workflows for `add`, `remove`, or `commands`
-  - manual edits may be required
-- `modular`
-  - full maintenance toolchain
-- `advanced`
-  - full maintenance toolchain with larger architecture boundaries
-
-## Common command snippets
+## Fast Examples
 
 ```bash
-# Inspect
+# Context
 forgeloop info -d ./my-bot
-forgeloop doctor -d ./my-bot
 
 # Generate
 forgeloop add command ping --description "Ping command" -d ./my-bot
-forgeloop add context-menu inspect --type user -d ./my-bot
 forgeloop add event interactionCreate --on -d ./my-bot
 forgeloop add button --custom-id ping_btn -d ./my-bot
 
-# Validate and deploy
+# Validate + sync
 forgeloop commands list -d ./my-bot
+forgeloop commands diff --guild -d ./my-bot
 forgeloop commands deploy --guild -d ./my-bot
 
-# Remove
+# Remove + optional mirror
 forgeloop remove command ping -d ./my-bot
 forgeloop remove command ping --sync --guild -d ./my-bot
-forgeloop remove button --custom-id ping_btn -d ./my-bot
-
-# Docs
-forgeloop docs
 ```
